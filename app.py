@@ -26,13 +26,13 @@ col1, col2 = st.columns([2, 1])
 
 with col1:
     if st.session_state.page == 1:
-        st.info("Click Start to see the passage. Try to read as quickly as possible.")
+        st.info("Startボタンを押して英文を読みましょう.")
     elif st.session_state.page == 2:
-        st.info("Click STOP when you've finished reading.")
+        st.info("読み終わったらStopボタンを押しましょう")
     elif st.session_state.page == 3:
-        st.info("Answer the questions and click Submit.")
+        st.info("問題を解いてSubmitボタンを押しましょう")
     elif st.session_state.page == 4:
-        st.success("Check your result and restart if you'd like.")
+        st.success("結果を記録しましょう　Restartを押すともう一度できます")
 
 # Page 1: Start
 if st.session_state.page == 1:
