@@ -20,7 +20,7 @@ if "q2" not in st.session_state:
     st.session_state.q2 = None
 
 st.set_page_config(page_title="Speed Reading App", layout="wide")
-st.title("Speed Reading App")
+st.title("English Booster スピード測定")
 
 col1, col2 = st.columns([2, 1])
 
