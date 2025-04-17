@@ -4,7 +4,7 @@ import pandas as pd
 
 # Load CSV (always use the first row)
 DATA_PATH = "data.csv"
-df = pd.read_csv(DATA_PATH, sep='|')
+df = pd.read_csv(DATA_PATH)
 data = df.iloc[0]  # Get the first row
 
 # Initialize session state
