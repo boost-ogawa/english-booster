@@ -3,7 +3,7 @@ import time
 import pandas as pd
 
 # Load CSV (always use the first row)
-DATA_PATH = "C:/Users/ogawa/Streamlit_apps/data.csv"
+DATA_PATH = "data.csv"
 df = pd.read_csv(DATA_PATH, sep='|')
 data = df.iloc[0]  # Get the first row
 
