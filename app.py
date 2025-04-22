@@ -1,41 +1,30 @@
-import streamlit as st
-import firebase_admin
-from firebase_admin import credentials, auth, firestore
-import pandas as pd
-import time
-from datetime import datetime
-
 # --- ページ設定 ---
+import streamlit as st
 st.set_page_config(page_title="Speed Reading App", layout="wide")
+
+# --- ライブラリ ---
+import time
+import pandas as pd
+from datetime import datetime
+from firebase_admin import auth, credentials, firestore, initialize_app
+import firebase_admin
 
 # --- Firebase 初期化 ---
 def initialize_firebase():
-     if not firebase_admin._apps:
+    if not firebase_admin._apps:
         try:
-             cred = credentials.Certificate({
-                 "type": st.secrets["firebase"]["type"],
-                 "project_id": st.secrets["firebase"]["project_id"],
-                 "private_key_id": st.secrets["firebase"]["private_key_id"],
-                 "private_key": st.secrets["firebase"]["private_key"].replace('\\n', '\n'),
-                 "client_email": st.secrets["firebase"]["client_email"],
-                 "client_id": st.secrets["firebase"]["client_id"],
-                 "auth_uri": st.secrets["firebase"]["auth_uri"],
-                 "token_uri": st.secrets["firebase"]["token_uri"],
-                 "auth_provider_x509_cert_url": st.secrets["firebase"]["auth_provider_x509_cert_url"],
-                 "client_x509_cert_url": st.secrets["firebase"]["client_x509_cert_url"],
-                 "universe_domain": st.secrets["firebase"]["universe_domain"]
-             })
-             firebase_admin.initialize_app(cred)
+            cred = credentials.Certificate("serviceAccountKey.json")
+            initialize_app(cred)
         except Exception as e:
-             st.error(f"Firebase 初期化エラー: {e}")
-             st.stop()
+            st.error(f"Firebase初期化エラー: {e}")
+            st.stop()
 
 initialize_firebase()
 db = firestore.client()
 
-# --- 認証ユーザー取得 ---
+# --- トークンからユーザー情報を取得 ---
 def get_authenticated_user():
-    token = st.query_params.get("token")  # ✅ 新しい書き方（リストじゃなく文字列で返る）
+    token = st.query_params.get("token", [None])[0]  # 修正箇所
     if not token:
         return None
     try:
@@ -44,26 +33,7 @@ def get_authenticated_user():
         st.error(f"認証エラー: {e}")
         return None
 
-user = get_authenticated_user()
-if user:
-    user_data = get_user_data(user["uid"])
-
-    if user_data is None:
-        st.error("ユーザーデータが見つかりません。管理者に連絡してください。")
-        st.stop()
-
-    role = user_data.get("role", "student")  # デフォルトは student
-
-    if role == "admin":
-        st.success("ようこそ、管理者モードです 👑")
-        # 管理者向け画面ここに追加
-        st.write("ここは管理者専用ページです。")
-    else:
-        st.success("ようこそ、学習者モードです 📚")
-        # 学習者向け画面ここに追加
-        st.write("ここは学習者ページです。")
-
-# --- Firestore関連 ---
+# --- Firestore 関連関数 ---
 def get_user_data(uid):
     try:
         doc = db.collection("users").document(uid).get()
@@ -80,74 +50,99 @@ def save_user_data(uid, data):
         st.error(f"保存失敗: {e}")
 
 def is_admin(user):
-    try:
-        return db.collection("admins").document(user["uid"]).get().exists
-    except Exception as e:
-        st.warning(f"管理者チェック失敗: {e}")
-        return False
+    uid = user["uid"]
+    data = get_user_data(uid)
+    return data and data.get("role") == "admin"
 
-# --- セッション初期化 ---
-for key, default in {
-    "page": 1,
-    "start_time": None,
-    "stop_time": None,
-    "q1": None,
-    "q2": None,
-    "row_to_load": 1,
-    "submitted": False
-}.items():
-    if key not in st.session_state:
-        st.session_state[key] = default
+# --- ユーザー管理機能 ---
+def manage_users():
+    st.title("ユーザー管理画面")
 
-# --- CSVデータ読み込み関数 ---
-def load_material(data_path, row_index):
+    email = st.text_input("メールアドレス")
+    role = st.selectbox("ロール", ["student", "admin"])
+
+    if st.button("ユーザーを追加"):
+        if email:
+            db.collection("users").document(email).set({"role": role})
+            st.success(f"{email} を {role} として追加しました。")
+        else:
+            st.warning("メールアドレスを入力してください。")
+
+    if st.button("ユーザーを削除"):
+        if email:
+            db.collection("users").document(email).delete()
+            st.success(f"{email} を削除しました。")
+
+    st.subheader("登録済みユーザー一覧")
+    for user in db.collection("users").stream():
+        data = user.to_dict()
+        st.write(f"- {user.id}（role: {data.get('role', 'N/A')}）")
+
+# --- CSV読込関数 ---
+def load_material(path, index):
     try:
-        df = pd.read_csv(data_path)
-        return df.iloc[row_index]
+        df = pd.read_csv(path)
+        return df.iloc[index]
     except Exception as e:
-        st.error(f"データ読み込みエラー: {e}")
+        st.error(f"CSV読み込み失敗: {e}")
         return None
 
-# --- ユーザー処理 ---
-if user:
+# --- Speed Reading App 本体 ---
+def speed_reading_app(user):
     uid = user["uid"]
     user_data = get_user_data(uid)
 
+    if user_data is None:
+        st.error("ユーザーデータが見つかりません。管理者に連絡してください。")
+        st.stop()
+
     st.sidebar.success(f"認証成功: {uid}")
-    if user_data:
-        st.sidebar.write(f"ようこそ、{user_data.get('name', 'ユーザー')} さん！")
-    else:
-        name = st.sidebar.text_input("はじめての方は名前を登録してください")
+    st.sidebar.write(f"ようこそ、{user_data.get('name', 'ユーザー')} さん")
+
+    # 学習者登録
+    if "name" not in user_data:
+        name = st.sidebar.text_input("名前を登録してください")
         if st.sidebar.button("登録"):
             save_user_data(uid, {"name": name})
 
-    # --- 管理者モード ---
-    admin_mode = is_admin(user)
+    admin_mode = user_data.get("role") == "admin"
+
     if admin_mode:
+        st.success("👑 管理者モード")
         st.sidebar.subheader("管理者モード")
-        row_index = st.sidebar.number_input("表示する課題番号", 0, step=1, value=st.session_state.row_to_load)
+        manage_users()
+
+        row_index = st.sidebar.number_input("課題番号", 0, step=1, value=st.session_state.get("row_to_load", 1))
         st.session_state.row_to_load = row_index
 
         st.subheader("📊 学習履歴")
         try:
             results = db.collection("results").order_by("timestamp").get()
-            df_results = pd.DataFrame([doc.to_dict() for doc in results])
-            if not df_results.empty:
-                st.dataframe(df_results)
+            df = pd.DataFrame([r.to_dict() for r in results])
+            if not df.empty:
+                st.dataframe(df)
             else:
                 st.info("履歴がまだありません。")
         except:
-            st.error("履歴の取得に失敗しました。")
+            st.error("履歴の取得失敗")
 
-    # --- データ読み込み ---
+    # --- 課題読込 ---
     DATA_PATH = "data.csv"
-    data = load_material(DATA_PATH, int(st.session_state.row_to_load))
+    data = load_material(DATA_PATH, int(st.session_state.get("row_to_load", 0)))
     if data is None:
         st.stop()
 
     col1, col2 = st.columns([2, 1])
 
-    # --- ステップ1: 読む前 ---
+    # --- セッション初期化 ---
+    for key, val in {
+        "page": 1, "start_time": None, "stop_time": None,
+        "q1": None, "q2": None, "submitted": False
+    }.items():
+        if key not in st.session_state:
+            st.session_state[key] = val
+
+    # --- 読解ステップ ---
     if st.session_state.page == 1:
         with col1:
             st.info("Startを押して英文を読みましょう")
@@ -156,64 +151,57 @@ if user:
                 st.session_state.page = 2
                 st.rerun()
 
-    # --- ステップ2: 読書中 ---
     elif st.session_state.page == 2:
         with col1:
-            st.info("読み終わったらStopを押してください")
-            st.markdown(f"<div style='font-size: 1.3rem; line-height: 1.8;'>{data['main']}</div>", unsafe_allow_html=True)
+            st.info("読み終えたらStopを押してください")
+            st.markdown(f"<div style='font-size:1.3rem; line-height:1.8;'>{data['main']}</div>", unsafe_allow_html=True)
             if st.button("Stop"):
                 st.session_state.stop_time = time.time()
                 st.session_state.page = 3
                 st.rerun()
 
-    # --- ステップ3: 質問 ---
     elif st.session_state.page == 3:
         with col1:
             st.info("問題に答えてください")
-            st.markdown(f"<div style='font-size: 1.3rem; line-height: 1.8;'>{data['main']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:1.3rem; line-height:1.8;'>{data['main']}</div>", unsafe_allow_html=True)
 
         with col2:
             st.radio(data["Q1"], [data["Q1A"], data["Q1B"], data["Q1C"], data["Q1D"]], key="q1")
             st.radio(data["Q2"], [data["Q2A"], data["Q2B"], data["Q2C"], data["Q2D"]], key="q2")
             if st.button("Submit"):
                 if st.session_state.q1 and st.session_state.q2:
+                    st.session_state.submitted = True
                     st.session_state.page = 4
                     st.rerun()
-                else:
-                    st.error("2問とも答えてください。")
 
-    # --- ステップ4: 結果表示 ---
     elif st.session_state.page == 4:
-        with col2:
-            total_time = st.session_state.stop_time - st.session_state.start_time
-            word_count = len(data["main"].split())
-            wpm = (word_count / total_time) * 60
-            correct1 = st.session_state.q1 == data["A1"]
-            correct2 = st.session_state.q2 == data["A2"]
-            correct_count = int(correct1) + int(correct2)
-
+        with col1:
             st.success("結果")
-            st.write(f"Words: {word_count}")
-            st.write(f"Time: {total_time:.2f}s")
-            st.write(f"WPM: **{wpm:.2f}**")
-            st.write(f"Q1: {'✅' if correct1 else '❌'}")
-            st.write(f"Q2: {'✅' if correct2 else '❌'}")
+            correct1 = st.session_state.q1 == data["Answer1"]
+            correct2 = st.session_state.q2 == data["Answer2"]
+            duration = round(st.session_state.stop_time - st.session_state.start_time, 2)
+            wpm = round(len(data["main"].split()) / duration * 60, 2)
 
-            # Firestoreに保存
-            if not st.session_state.submitted:
+            st.write("問題1:", "✅ 正解" if correct1 else "❌ 不正解")
+            st.write("問題2:", "✅ 正解" if correct2 else "❌ 不正解")
+            st.write(f"読み時間: {duration} 秒")
+            st.write(f"WPM: {wpm}")
+
+            if st.session_state.submitted:
                 db.collection("results").add({
                     "uid": uid,
-                    "timestamp": datetime.now().isoformat(),
-                    "material_id": str(data.get("id", f"row_{st.session_state.row_to_load}")),
-                    "wpm": round(wpm, 2),
-                    "correct_answers": correct_count
+                    "timestamp": datetime.now(),
+                    "wpm": wpm,
+                    "q1": correct1,
+                    "q2": correct2
                 })
-                st.session_state.submitted = True
-
-            if st.button("Restart"):
-                for key in ["page", "start_time", "stop_time", "q1", "q2", "submitted"]:
-                    st.session_state[key] = 1 if key == "page" else None
+                st.success("記録を保存しました")
+                st.session_state.page = 1
                 st.rerun()
 
+# --- 実行 ---
+user = get_authenticated_user()
+if user:
+    speed_reading_app(user)
 else:
     st.warning("ログインが必要です。URLに '?token=...' を付けてアクセスしてください。")
