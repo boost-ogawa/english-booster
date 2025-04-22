@@ -11,14 +11,22 @@ import firebase_admin
 
 # --- Firebase 初期化 ---
 def initialize_firebase():
-    if not firebase_admin._apps:
+    if not firebase_admin._apps:  # 初期化されていない場合のみ実行
         try:
-            cred = credentials.Certificate("serviceAccountKey.json")
+            if "firebase" in st.secrets:
+                # Streamlit Cloud 用
+                cred = credentials.Certificate(st.secrets["firebase"])
+            else:
+                # ローカル実行用
+                cred = credentials.Certificate("serviceAccountKey.json")
+            
             initialize_app(cred)
+
         except Exception as e:
             st.error(f"Firebase初期化エラー: {e}")
             st.stop()
 
+# 初期化と Firestore クライアントの取得
 initialize_firebase()
 db = firestore.client()
 
