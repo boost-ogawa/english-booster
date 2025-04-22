@@ -11,13 +11,12 @@ import firebase_admin
 
 # --- Firebase 初期化 ---
 import json  # ← 追加！
-
 def initialize_firebase():
     if not firebase_admin._apps:
         try:
             if "firebase" in st.secrets:
-                # Streamlit Cloud 用：dictをJSON文字列にしてからdictに再構築
-                firebase_dict = json.loads(json.dumps(st.secrets["firebase"]))
+                # Streamlit Cloud 用：AttrDict → dict に変換
+                firebase_dict = dict(st.secrets["firebase"])
                 cred = credentials.Certificate(firebase_dict)
             else:
                 # ローカル用
