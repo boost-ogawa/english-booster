@@ -2,6 +2,27 @@ import streamlit as st
 import pandas as pd
 import time
 from datetime import datetime
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# --- Firebaseの初期化 ---
+cred = credentials.Certificate("serviceAccountKey.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+
+# --- Firestoreに結果を保存する関数 ---
+def save_results(wpm, correct_answers, material_id):
+    timestamp = datetime.now().isoformat()  # 現在の時間を取得
+    result_data = {
+        "timestamp": timestamp,  # 時間
+        "material_id": material_id,  # 素材ID（何を読んだか）
+        "wpm": wpm,  # WPM（1分間の単語数）
+        "correct_answers": correct_answers  # 正解数
+    }
+    
+    # Firestoreの"results"コレクションに保存
+    db.collection("results").add(result_data)  # Firestoreにデータを追加
+    print("結果が保存されました")
 
 # --- ページ設定（最初に書く必要あり） ---
 st.set_page_config(page_title="Speed Reading App", layout="wide")
@@ -122,6 +143,19 @@ with col1:
             # 結果を表示（Firestoreなどへの保存処理は省略）
             st.write(f"Timestamp: {timestamp}")
             st.write(f"Correct Answers: {correct_answers_to_store}")
+
+            # Firestoreに結果を保存
+            if "submitted" not in st.session_state:
+                st.session_state.submitted = False
+            if not st.session_state.submitted:
+                result_data = {
+                    "timestamp": timestamp,
+                    "material_id": str(data.get("id", f"row_{st.session_state.row_to_load}")),
+                    "wpm": round(wpm, 2),
+                    "correct_answers": correct_answers_to_store  # 正解数を保存
+                }
+                save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")))
+                st.session_state.submitted = True
 
             if st.button("Restart"):
                 st.session_state.page = 1
