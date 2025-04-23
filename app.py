@@ -20,18 +20,22 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
 db = firestore.client()
 
 # --- Firestoreに結果を保存する関数 ---
-def save_results(wpm, correct_answers, material_id):
+def save_results(wpm, correct_answers, material_id, first_name, last_name, user_id):
     jst = timezone('Asia/Tokyo')
     timestamp = datetime.now(jst).isoformat()
+
     result_data = {
-        "timestamp": timestamp,  # 時間
-        "material_id": material_id,  # 素材ID（何を読んだか）
-        "wpm": wpm,  # WPM（1分間の単語数）
-        "correct_answers": correct_answers  # 正解数
+        "timestamp": timestamp,           # 時間
+        "material_id": material_id,       # 素材ID（何を読んだか）
+        "wpm": round(wpm, 1),             # WPM（1分間の単語数）小数第1位まで
+        "correct_answers": correct_answers,  # 正解数
+        "first_name": first_name,
+        "last_name": last_name,
+        "user_id": user_id
     }
-    
+
     # Firestoreの"results"コレクションに保存
-    db.collection("results").add(result_data)  # Firestoreにデータを追加
+    db.collection("results").add(result_data)
     print("結果が保存されました")
 
 # --- ページ設定（最初に書く必要あり） ---
@@ -57,7 +61,7 @@ if "row_to_load" not in st.session_state:
 
 # --- ページ状態などのセッション初期化 ---
 if "page" not in st.session_state:
-    st.session_state.page = 1
+    st.session_state.page = 0  # ← 初期ページを「0」に変更（ここがポイント！）
 if "start_time" not in st.session_state:
     st.session_state.start_time = None
 if "stop_time" not in st.session_state:
@@ -67,111 +71,158 @@ if "q1" not in st.session_state:
 if "q2" not in st.session_state:
     st.session_state.q2 = None
 
-# --- CSVデータの読み込み ---
-DATA_PATH = "data.csv"
-data = load_material(DATA_PATH, int(st.session_state.row_to_load))
+# --- セッションに名前・IDの初期化 ---
+if "last_name" not in st.session_state:
+    st.session_state.last_name = ""
+if "first_name" not in st.session_state:
+    st.session_state.first_name = ""
+if "user_id" not in st.session_state:
+    st.session_state.user_id = ""
 
-if data is None:
-    st.stop()
+# --- page == 0: 名前とIDの入力フォーム ---
+if st.session_state.page == 0:
+    st.title("English Booster へようこそ")
 
-st.title("English Booster スピード測定")
+    st.write("以下の情報を入力してください：")
 
-# --- 学習者用のUI ---
-col1, col2 = st.columns([2, 1])
-with col1:
-    if st.session_state.page == 1:
-        st.info("Startボタンを押して英文を読みましょう.")
-        if st.button("Start", key="start_button"):
-            st.session_state.start_time = time.time()
-            st.session_state.page = 2
+    st.session_state.last_name = st.text_input("姓（例：山田）", value=st.session_state.last_name)
+    st.session_state.first_name = st.text_input("名（例：太郎）", value=st.session_state.first_name)
+    st.session_state.user_id = st.text_input("ID（例：abc123）", value=st.session_state.user_id)
+
+    if st.button("学習をはじめる"):
+        if st.session_state.last_name and st.session_state.first_name and st.session_state.user_id:
+            st.session_state.page = 1
             st.rerun()
-    elif st.session_state.page == 2:
-        st.info("読み終わったらStopボタンを押しましょう")
-        st.markdown(
-            f"""
-            <style>
-            .custom-paragraph {{
-                font-family: Georgia, serif;
-                line-height: 1.8;
-                font-size: 1.3rem;
-            }}
-            </style>
-            <div class="custom-paragraph">
-            {data['main']}
-            </div>
-            """, unsafe_allow_html=True)
-        if st.button("Stop"):
-            st.session_state.stop_time = time.time()
-            st.session_state.page = 3
+        else:
+            st.warning("すべての項目を入力してください。")
+
+# --- page == 1: 学習内容の表示とスタートボタンの処理 ---
+if st.session_state.page == 1:
+    # 学習者の名前を挨拶
+    st.title(f"こんにちは、{st.session_state.first_name}さん！")
+
+    # 学習内容を表示（データが存在すれば）
+    data = load_material(DATA_PATH, int(st.session_state.row_to_load))
+    if data is None:
+        st.stop()
+
+    st.markdown(
+        f"""
+        <style>
+        .custom-paragraph {{
+            font-family: Georgia, serif;
+            line-height: 1.8;
+            font-size: 1.3rem;
+        }}
+        </style>
+        <div class="custom-paragraph">
+        {data['main']}
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.info("Startボタンを押して英文を読みましょう.")
+    if st.button("Start", key="start_button"):
+        st.session_state.start_time = time.time()
+        st.session_state.page = 2
+        st.rerun()
+
+# --- page == 2: 読書時間の計測 ---
+if st.session_state.page == 2:
+    st.info("読み終わったらStopボタンを押しましょう")
+    st.markdown(
+        f"""
+        <style>
+        .custom-paragraph {{
+            font-family: Georgia, serif;
+            line-height: 1.8;
+            font-size: 1.3rem;
+        }}
+        </style>
+        <div class="custom-paragraph">
+        {data['main']}
+        </div>
+        """, unsafe_allow_html=True)
+
+    if st.button("Stop"):
+        st.session_state.stop_time = time.time()
+        st.session_state.page = 3
+        st.rerun()
+
+# --- page == 3: クイズの表示と解答処理 ---
+if st.session_state.page == 3:
+    st.info("問題を解いてSubmitボタンを押しましょう")
+    st.markdown(
+        f"""
+        <style>
+        .custom-paragraph {{
+            font-family: Georgia, serif;
+            line-height: 1.8;
+            font-size: 1.3rem;
+        }}
+        </style>
+        <div class="custom-paragraph">
+        {data['main']}
+        </div>
+        """, unsafe_allow_html=True)
+
+    # クイズの表示
+    with col2:
+        st.subheader("Questions")
+        st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1")
+        st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
+
+    if st.button("Submit"):
+        if st.session_state.q1 is None or st.session_state.q2 is None:
+            st.error("Please answer both questions.")
+        else:
+            st.session_state.page = 4
             st.rerun()
-    elif st.session_state.page == 3:
-        st.info("問題を解いてSubmitボタンを押しましょう")
-        st.markdown(
-            f"""
-            <style>
-            .custom-paragraph {{
-                font-family: Georgia, serif;
-                line-height: 1.8;
-                font-size: 1.3rem;
-            }}
-            </style>
-            <div class="custom-paragraph">
-            {data['main']}
-            </div>
-            """, unsafe_allow_html=True)
-        with col2:
-            st.subheader("Questions")
-            st.radio(data['Q1'],
-                     [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']],
-                     key="q1")
-            st.radio(data['Q2'],
-                     [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']],
-                     key="q2")
-            if st.button("Submit"):
-                if st.session_state.q1 is None or st.session_state.q2 is None:
-                    st.error("Please answer both questions.")
-                else:
-                    st.session_state.page = 4
-                    st.rerun()
-    elif st.session_state.page == 4:
-        st.success("結果を記録しましょう　Restartを押すともう一度できます")
-        with col2:
-            st.subheader("Result")
-            total_time = st.session_state.stop_time - st.session_state.start_time
-            word_count = len(data['main'].split())
-            wpm = (word_count / total_time) * 60
-            st.write(f"Words read: {word_count}")
-            st.write(f"Time taken: {total_time:.2f} seconds")
-            st.write(f"WPM: **{wpm:.1f}** words per minute")  # ← 小数第1位まで
-            correct1 = st.session_state.q1 == data['A1']
-            correct2 = st.session_state.q2 == data['A2']
-            st.write(f"Q1: {'✅ Correct' if correct1 else '❌ Incorrect'}")
-            st.write(f"Q2: {'✅ Correct' if correct2 else '❌ Incorrect'}")
-            timestamp = datetime.now().isoformat()
-            correct_answers_to_store = int(correct1) + int(correct2)
 
-            # 結果を表示（Firestoreなどへの保存処理は省略）
-            st.write(f"Timestamp: {timestamp}")
-            st.write(f"Correct Answers: {correct_answers_to_store}")
+# --- page == 4: 結果の表示と保存 ---
+if st.session_state.page == 4:
+    st.success("結果を記録しましょう。Restartを押すともう一度できます。")
 
-            # Firestoreに結果を保存
-            if "submitted" not in st.session_state:
-                st.session_state.submitted = False
-            if not st.session_state.submitted:
-                result_data = {
-                    "timestamp": timestamp,
-                    "material_id": str(data.get("id", f"row_{st.session_state.row_to_load}")),
-                    "wpm": round(wpm, 1),  # ← これで小数第1位までに丸めて保存
-                    "correct_answers": correct_answers_to_store  # 正解数を保存
-                }
-                save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")))
-                st.session_state.submitted = True
+    with col2:
+        st.subheader("Result")
+        total_time = st.session_state.stop_time - st.session_state.start_time
+        word_count = len(data['main'].split())
+        wpm = (word_count / total_time) * 60
+        st.write(f"Words read: {word_count}")
+        st.write(f"Time taken: {total_time:.2f} seconds")
+        st.write(f"WPM: **{wpm:.1f}** words per minute")  # ← 小数第1位まで
+        correct1 = st.session_state.q1 == data['A1']
+        correct2 = st.session_state.q2 == data['A2']
+        st.write(f"Q1: {'✅ Correct' if correct1 else '❌ Incorrect'}")
+        st.write(f"Q2: {'✅ Correct' if correct2 else '❌ Incorrect'}")
+        timestamp = datetime.now().isoformat()
+        correct_answers_to_store = int(correct1) + int(correct2)
 
-            if st.button("Restart"):
-                st.session_state.page = 1
-                st.session_state.start_time = None
-                st.session_state.stop_time = None
-                st.session_state.q1 = None
-                st.session_state.q2 = None
-                st.session_state.submitted = False
-                st.rerun()
+        # 結果を表示
+        st.write(f"Timestamp: {timestamp}")
+        st.write(f"Correct Answers: {correct_answers_to_store}")
+
+        # Firestoreに結果を保存
+        if "submitted" not in st.session_state:
+            st.session_state.submitted = False
+        if not st.session_state.submitted:
+            result_data = {
+                "timestamp": timestamp,
+                "material_id": str(data.get("id", f"row_{st.session_state.row_to_load}")),
+                "wpm": round(wpm, 1),
+                "correct_answers": correct_answers_to_store,
+                "first_name": st.session_state.first_name,
+                "last_name": st.session_state.last_name,
+                "user_id": st.session_state.user_id
+            }
+            save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
+                         st.session_state.first_name, st.session_state.last_name, st.session_state.user_id)
+            st.session_state.submitted = True
+
+        if st.button("Restart"):
+            st.session_state.page = 1
+            st.session_state.start_time = None
+            st.session_state.stop_time = None
+            st.session_state.q1 = None
+            st.session_state.q2 = None
+            st.session_state.submitted = False
+            st.rerun()
