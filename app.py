@@ -26,13 +26,13 @@ def save_results(wpm, correct_answers, material_id, first_name, last_name, user_
     timestamp = datetime.now(jst).isoformat()
 
     result_data = {
+        "user_id": user_id,
+        "last_name": last_name,
+        "first_name": first_name,
         "timestamp": timestamp,
         "material_id": material_id,
         "wpm": round(wpm, 1),
-        "correct_answers": correct_answers,
-        "first_name": first_name,
-        "last_name": last_name,
-        "user_id": user_id
+        "correct_answers": correct_answers
     }
 
     try:
