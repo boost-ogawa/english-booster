@@ -8,7 +8,6 @@ from firebase_admin import credentials, firestore
 import json
 import tempfile
 import re  # 正規表現ライブラリ
-import plotly.express as px
 
 # --- GitHub の CSV ファイルの Raw URL ---
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
