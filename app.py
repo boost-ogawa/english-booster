@@ -142,7 +142,7 @@ with col1:
             wpm = (word_count / total_time) * 60
             st.write(f"Words read: {word_count}")
             st.write(f"Time taken: {total_time:.2f} seconds")
-            st.write(f"WPM: **{wpm:.2f}** words per minute")
+            st.write(f"WPM: **{wpm:.1f}** words per minute")  # ← 小数第1位まで
             correct1 = st.session_state.q1 == data['A1']
             correct2 = st.session_state.q2 == data['A2']
             st.write(f"Q1: {'✅ Correct' if correct1 else '❌ Incorrect'}")
@@ -161,7 +161,7 @@ with col1:
                 result_data = {
                     "timestamp": timestamp,
                     "material_id": str(data.get("id", f"row_{st.session_state.row_to_load}")),
-                    "wpm": round(wpm, 2),
+                    "wpm": round(wpm, 1),  # ← これで小数第1位までに丸めて保存
                     "correct_answers": correct_answers_to_store  # 正解数を保存
                 }
                 save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")))
