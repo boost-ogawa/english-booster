@@ -110,20 +110,18 @@ if st.session_state.page == 0:
         last_name = st.text_input("姓", key="last_name_input", value=st.session_state.last_name)
         first_name = st.text_input("名", key="first_name_input", value=st.session_state.first_name)
         user_id = st.text_input("ID", key="user_id_input", value=st.session_state.user_id)
-        st.write(f"valid_user_ids: {st.session_state.get('valid_user_ids')}") # ← 追加
         if st.button("次へ"):
             if last_name and first_name and user_id:
-                if user_id in valid_user_ids:
+                if user_id.strip() in valid_user_ids: # ← strip() を追加
                     st.session_state.last_name = last_name
                     st.session_state.first_name = first_name
-                    st.session_state.user_id = user_id
+                    st.session_state.user_id = user_id.strip() # ← ここも strip()
                     st.session_state.page = 1
                     st.rerun()
                 else:
                     st.error(f"入力されたID '{user_id}' は登録されていません。")
             else:
                 st.warning("すべての項目を入力してください。")
-
 # --- page == 1: 挨拶とスタートボタン ---
 elif st.session_state.page == 1:
     st.title("English Booster スピード測定")
