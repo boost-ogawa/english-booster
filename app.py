@@ -9,6 +9,8 @@ import json
 import tempfile
 import re  # 正規表現ライブラリ
 
+GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
+
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
 with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
@@ -205,8 +207,31 @@ elif st.session_state.page == 3:
 
 # --- page == 4: 結果の表示と保存 (2カラム) ---
 elif st.session_state.page == 4:
-    # CSVデータの読み込み
-    DATA_PATH = "data.csv"
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.subheader(f"{st.session_state.first_name}さんのWPM推移（過去データ）")
+
+        current_user_id = st.session_state.get('user_id')
+
+        if current_user_id:
+            try:
+                df_results = pd.read_csv(GITHUB_CSV_URL)
+                user_results = df_results[df_results['user_id'] == current_user_id]
+
+                if not user_results.empty:
+                    # user_id以外のカラムを抽出して表示
+                    past_data = user_results.drop(columns=['user_id'])
+                    st.dataframe(past_data)
+                else:
+                    st.info("まだ学習履歴がありません。")
+
+            except Exception as e:
+                st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
+        else:
+            st.info("ユーザーIDがありません。")
+
+    with col2:
+        DATA_PATH = "data.csv"
     data = load_material(DATA_PATH, int(st.session_state.row_to_load))
 
     if data is None:
