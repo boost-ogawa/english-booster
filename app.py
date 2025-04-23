@@ -7,6 +7,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import json
 import tempfile
+import re  # 正規表現ライブラリ
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -59,7 +60,8 @@ def load_material(data_path, row_index):
     except Exception as e:
         st.error(f"予期しないエラーが発生しました: {e}")
         return None
-# ユーザーの登録確認
+
+# --- GitHubからユーザーIDリストをロードし、セッションステートに格納 ---
 @st.cache_data
 def load_user_ids_from_github(github_raw_url):
     try:
@@ -74,6 +76,9 @@ def load_user_ids_from_github(github_raw_url):
         return []
 
 GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user.csv"
+
+if 'valid_user_ids' not in st.session_state:
+    st.session_state['valid_user_ids'] = load_user_ids_from_github(GITHUB_USER_CSV_URL)
 
 # セッション変数の初期化
 if "row_to_load" not in st.session_state:
@@ -112,10 +117,12 @@ if st.session_state.page == 0:
         user_id = st.text_input("ID", key="user_id_input", value=st.session_state.user_id)
         if st.button("次へ"):
             if last_name and first_name and user_id:
-                if user_id.strip() in valid_user_ids: # ← strip() を追加
+                if not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
+                    st.error("IDは半角英数字で入力してください。")
+                elif user_id.strip() in st.session_state.get('valid_user_ids', []):
                     st.session_state.last_name = last_name
                     st.session_state.first_name = first_name
-                    st.session_state.user_id = user_id.strip() # ← ここも strip()
+                    st.session_state.user_id = user_id.strip()
                     st.session_state.page = 1
                     st.rerun()
                 else:
