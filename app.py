@@ -12,19 +12,17 @@ db = firestore.client()
 
 # --- Firestoreに結果を保存する関数 ---
 def save_results(wpm, correct_answers, material_id):
-    timestamp = datetime.now().isoformat()
+    timestamp = datetime.now().isoformat()  # 現在の時間を取得
     result_data = {
-        "timestamp": timestamp,
-        "material_id": material_id,
-        "wpm": wpm,
-        "correct_answers": correct_answers
+        "timestamp": timestamp,  # 時間
+        "material_id": material_id,  # 素材ID（何を読んだか）
+        "wpm": wpm,  # WPM（1分間の単語数）
+        "correct_answers": correct_answers  # 正解数
     }
-
-    try:
-        db.collection("results").add(result_data)
-        print("✅ Firestoreに保存成功:", result_data)
-    except Exception as e:
-        print("❌ Firestore保存エラー:", e)
+    
+    # Firestoreの"results"コレクションに保存
+    db.collection("results").add(result_data)  # Firestoreにデータを追加
+    print("結果が保存されました")
 
 # --- ページ設定（最初に書く必要あり） ---
 st.set_page_config(page_title="Speed Reading App", layout="wide")
