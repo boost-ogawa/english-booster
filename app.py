@@ -126,7 +126,7 @@ elif st.session_state.page == 2:
         st.stop()
 
     st.info("読み終わったらStopボタンを押しましょう")
-    col1, _ = st.columns(2)
+    col1, _ = st.columns([2, 1]) # ← ここを [2, 1] に修正
     with col1:
         st.markdown(
             f"""
