@@ -207,6 +207,7 @@ elif st.session_state.page == 3:
 
 # --- page == 4: 結果の表示と保存 (2カラム) ---
 elif st.session_state.page == 4:
+    st.write(f"現在の user_id: {st.session_state.get('user_id')}")
     col1, col2 = st.columns([2, 1])
     with col1:
         st.subheader(f"{st.session_state.first_name}さんのWPM推移（過去データ）")
