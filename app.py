@@ -112,7 +112,6 @@ elif st.session_state.page == 1:
         st.subheader(f"こんにちは、{st.session_state.first_name}さん！")
     st.info("下のStartボタンを押して英文を読みましょう.")
     if st.button("Start"):
-        st.session_state.start_time = time.time()
         st.session_state.page = 2
         st.rerun()
 
@@ -126,7 +125,7 @@ elif st.session_state.page == 2:
         st.stop()
 
     st.info("読み終わったらStopボタンを押しましょう")
-    col1, _ = st.columns(2)
+    col1, col2 = st.columns([2, 1])
     with col1:
         st.markdown(
             f"""
@@ -146,6 +145,8 @@ elif st.session_state.page == 2:
             st.session_state.stop_time = time.time()
             st.session_state.page = 3
             st.rerun()
+    with col2:
+        pass # Stopボタンはcol1に配置
 
 # --- page == 3: クイズの表示と解答処理 (2カラム) ---
 elif st.session_state.page == 3:
