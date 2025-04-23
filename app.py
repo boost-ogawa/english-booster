@@ -6,7 +6,8 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 
 # --- Firebaseの初期化 ---
-cred = credentials.Certificate("serviceAccountKey.json")
+firebase_creds = st.secrets["firebase"]  # secrets.tomlからfirebaseの設定を取得
+cred = credentials.Certificate(firebase_creds)  # 認証情報を元にFirebaseを初期化
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
