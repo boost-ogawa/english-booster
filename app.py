@@ -225,7 +225,7 @@ elif st.session_state.page == 4:
             st.error("測定時間が記録されていません。もう一度お試しください。")
 
         if st.button("Restart"):
-            st.session_state.page = 2  # ページ 2 から再開
+            st.session_state.page = 1  # ページ 1 から再開
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.q1 = None
