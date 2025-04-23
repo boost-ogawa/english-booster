@@ -76,6 +76,8 @@ if "q1" not in st.session_state:
     st.session_state.q1 = None
 if "q2" not in st.session_state:
     st.session_state.q2 = None
+if "submitted" not in st.session_state:
+    st.session_state.submitted = False
 
 # --- セッションに名前・IDの初期化 ---
 if "last_name" not in st.session_state:
@@ -110,10 +112,11 @@ elif st.session_state.page == 1:
         st.subheader(f"こんにちは、{st.session_state.first_name}さん！")
     st.info("下のStartボタンを押して英文を読みましょう.")
     if st.button("Start"):
+        st.session_state.start_time = time.time()
         st.session_state.page = 2
         st.rerun()
 
-# --- page == 2: 英文表示とStopボタン ---
+# --- page == 2: 英文表示とStopボタン (2カラム) ---
 elif st.session_state.page == 2:
     # CSVデータの読み込み
     DATA_PATH = "data.csv"
@@ -123,26 +126,28 @@ elif st.session_state.page == 2:
         st.stop()
 
     st.info("読み終わったらStopボタンを押しましょう")
-    st.markdown(
-        f"""
-        <style>
-        .custom-paragraph {{
-            font-family: Georgia, serif;
-            line-height: 1.8;
-            font-size: 1.3rem;
-        }}
-        </style>
-        <div class="custom-paragraph">
-        {data['main']}
-        </div>
-        """, unsafe_allow_html=True
-    )
-    if st.button("Stop"):
-        st.session_state.stop_time = time.time()
-        st.session_state.page = 3
-        st.rerun()
+    col1, _ = st.columns(2)
+    with col1:
+        st.markdown(
+            f"""
+            <style>
+            .custom-paragraph {{
+                font-family: Georgia, serif;
+                line-height: 1.8;
+                font-size: 1.3rem;
+            }}
+            </style>
+            <div class="custom-paragraph">
+            {data['main']}
+            </div>
+            """, unsafe_allow_html=True
+        )
+        if st.button("Stop"):
+            st.session_state.stop_time = time.time()
+            st.session_state.page = 3
+            st.rerun()
 
-# --- page == 3: クイズの表示と解答処理 ---
+# --- page == 3: クイズの表示と解答処理 (2カラム) ---
 elif st.session_state.page == 3:
     # CSVデータの読み込み
     DATA_PATH = "data.csv"
@@ -180,7 +185,7 @@ elif st.session_state.page == 3:
                 st.session_state.page = 4
                 st.rerun()
 
-# --- page == 4: 結果の表示と保存 ---
+# --- page == 4: 結果の表示と保存 (2カラム) ---
 elif st.session_state.page == 4:
     # CSVデータの読み込み
     DATA_PATH = "data.csv"
@@ -194,30 +199,32 @@ elif st.session_state.page == 4:
     col1, col2 = st.columns([2, 1])
     with col2:
         st.subheader("Result")
-        total_time = st.session_state.stop_time - st.session_state.start_time
-        word_count = len(data['main'].split())
-        wpm = (word_count / total_time) * 60
-        st.write(f"Words read: {word_count}")
-        st.write(f"Time taken: {total_time:.2f} seconds")
-        st.write(f"WPM: **{wpm:.1f}** words per minute")
-        correct1 = st.session_state.q1 == data['A1']
-        correct2 = st.session_state.q2 == data['A2']
-        st.write(f"Q1: {'✅ Correct' if correct1 else '❌ Incorrect'}")
-        st.write(f"Q2: {'✅ Correct' if correct2 else '❌ Incorrect'}")
-        timestamp = datetime.now().isoformat()
-        correct_answers_to_store = int(correct1) + int(correct2)
+        # 開始時間と停止時間が記録されているか確認
+        if st.session_state.start_time and st.session_state.stop_time:
+            total_time = st.session_state.stop_time - st.session_state.start_time
+            word_count = len(data['main'].split())
+            wpm = (word_count / total_time) * 60
+            st.write(f"Words read: {word_count}")
+            st.write(f"Time taken: {total_time:.2f} seconds")
+            st.write(f"WPM: **{wpm:.1f}** words per minute")
+            correct1 = st.session_state.q1 == data['A1']
+            correct2 = st.session_state.q2 == data['A2']
+            st.write(f"Q1: {'✅ Correct' if correct1 else '❌ Incorrect'}")
+            st.write(f"Q2: {'✅ Correct' if correct2 else '❌ Incorrect'}")
+            timestamp = datetime.now().isoformat()
+            correct_answers_to_store = int(correct1) + int(correct2)
 
-        # 結果を表示
-        st.write(f"Timestamp: {timestamp}")
-        st.write(f"Correct Answers: {correct_answers_to_store}")
+            # 結果を表示
+            st.write(f"Timestamp: {timestamp}")
+            st.write(f"Correct Answers: {correct_answers_to_store}")
 
-        # Firestoreに結果を保存
-        if "submitted" not in st.session_state:
-            st.session_state.submitted = False
-        if not st.session_state.submitted:
-            save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
-                         st.session_state.first_name, st.session_state.last_name, st.session_state.user_id)
-            st.session_state.submitted = True
+            # Firestoreに結果を保存
+            if not st.session_state.submitted:
+                save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
+                             st.session_state.first_name, st.session_state.last_name, st.session_state.user_id)
+                st.session_state.submitted = True
+        else:
+            st.error("測定時間が記録されていません。もう一度お試しください。")
 
         if st.button("Restart"):
             st.session_state.page = 0  # 最初に戻る
