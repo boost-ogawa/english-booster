@@ -8,7 +8,6 @@ from firebase_admin import credentials, firestore
 import json
 import tempfile
 import re  # 正規表現ライブラリ
-import plotly.express as px
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -205,7 +204,6 @@ elif st.session_state.page == 3:
                 st.rerun()
 
 # --- page == 4: 結果の表示と保存 (2カラム) ---
-
 elif st.session_state.page == 4:
     # CSVデータの読み込み
     DATA_PATH = "data.csv"
