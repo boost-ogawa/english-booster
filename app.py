@@ -200,6 +200,7 @@ elif st.session_state.page == 4:
     with col2:
         st.subheader("Result")
         correct_answers_to_store = 0  # 初期値を設定
+        wpm = 0.0  # wpm の初期値を設定
 
         # 開始時間と停止時間が記録されているか確認
         if st.session_state.start_time and st.session_state.stop_time:
@@ -231,4 +232,3 @@ elif st.session_state.page == 4:
             st.session_state.q2 = None
             st.session_state.submitted = False
             st.rerun()
-            
