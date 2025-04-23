@@ -110,6 +110,7 @@ if st.session_state.page == 0:
         last_name = st.text_input("姓", key="last_name_input", value=st.session_state.last_name)
         first_name = st.text_input("名", key="first_name_input", value=st.session_state.first_name)
         user_id = st.text_input("ID", key="user_id_input", value=st.session_state.user_id)
+        st.write(f"valid_user_ids: {st.session_state.get('valid_user_ids')}") # ← 追加
         if st.button("次へ"):
             if last_name and first_name and user_id:
                 if user_id in valid_user_ids:
