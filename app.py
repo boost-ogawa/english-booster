@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import time
 from datetime import datetime
+from pytz import timezone  # ← これは最初の方、他のimportの並びに追加
 import firebase_admin
 from firebase_admin import credentials, firestore
 import json
@@ -20,7 +21,8 @@ db = firestore.client()
 
 # --- Firestoreに結果を保存する関数 ---
 def save_results(wpm, correct_answers, material_id):
-    timestamp = datetime.now().isoformat()  # 現在の時間を取得
+    jst = timezone('Asia/Tokyo')
+    timestamp = datetime.now(jst).isoformat()
     result_data = {
         "timestamp": timestamp,  # 時間
         "material_id": material_id,  # 素材ID（何を読んだか）
