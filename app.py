@@ -203,8 +203,6 @@ elif st.session_state.page == 3:
                 st.session_state.page = 4
                 st.rerun()
 
-import plotly.express as px  # 折れ線グラフ描画ライブラリ
-
 # --- page == 4: 結果の表示と保存 (2カラム) ---
 elif st.session_state.page == 4:
     # CSVデータの読み込み
