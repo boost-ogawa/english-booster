@@ -92,14 +92,11 @@ if st.session_state.page == 0:
     st.title("名前とIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
-        last_name = st.text_input("姓", key="last_name_input")
-        first_name = st.text_input("名", key="first_name_input")
-        user_id = st.text_input("ID", key="user_id_input")
+        st.text_input("姓", key="last_name_input", value=st.session_state.last_name)
+        st.text_input("名", key="first_name_input", value=st.session_state.first_name)
+        st.text_input("ID", key="user_id_input", value=st.session_state.user_id)
         if st.button("次へ"):
-            if last_name and first_name and user_id:
-                st.session_state.last_name = last_name
-                st.session_state.first_name = first_name
-                st.session_state.user_id = user_id
+            if st.session_state.last_name and st.session_state.first_name and st.session_state.user_id:
                 st.session_state.page = 1
                 st.rerun()
             else:
@@ -126,7 +123,7 @@ elif st.session_state.page == 2:
         st.stop()
 
     st.info("読み終わったらStopボタンを押しましょう")
-    col1, _ = st.columns([2, 1]) # ← ここを [2, 1] に修正
+    col1, _ = st.columns([2, 1])
     with col1:
         st.markdown(
             f"""
@@ -211,12 +208,6 @@ elif st.session_state.page == 4:
             correct2 = st.session_state.q2 == data['A2']
             st.write(f"Q1: {'✅ Correct' if correct1 else '❌ Incorrect'}")
             st.write(f"Q2: {'✅ Correct' if correct2 else '❌ Incorrect'}")
-            timestamp = datetime.now().isoformat()
-            correct_answers_to_store = int(correct1) + int(correct2)
-
-            # 結果を表示
-            st.write(f"Timestamp: {timestamp}")
-            st.write(f"Correct Answers: {correct_answers_to_store}")
 
             # Firestoreに結果を保存
             if not st.session_state.submitted:
@@ -227,7 +218,7 @@ elif st.session_state.page == 4:
             st.error("測定時間が記録されていません。もう一度お試しください。")
 
         if st.button("Restart"):
-            st.session_state.page = 0  # 最初に戻る
+            st.session_state.page = 2  # ページ 2 から再開
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.q1 = None
