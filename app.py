@@ -92,11 +92,14 @@ if st.session_state.page == 0:
     st.title("名前とIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
-        st.text_input("姓", key="last_name_input", value=st.session_state.last_name)
-        st.text_input("名", key="first_name_input", value=st.session_state.first_name)
-        st.text_input("ID", key="user_id_input", value=st.session_state.user_id)
+        last_name = st.text_input("姓", key="last_name_input", value=st.session_state.last_name)
+        first_name = st.text_input("名", key="first_name_input", value=st.session_state.first_name)
+        user_id = st.text_input("ID", key="user_id_input", value=st.session_state.user_id)
         if st.button("次へ"):
-            if st.session_state.last_name and st.session_state.first_name and st.session_state.user_id:
+            if last_name and first_name and user_id:
+                st.session_state.last_name = last_name
+                st.session_state.first_name = first_name
+                st.session_state.user_id = user_id
                 st.session_state.page = 1
                 st.rerun()
             else:
