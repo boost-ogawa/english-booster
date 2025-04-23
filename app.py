@@ -203,6 +203,8 @@ elif st.session_state.page == 3:
                 st.session_state.page = 4
                 st.rerun()
 
+import plotly.express as px  # 折れ線グラフ描画ライブラリ
+
 # --- page == 4: 結果の表示と保存 (2カラム) ---
 elif st.session_state.page == 4:
     # CSVデータの読み込み
@@ -212,15 +214,14 @@ elif st.session_state.page == 4:
     if data is None:
         st.stop()
 
-    st.success("結果を記録しましょう。Restartを押すともう一度できます。")
+    st.success("結果を記録しました。Restartを押すともう一度できます。")
 
     col1, col2 = st.columns([2, 1])
     with col2:
         st.subheader("Result")
-        correct_answers_to_store = 0  # 初期値を設定
-        wpm = 0.0  # wpm の初期値を設定
+        correct_answers_to_store = 0
+        wpm = 0.0
 
-        # 開始時間と停止時間が記録されているか確認
         if st.session_state.start_time and st.session_state.stop_time:
             total_time = st.session_state.stop_time - st.session_state.start_time
             word_count = len(data['main'].split())
@@ -234,7 +235,6 @@ elif st.session_state.page == 4:
             st.write(f"Q2: {'✅ Correct' if correct2 else '❌ Incorrect'}")
             correct_answers_to_store = int(correct1) + int(correct2)
 
-            # Firestoreに結果を保存
             if not st.session_state.submitted:
                 save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
                              st.session_state.first_name, st.session_state.last_name, st.session_state.user_id)
@@ -243,10 +243,31 @@ elif st.session_state.page == 4:
             st.error("測定時間が記録されていません。もう一度お試しください。")
 
         if st.button("Restart"):
-            st.session_state.page = 1  # ページ 1 から再開
+            st.session_state.page = 1
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.q1 = None
             st.session_state.q2 = None
             st.session_state.submitted = False
             st.rerun()
+
+    with col1:
+        st.subheader(f"{st.session_state.first_name}さんのWPM推移")
+        # Firestoreから該当ユーザーの履歴データを取得
+        results_ref = db.collection("results")
+        query = results_ref.where("user_id", "==", st.session_state.user_id).order_by("timestamp")
+        user_history = query.get()
+
+        if user_history:
+            history_data = [doc.to_dict() for doc in user_history]
+            df_history = pd.DataFrame(history_data)
+
+            # timestampをdatetime型に変換し、時刻部分までを表示
+            df_history['datetime'] = pd.to_datetime(df_history['timestamp']).dt.strftime('%Y-%m-%d %H:%M')
+
+            # 折れ線グラフの作成
+            fig = px.line(df_history, x='datetime', y='wpm', title='WPMの推移')
+            fig.update_layout(xaxis_title='時間', yaxis_title='WPM', yaxis_range=[0, 300])
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("まだ履歴データがありません。")
