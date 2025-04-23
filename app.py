@@ -59,6 +59,21 @@ def load_material(data_path, row_index):
     except Exception as e:
         st.error(f"予期しないエラーが発生しました: {e}")
         return None
+# ユーザーの登録確認
+@st.cache_data
+def load_user_ids_from_github(github_raw_url):
+    try:
+        df = pd.read_csv(github_raw_url)
+        if 'user_id' in df.columns:
+            return df['user_id'].tolist()
+        else:
+            st.error("CSVファイルに 'user_id' カラムが存在しません。")
+            return []
+    except Exception as e:
+        st.error(f"GitHubからのユーザーIDリストの読み込みに失敗しました: {e}")
+        return []
+
+GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user.csv"
 
 # セッション変数の初期化
 if "row_to_load" not in st.session_state:
@@ -97,11 +112,14 @@ if st.session_state.page == 0:
         user_id = st.text_input("ID", key="user_id_input", value=st.session_state.user_id)
         if st.button("次へ"):
             if last_name and first_name and user_id:
-                st.session_state.last_name = last_name
-                st.session_state.first_name = first_name
-                st.session_state.user_id = user_id
-                st.session_state.page = 1
-                st.rerun()
+                if user_id in valid_user_ids:
+                    st.session_state.last_name = last_name
+                    st.session_state.first_name = first_name
+                    st.session_state.user_id = user_id
+                    st.session_state.page = 1
+                    st.rerun()
+                else:
+                    st.error(f"入力されたID '{user_id}' は登録されていません。")
             else:
                 st.warning("すべての項目を入力してください。")
 
