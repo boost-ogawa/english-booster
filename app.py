@@ -29,10 +29,18 @@ def save_results(wpm, correct_answers, material_id, first_name, last_name, user_
         "material_id": material_id,       # 素材ID（何を読んだか）
         "wpm": round(wpm, 1),             # WPM（1分間の単語数）小数第1位まで
         "correct_answers": correct_answers,  # 正解数
-        "first_name": first_name,
-        "last_name": last_name,
-        "user_id": user_id
+        "first_name": first_name,         # 名前（姓）
+        "last_name": last_name,           # 名前（名）
+        "user_id": user_id                # ユーザーID
     }
+
+    try:
+        # Firestoreの"results"コレクションに保存
+        db.collection("results").add(result_data)
+        print("結果が保存されました")
+    except Exception as e:
+        # エラーハンドリング（保存に失敗した場合）
+        st.error(f"結果の保存に失敗しました: {e}")
 
     # Firestoreの"results"コレクションに保存
     db.collection("results").add(result_data)
@@ -46,22 +54,26 @@ def load_material(data_path, row_index):
     """CSVファイルから指定された行のデータを読み込む関数"""
     try:
         df = pd.read_csv(data_path)
-        data = df.iloc[row_index]
-        return data
+        if row_index < len(df):
+            return df.iloc[row_index]
+        else:
+            st.error(f"指定された行番号 ({row_index + 1}) はファイルに存在しません。")
+            return None
     except FileNotFoundError:
         st.error(f"ファイル '{data_path}' が見つかりません。")
         return None
-    except IndexError:
-        st.error(f"指定された行番号 ({row_index + 1}) はファイルに存在しません。")
+    except Exception as e:
+        st.error(f"予期しないエラーが発生しました: {e}")
         return None
 
-# --- row_to_load をセッションで管理 ---
+# セッション変数の初期化
 if "row_to_load" not in st.session_state:
     st.session_state.row_to_load = 1
 
-# --- ページ状態などのセッション初期化 ---
 if "page" not in st.session_state:
-    st.session_state.page = 0  # ← 初期ページを「0」に変更（ここがポイント！）
+    st.session_state.page = 0  # 初期ページを0に設定
+
+# その他のセッション変数
 if "start_time" not in st.session_state:
     st.session_state.start_time = None
 if "stop_time" not in st.session_state:
