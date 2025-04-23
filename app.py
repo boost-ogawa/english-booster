@@ -255,7 +255,7 @@ elif st.session_state.page == 4:
             st.session_state.submitted = False
             st.rerun()
 
-    with col1:
+with col1:
         st.subheader(f"{st.session_state.first_name}さんのWPM推移")
 
         current_user_id = st.session_state.get('user_id')
@@ -264,30 +264,31 @@ elif st.session_state.page == 4:
 
         if current_user_id:
             try:
-                df = pd.read_csv(GITHUB_CSV_URL)
-                user_data = df[df['user_id'] == current_user_id].iloc[0]
+                df_results = pd.read_csv(GITHUB_CSV_URL)
+                user_results = df_results[df_results['user_id'] == current_user_id]
 
-                # 過去のデータを整形
-                past_months = df.columns[1:]
-                past_wpm = [user_data[month] for month in past_months]
-                df_past = pd.DataFrame({'月': past_months, 'WPM': past_wpm, '種別': '過去'})
+                if not user_results.empty:
+                    # 過去のデータを整形
+                    past_data = {}
+                    for col in user_results.columns:
+                        if col != 'user_id':
+                            past_data[col] = user_results[col].iloc[0]
 
-                # 今回のデータを追加
-                if latest_wpm is not None and latest_month:
-                    df_current = pd.DataFrame({'月': [latest_month], 'WPM': [latest_wpm], '種別': '今回'})
-                    df_graph = pd.concat([df_past, df_current], ignore_index=True)
-                else:
-                    df_graph = df_past.copy()
+                    df_past = pd.DataFrame(list(past_data.items()), columns=['月', 'WPM'])
+                    df_past['種別'] = '過去'
 
-                if not df_graph.empty:
-                    fig = px.line(df_graph, x='月', y='WPM', color='種別',
-                                  title=f"{st.session_state.first_name}さんのWPM推移")
-                    fig.update_layout(yaxis_title='WPM', yaxis_range=[0, 300])
-                    st.plotly_chart(fig, use_container_width=True)
+                    # 今回のデータを追加
+                    if latest_wpm is not None and latest_month:
+                        df_current = pd.DataFrame([{'月': latest_month, 'WPM': latest_wpm, '種別': '今回'}])
+                        df_display = pd.concat([df_past, df_current], ignore_index=True)
+                    else:
+                        df_display = df_past.copy()
+
+                    st.dataframe(df_display)
                 else:
                     st.info("まだ学習履歴がありません。")
 
             except Exception as e:
-                st.error(f"グラフデータの読み込みまたは処理に失敗しました: {e}")
+                st.error(f"データ読み込みまたは処理に失敗しました: {e}")
         else:
             st.info("ユーザーIDがありません。")
