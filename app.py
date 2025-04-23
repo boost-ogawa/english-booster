@@ -199,6 +199,8 @@ elif st.session_state.page == 4:
     col1, col2 = st.columns([2, 1])
     with col2:
         st.subheader("Result")
+        correct_answers_to_store = 0  # 初期値を設定
+
         # 開始時間と停止時間が記録されているか確認
         if st.session_state.start_time and st.session_state.stop_time:
             total_time = st.session_state.stop_time - st.session_state.start_time
@@ -211,6 +213,7 @@ elif st.session_state.page == 4:
             correct2 = st.session_state.q2 == data['A2']
             st.write(f"Q1: {'✅ Correct' if correct1 else '❌ Incorrect'}")
             st.write(f"Q2: {'✅ Correct' if correct2 else '❌ Incorrect'}")
+            correct_answers_to_store = int(correct1) + int(correct2)
 
             # Firestoreに結果を保存
             if not st.session_state.submitted:
@@ -228,3 +231,4 @@ elif st.session_state.page == 4:
             st.session_state.q2 = None
             st.session_state.submitted = False
             st.rerun()
+            
