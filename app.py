@@ -77,17 +77,11 @@ def load_user_ids_from_github(github_raw_url):
 
 GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user.csv"
 
-if 'valid_user_ids' not in st.session_state:
-    st.session_state['valid_user_ids'] = load_user_ids_from_github(GITHUB_USER_CSV_URL)
-
-# セッション変数の初期化
+# --- セッション変数の初期化 ---
 if "row_to_load" not in st.session_state:
-    st.session_state.row_to_load = 0  # 開始行を0に設定
-
+    st.session_state.row_to_load = 0
 if "page" not in st.session_state:
-    st.session_state.page = 0  # 初期ページを0に設定
-
-# その他のセッション変数
+    st.session_state.page = 0
 if "start_time" not in st.session_state:
     st.session_state.start_time = None
 if "stop_time" not in st.session_state:
@@ -98,14 +92,14 @@ if "q2" not in st.session_state:
     st.session_state.q2 = None
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
-
-# --- セッションに名前・IDの初期化 ---
 if "last_name" not in st.session_state:
     st.session_state.last_name = ""
 if "first_name" not in st.session_state:
     st.session_state.first_name = ""
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
+if 'valid_user_ids' not in st.session_state:
+    st.session_state['valid_user_ids'] = load_user_ids_from_github(GITHUB_USER_CSV_URL)
 
 # --- page == 0: 名前とIDの入力フォーム ---
 if st.session_state.page == 0:
