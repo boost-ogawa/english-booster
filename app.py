@@ -8,9 +8,7 @@ from firebase_admin import credentials, firestore
 import json
 import tempfile
 import re  # 正規表現ライブラリ
-
-# --- GitHub の CSV ファイルの Raw URL ---
-GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
+import plotly.express as px
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -207,6 +205,7 @@ elif st.session_state.page == 3:
                 st.rerun()
 
 # --- page == 4: 結果の表示と保存 (2カラム) ---
+
 elif st.session_state.page == 4:
     # CSVデータの読み込み
     DATA_PATH = "data.csv"
@@ -215,14 +214,15 @@ elif st.session_state.page == 4:
     if data is None:
         st.stop()
 
-    st.success("結果を記録しました。Restartを押すともう一度できます。")
+    st.success("結果を記録しましょう。Restartを押すともう一度できます。")
 
     col1, col2 = st.columns([2, 1])
     with col2:
         st.subheader("Result")
-        correct_answers_to_store = 0
-        wpm = 0.0
+        correct_answers_to_store = 0  # 初期値を設定
+        wpm = 0.0  # wpm の初期値を設定
 
+        # 開始時間と停止時間が記録されているか確認
         if st.session_state.start_time and st.session_state.stop_time:
             total_time = st.session_state.stop_time - st.session_state.start_time
             word_count = len(data['main'].split())
@@ -236,58 +236,19 @@ elif st.session_state.page == 4:
             st.write(f"Q2: {'✅ Correct' if correct2 else '❌ Incorrect'}")
             correct_answers_to_store = int(correct1) + int(correct2)
 
+            # Firestoreに結果を保存
             if not st.session_state.submitted:
                 save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
                              st.session_state.first_name, st.session_state.last_name, st.session_state.user_id)
                 st.session_state.submitted = True
-                st.session_state.latest_wpm = wpm  # 最新の WPM をセッションステートに保存
-                st.session_state.latest_timestamp = datetime.now().strftime('%Y年%m月') # 最新の年月を保存
         else:
             st.error("測定時間が記録されていません。もう一度お試しください。")
 
         if st.button("Restart"):
-            st.session_state.page = 1
+            st.session_state.page = 1  # ページ 1 から再開
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.q1 = None
             st.session_state.q2 = None
             st.session_state.submitted = False
             st.rerun()
-
-with col1:
-        st.subheader(f"{st.session_state.first_name}さんのWPM推移")
-
-        current_user_id = st.session_state.get('user_id')
-        latest_wpm = st.session_state.get('latest_wpm')
-        latest_month = st.session_state.get('latest_timestamp')
-
-        if current_user_id:
-            try:
-                df_results = pd.read_csv(GITHUB_CSV_URL)
-                user_results = df_results[df_results['user_id'] == current_user_id]
-
-                if not user_results.empty:
-                    # 過去のデータを整形
-                    past_data = {}
-                    for col in user_results.columns:
-                        if col != 'user_id':
-                            past_data[col] = user_results[col].iloc[0]
-
-                    df_past = pd.DataFrame(list(past_data.items()), columns=['月', 'WPM'])
-                    df_past['種別'] = '過去'
-
-                    # 今回のデータを追加
-                    if latest_wpm is not None and latest_month:
-                        df_current = pd.DataFrame([{'月': latest_month, 'WPM': latest_wpm, '種別': '今回'}])
-                        df_display = pd.concat([df_past, df_current], ignore_index=True)
-                    else:
-                        df_display = df_past.copy()
-
-                    st.dataframe(df_display)
-                else:
-                    st.info("まだ学習履歴がありません。")
-
-            except Exception as e:
-                st.error(f"データ読み込みまたは処理に失敗しました: {e}")
-        else:
-            st.info("ユーザーIDがありません。")
