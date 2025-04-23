@@ -4,11 +4,19 @@ import time
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore
+import json
+import tempfile
 
 # --- Firebaseの初期化 ---
-firebase_creds = st.secrets["firebase"]  # secrets.tomlからfirebaseの設定を取得
-cred = credentials.Certificate(firebase_creds)  # 認証情報を元にFirebaseを初期化
-firebase_admin.initialize_app(cred)
+# secrets から認証情報を取得し、一時ファイルに保存
+firebase_creds_dict = st.secrets["firebase"]
+with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
+    json.dump(firebase_creds_dict, f)
+    f.flush()
+    cred = credentials.Certificate(f.name)
+    firebase_admin.initialize_app(cred)
+
+# Firestore クライアントの取得
 db = firestore.client()
 
 # --- Firestoreに結果を保存する関数 ---
