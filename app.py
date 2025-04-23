@@ -8,15 +8,14 @@ import json
 import tempfile
 
 # --- Firebaseの初期化 ---
-# secrets から認証情報を取得し、一時ファイルに保存
-firebase_creds_dict = dict(st.secrets["firebase"])  # ←ここで明示的に dict に変換！
+firebase_creds_dict = dict(st.secrets["firebase"])
 with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
     json.dump(firebase_creds_dict, f)
     f.flush()
     cred = credentials.Certificate(f.name)
-    firebase_admin.initialize_app(cred)
+    if not firebase_admin._apps:  # ← すでに初期化されていないか確認
+        firebase_admin.initialize_app(cred)
 
-# Firestore クライアントの取得
 db = firestore.client()
 
 # --- Firestoreに結果を保存する関数 ---
