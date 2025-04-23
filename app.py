@@ -62,7 +62,7 @@ def load_material(data_path, row_index):
 
 # セッション変数の初期化
 if "row_to_load" not in st.session_state:
-    st.session_state.row_to_load = 1
+    st.session_state.row_to_load = 0  # 開始行を0に設定
 
 if "page" not in st.session_state:
     st.session_state.page = 0  # 初期ページを0に設定
@@ -103,19 +103,18 @@ if st.session_state.page == 0:
             else:
                 st.warning("すべての項目を入力してください。")
 
-# --- page == 1: 学習内容の表示とスタートボタンの処理 ---
+# --- page == 1: 挨拶とスタートボタン ---
 elif st.session_state.page == 1:
     st.title("English Booster スピード測定")
-
-    # 学習者の名前を挨拶
     if st.session_state.first_name:
-        # ここで初回かどうかの判定を入れることも可能ですが、今回は簡易的に名前があれば表示
         st.subheader(f"こんにちは、{st.session_state.first_name}さん！")
-        st.info("Startボタンを押して英文を読みましょう.")
-    else:
-        st.info("Startボタンを押して英文を読みましょう.")
-        st.info("※ 初めての方は、前の画面で名前とIDを正しく入力してください。")
+    st.info("下のStartボタンを押して英文を読みましょう.")
+    if st.button("Start"):
+        st.session_state.page = 2
+        st.rerun()
 
+# --- page == 2: 英文表示とStopボタン ---
+elif st.session_state.page == 2:
     # CSVデータの読み込み
     DATA_PATH = "data.csv"
     data = load_material(DATA_PATH, int(st.session_state.row_to_load))
@@ -123,53 +122,35 @@ elif st.session_state.page == 1:
     if data is None:
         st.stop()
 
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.markdown(
-            f"""
-            <style>
-            .custom-paragraph {{
-                font-family: Georgia, serif;
-                line-height: 1.8;
-                font-size: 1.3rem;
-            }}
-            </style>
-            <div class="custom-paragraph">
-            {data['main']}
-            </div>
-            """, unsafe_allow_html=True
-        )
-        if st.button("Start", key="start_button"):
-            st.session_state.start_time = time.time()
-            st.session_state.page = 2
-            st.rerun()
-
-# --- page == 2: 読書時間の計測 ---
-elif st.session_state.page == 2:
     st.info("読み終わったらStopボタンを押しましょう")
-    col1, _ = st.columns(2)
-    with col1:
-        st.markdown(
-            f"""
-            <style>
-            .custom-paragraph {{
-                font-family: Georgia, serif;
-                line-height: 1.8;
-                font-size: 1.3rem;
-            }}
-            </style>
-            <div class="custom-paragraph">
-            {data['main']}
-            </div>
-            """, unsafe_allow_html=True
-        )
-        if st.button("Stop"):
-            st.session_state.stop_time = time.time()
-            st.session_state.page = 3
-            st.rerun()
+    st.markdown(
+        f"""
+        <style>
+        .custom-paragraph {{
+            font-family: Georgia, serif;
+            line-height: 1.8;
+            font-size: 1.3rem;
+        }}
+        </style>
+        <div class="custom-paragraph">
+        {data['main']}
+        </div>
+        """, unsafe_allow_html=True
+    )
+    if st.button("Stop"):
+        st.session_state.stop_time = time.time()
+        st.session_state.page = 3
+        st.rerun()
 
 # --- page == 3: クイズの表示と解答処理 ---
 elif st.session_state.page == 3:
+    # CSVデータの読み込み
+    DATA_PATH = "data.csv"
+    data = load_material(DATA_PATH, int(st.session_state.row_to_load))
+
+    if data is None:
+        st.stop()
+
     st.info("問題を解いてSubmitボタンを押しましょう")
     col1, col2 = st.columns([2, 1])
     with col1:
@@ -201,6 +182,13 @@ elif st.session_state.page == 3:
 
 # --- page == 4: 結果の表示と保存 ---
 elif st.session_state.page == 4:
+    # CSVデータの読み込み
+    DATA_PATH = "data.csv"
+    data = load_material(DATA_PATH, int(st.session_state.row_to_load))
+
+    if data is None:
+        st.stop()
+
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
 
     col1, col2 = st.columns([2, 1])
@@ -232,7 +220,7 @@ elif st.session_state.page == 4:
             st.session_state.submitted = True
 
         if st.button("Restart"):
-            st.session_state.page = 1
+            st.session_state.page = 0  # 最初に戻る
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.q1 = None
