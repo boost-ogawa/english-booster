@@ -210,7 +210,8 @@ elif st.session_state.page == 4:
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
     col1, col2 = st.columns([2, 1])
     with col2:
-    
+        st.subheader(f"{st.session_state.first_name}さんのWPM推移")
+
         current_user_id = st.session_state.get('user_id')
 
         if current_user_id:
@@ -260,13 +261,13 @@ elif st.session_state.page == 4:
             total_time = st.session_state.stop_time - st.session_state.start_time
             word_count = len(data['main'].split())
             wpm = (word_count / total_time) * 60
-            st.write(f"Words read: {word_count}")
-            st.write(f"Time taken: {total_time:.2f} seconds")
-            st.write(f"WPM: **{wpm:.1f}** words per minute")
+            st.write(f"今回の文章の総単語数: {word_count}")
+            st.write(f"文章を読んだ所要時間: {total_time:.2f} seconds")
+            st.write(f"１分間あたりの単語数: **{wpm:.1f}** words per minute")
             correct1 = st.session_state.q1 == data['A1']
             correct2 = st.session_state.q2 == data['A2']
-            st.write(f"Q1: {'✅ Correct' if correct1 else '❌ Incorrect'}")
-            st.write(f"Q2: {'✅ Correct' if correct2 else '❌ Incorrect'}")
+            st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
+            st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
             correct_answers_to_store = int(correct1) + int(correct2)
 
             # Firestoreに結果を保存
