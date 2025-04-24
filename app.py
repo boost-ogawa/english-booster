@@ -207,6 +207,7 @@ elif st.session_state.page == 3:
 
 # --- page == 4: 結果の表示と保存 (2カラム) ---
 elif st.session_state.page == 4:
+    st.success("結果を記録しましょう。Restartを押すともう一度できます。")
     col1, col2 = st.columns([2, 1])
     with col1:
         st.subheader(f"{st.session_state.first_name}さんのWPM推移（過去データ）")
@@ -221,6 +222,13 @@ elif st.session_state.page == 4:
                 if not user_results.empty:
                     # user_id以外のカラムを抽出して転置して表示
                     past_data_transposed = user_results.drop(columns=['user_id']).T
+                    # 最初の行のインデックスを "1分当たりの単語数" などに変更
+                    if 0 in past_data_transposed.index:
+                        past_data_transposed = past_data_transposed.rename(index={0: '1分当たりの単語数'})
+                        # 列の幅を自動調整する設定
+                        column_config = {}
+                        for col in past_data_transposed.columns:
+                            column_config[col] = st.column_config.Column(width="auto")
                     st.dataframe(past_data_transposed)
                 else:
                     st.info("まだ学習履歴がありません。")
@@ -237,9 +245,6 @@ elif st.session_state.page == 4:
     if data is None:
         st.stop()
 
-    st.success("結果を記録しましょう。Restartを押すともう一度できます。")
-
-    col1, col2 = st.columns([2, 1])
     with col2:
         st.subheader("Result")
         correct_answers_to_store = 0  # 初期値を設定
