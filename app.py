@@ -220,27 +220,25 @@ elif st.session_state.page == 4:
                 user_results = df_results[df_results['user_id'] == current_user_id]
 
                 if not user_results.empty:
-                    past_data_transposed = user_results.drop(columns=['user_id']).T
+                    past_data = user_results.drop(columns=['user_id'])
+                    if not past_data.empty:
+                        past_data_transposed = past_data.T
+                        if not past_data_transposed.empty:
+                            # 最初の行をヘッダーとして扱う
+                            new_header = past_data_transposed.iloc[0]
+                            past_data_transposed = past_data_transposed[1:]
+                            past_data_transposed.columns = new_header
 
-                    # インデックスの変更
-                    index_mapping = {
-                        "timestamp": "日時",
-                        "wpm": "1分当たりの単語数",
-                        "correct_answers": "正答数",
-                        "material_id": "教材 ID"
-                        # 必要に応じて他のインデックスも追加
-                    }
-                    past_data_transposed = past_data_transposed.rename(index=index_mapping)
+                            # 列の幅を自動調整する設定
+                            column_config = {}
+                            for col in past_data_transposed.columns:
+                                column_config[col] = st.column_config.Column(width="auto")
 
-                    # 列の幅を自動調整する設定
-                    column_config = {}
-                    for col in past_data_transposed.columns:
-                        column_config[col] = st.column_config.Column(width="auto")
-
-                    st.dataframe(past_data_transposed, column_config=column_config)
-                else:
-                    st.info("まだ学習履歴がありません。")
-
+                            st.dataframe(past_data_transposed, column_config=column_config)
+                        else:
+                            st.info("まだ学習履歴がありません。")
+                    else:
+                        st.info("まだ学習履歴がありません。")
             except Exception as e:
                 st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
         else:
