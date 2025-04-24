@@ -210,7 +210,6 @@ elif st.session_state.page == 4:
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
     col1, col2 = st.columns([2, 1])
     with col1:
-
         st.subheader(f"{st.session_state.first_name}さんのWPM推移（過去データ）")
 
         current_user_id = st.session_state.get('user_id')
@@ -240,6 +239,7 @@ elif st.session_state.page == 4:
                             st.info("まだ学習履歴がありません。")
                     else:
                         st.info("まだ学習履歴がありません。")
+
             except Exception as e:
                 st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
         else:
