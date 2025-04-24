@@ -63,19 +63,16 @@ def load_material(data_path, row_index):
         st.error(f"予期しないエラーが発生しました: {e}")
         return None
 
-# --- GitHubからユーザーIDリストをロードし、セッションステートに格納 ---
+# --- GitHubからニックネームとIDでユーザー情報をロードする関数 ---
 @st.cache_data
-def load_user_ids_from_github(github_raw_url):
+def get_user_data(github_raw_url, nickname, user_id):
     try:
         df = pd.read_csv(github_raw_url)
-        if 'user_id' in df.columns:
-            return df['user_id'].tolist()
-        else:
-            st.error("CSVファイルに 'user_id' カラムが存在しません。")
-            return []
-    except Exception as e:
-        st.error(f"GitHubからのユーザーIDリストの読み込みに失敗しました: {e}")
-        return []
+        user = df[(df['nickname'] == nickname) & (df['user_id'] == user_id)].iloc[0].to_dict()
+        return user
+    except (IndexError, FileNotFoundError, KeyError) as e:
+        print(f"ユーザーデータ取得エラー: {e}")
+        return None
 
 GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user.csv"
 
@@ -104,31 +101,34 @@ if "first_name" not in st.session_state:
     st.session_state.first_name = ""
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
-if 'valid_user_ids' not in st.session_state:
-    st.session_state['valid_user_ids'] = load_user_ids_from_github(GITHUB_USER_CSV_URL)
 
-# --- page == 0: 名前とIDの入力フォーム ---
+
+# --- page == 0: ニックネームとIDの入力フォーム ---
 if st.session_state.page == 0:
-    st.title("名前とIDを入力してください")
+    st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
-        last_name = st.text_input("姓", key="last_name_input", value=st.session_state.last_name)
-        first_name = st.text_input("名", key="first_name_input", value=st.session_state.first_name)
-        user_id = st.text_input("ID", key="user_id_input", value=st.session_state.user_id)
+        nickname = st.text_input("ニックネーム (半角英数字)", key="nickname_input", value=st.session_state.first_name)
+        user_id = st.text_input("ID (半角英数字)", key="user_id_input", value=st.session_state.user_id)
         if st.button("次へ"):
-            if last_name and first_name and user_id:
-                if not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
+            if nickname and user_id:
+                if not re.fullmatch(r'[0-9a-zA-Z]+', nickname):
+                    st.error("ニックネームは半角英数字で入力してください。")
+                elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
                     st.error("IDは半角英数字で入力してください。")
-                elif user_id.strip() in st.session_state.get('valid_user_ids', []):
-                    st.session_state.last_name = last_name
-                    st.session_state.first_name = first_name
-                    st.session_state.user_id = user_id.strip()
-                    st.session_state.page = 1
-                    st.rerun()
                 else:
-                    st.error(f"入力されたID '{user_id}' は登録されていません。")
+                    user_data = get_user_data(GITHUB_USER_CSV_URL, nickname.strip(), user_id.strip())
+                    if user_data:
+                        st.session_state.first_name = nickname.strip()
+                        st.session_state.last_name = ""
+                        st.session_state.user_id = user_id.strip()
+                        st.session_state.page = 1
+                        st.rerun()
+                    else:
+                        st.error("ニックネームまたはIDが正しくありません。")
             else:
-                st.warning("すべての項目を入力してください。")
+                st.warning("ニックネームとIDを入力してください。")
+                
 # --- page == 1: 挨拶とスタートボタン ---
 elif st.session_state.page == 1:
     st.title("English Booster スピード測定")
