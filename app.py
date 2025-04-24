@@ -79,9 +79,13 @@ def load_user_ids_from_github(github_raw_url):
 
 GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user.csv"
 
-# --- セッション変数の初期化 ---
+# --- セッション変数の初期化 読み込みデータの変更---
 if "row_to_load" not in st.session_state:
     st.session_state.row_to_load = 0
+
+if "fixed_row_index" not in st.session_state:
+    st.session_state.fixed_row_index = 1  # ← 固定の行番号を 1 に設定（2行目）
+
 if "page" not in st.session_state:
     st.session_state.page = 0
 if "start_time" not in st.session_state:
@@ -140,7 +144,7 @@ elif st.session_state.page == 1:
 elif st.session_state.page == 2:
     # CSVデータの読み込み
     DATA_PATH = "data.csv"
-    data = load_material(DATA_PATH, int(st.session_state.row_to_load))
+    data = load_material(DATA_PATH, st.session_state.fixed_row_index)  # ← 変更
 
     if data is None:
         st.stop()
@@ -171,7 +175,7 @@ elif st.session_state.page == 2:
 elif st.session_state.page == 3:
     # CSVデータの読み込み
     DATA_PATH = "data.csv"
-    data = load_material(DATA_PATH, int(st.session_state.row_to_load))
+    data = load_material(DATA_PATH, st.session_state.fixed_row_index)  # ← 変更
 
     if data is None:
         st.stop()
@@ -246,7 +250,7 @@ elif st.session_state.page == 4:
             st.info("ユーザーIDがありません。")  
     with col2:
         DATA_PATH = "data.csv"
-    data = load_material(DATA_PATH, int(st.session_state.row_to_load))
+    data = load_material(DATA_PATH, st.session_state.fixed_row_index)  # ← 変更
 
     if data is None:
         st.stop()
