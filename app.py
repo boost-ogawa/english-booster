@@ -212,7 +212,7 @@ elif st.session_state.page == 3:
 # --- page == 4: 結果の表示と保存 (2カラム) ---
 elif st.session_state.page == 4:
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([1, 1])
     with col2:
         st.subheader(f"{st.session_state.first_name}さんのWPM推移")
 
