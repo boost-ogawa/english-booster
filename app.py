@@ -219,9 +219,9 @@ elif st.session_state.page == 4:
                 user_results = df_results[df_results['user_id'] == current_user_id]
 
                 if not user_results.empty:
-                    # user_id以外のカラムを抽出して表示
-                    past_data = user_results.drop(columns=['user_id'])
-                    st.dataframe(past_data)
+                    # user_id以外のカラムを抽出して転置して表示
+                    past_data_transposed = user_results.drop(columns=['user_id']).T
+                    st.dataframe(past_data_transposed)
                 else:
                     st.info("まだ学習履歴がありません。")
 
@@ -229,7 +229,7 @@ elif st.session_state.page == 4:
                 st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
         else:
             st.info("ユーザーIDがありません。")
-
+    
     with col2:
         DATA_PATH = "data.csv"
     data = load_material(DATA_PATH, int(st.session_state.row_to_load))
