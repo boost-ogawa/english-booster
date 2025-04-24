@@ -217,32 +217,37 @@ elif st.session_state.page == 4:
         if current_user_id:
             try:
                 df_results = pd.read_csv(GITHUB_CSV_URL)
-                user_results = df_results[df_results['user_id'] == current_user_id]
+                user_results = df_results[df_results['user_id'] == current_user_id].copy() # 警告回避のためcopy()
 
                 if not user_results.empty:
-                    past_data = user_results.drop(columns=['user_id'])
-                    if not past_data.empty:
-                        past_data_transposed = past_data.T
-                        if not past_data_transposed.empty:
-                            # 最初の行をヘッダーとして扱う
-                            new_header = past_data_transposed.iloc[0]
-                            past_data_transposed = past_data_transposed[1:]
-                            past_data_transposed.columns = new_header
+                    # 'timestamp' をインデックスに設定し、元の 'timestamp' カラムを削除
+                    if 'timestamp' in user_results.columns:
+                        user_results = user_results.set_index('timestamp')
 
-                            # 列の幅を自動調整する設定
-                            column_config = {}
-                            for col in past_data_transposed.columns:
-                                column_config[col] = st.column_config.Column(width="auto")
+                    past_data_transposed = user_results.drop(columns=['user_id']).T
 
-                            st.dataframe(past_data_transposed, column_config=column_config)
-                        else:
-                            st.info("まだ学習履歴がありません。")
-                    else:
-                        st.info("まだ学習履歴がありません。")
+                    # インデックスの変更
+                    index_mapping = {
+                        "wpm": "1分当たりの単語数",
+                        "correct_answers": "正答数",
+                        "material_id": "教材 ID"
+                        # 必要に応じて他のインデックスも追加
+                    }
+                    past_data_transposed = past_data_transposed.rename(index=index_mapping)
+
+                    # 列の幅を自動調整する設定
+                    column_config = {}
+                    for col in past_data_transposed.columns:
+                        column_config[col] = st.column_config.Column(width="auto")
+
+                    st.dataframe(past_data_transposed, column_config=column_config)
+                else:
+                    st.info("まだ学習履歴がありません。")
+
             except Exception as e:
                 st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
         else:
-            st.info("ユーザーIDがありません。")  
+            st.info("ユーザーIDがありません。")
     with col2:
         DATA_PATH = "data.csv"
     data = load_material(DATA_PATH, int(st.session_state.row_to_load))
