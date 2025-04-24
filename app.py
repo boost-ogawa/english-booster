@@ -128,7 +128,7 @@ if st.session_state.page == 0:
                         st.error("ニックネームまたはIDが正しくありません。")
             else:
                 st.warning("ニックネームとIDを入力してください。")
-                
+
 # --- page == 1: 挨拶とスタートボタン ---
 elif st.session_state.page == 1:
     st.title("English Booster スピード測定")
@@ -224,43 +224,34 @@ elif st.session_state.page == 4:
                 user_results = df_results[df_results['user_id'] == current_user_id]
 
                 if not user_results.empty:
-                    past_data = user_results.drop(columns=['user_id'])
-                    if not past_data.empty:
-                        past_data_transposed = past_data.T
-                        if not past_data_transposed.empty:
-                            # 最初の行をヘッダーとして扱う
-                            new_header = past_data_transposed.iloc[0]
-                            past_data_transposed = past_data_transposed[1:]
-                            past_data_transposed.columns = new_header
-
-                            # 列の幅を自動調整する設定
-                            column_config = {}
-                            for col in past_data_transposed.columns:
-                                column_config[col] = st.column_config.Column(width="auto")
-
-                            st.dataframe(past_data_transposed, column_config=column_config)
-                        else:
-                            st.info("まだ学習履歴がありません。")
+                    # 'user_id' と '実施月' カラムを除外してWPMのデータのみ抽出
+                    wpm_history = user_results.drop(columns=['user_id', '実施月'], errors='ignore')
+                    if not wpm_history.empty:
+                        # 転置して表示しやすい形にする
+                        wpm_history_transposed = wpm_history.T
+                        wpm_history_transposed.columns = [f"WPM"] # カラム名をWPMに設定
+                        st.dataframe(wpm_history_transposed)
                     else:
                         st.info("まだ学習履歴がありません。")
+                else:
+                    st.info("まだ学習履歴がありません。")
 
             except Exception as e:
                 st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
         else:
-            st.info("ユーザーIDがありません。")  
-    with col2:
-        DATA_PATH = "data.csv"
-    data = load_material(DATA_PATH, st.session_state.fixed_row_index)  # ← 変更
-
-    if data is None:
-        st.stop()
+            st.info("ユーザーIDがありません。")
 
     with col1:
-        st.subheader("Result")
-        correct_answers_to_store = 0  # 初期値を設定
-        wpm = 0.0  # wpm の初期値を設定
+        DATA_PATH = "data.csv"
+        data = load_material(DATA_PATH, st.session_state.fixed_row_index)
 
-        # 開始時間と停止時間が記録されているか確認
+        if data is None:
+            st.stop()
+
+        st.subheader("Result")
+        correct_answers_to_store = 0
+        wpm = 0.0
+
         if st.session_state.start_time and st.session_state.stop_time:
             total_time = st.session_state.stop_time - st.session_state.start_time
             word_count = len(data['main'].split())
@@ -274,7 +265,6 @@ elif st.session_state.page == 4:
             st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
             correct_answers_to_store = int(correct1) + int(correct2)
 
-            # Firestoreに結果を保存
             if not st.session_state.submitted:
                 save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
                              st.session_state.first_name, st.session_state.last_name, st.session_state.user_id)
@@ -282,11 +272,11 @@ elif st.session_state.page == 4:
         else:
             st.error("測定時間が記録されていません。もう一度お試しください。")
 
-        if st.button("Restart"):
-            st.session_state.page = 1  # ページ 1 から再開
-            st.session_state.start_time = None
-            st.session_state.stop_time = None
-            st.session_state.q1 = None
-            st.session_state.q2 = None
-            st.session_state.submitted = False
-            st.rerun()
+    if st.button("Restart"):
+        st.session_state.page = 1
+        st.session_state.start_time = None
+        st.session_state.stop_time = None
+        st.session_state.q1 = None
+        st.session_state.q2 = None
+        st.session_state.submitted = False
+        st.rerun()
