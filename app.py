@@ -51,7 +51,7 @@ def load_material(data_path, row_index):
     """CSVファイルから指定された行のデータを読み込む関数"""
     try:
         df = pd.read_csv(data_path)
-        if 0 <= row_index < len(df):
+        if 1 <= row_index < len(df):
             return df.iloc[row_index]
         else:
             st.error(f"指定された行番号 ({row_index + 1}) はファイルに存在しません。")
