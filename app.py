@@ -220,24 +220,31 @@ elif st.session_state.page == 4:
                 user_results = df_results[df_results['user_id'] == current_user_id]
 
                 if not user_results.empty:
-                    # user_id以外のカラムを抽出して転置して表示
                     past_data_transposed = user_results.drop(columns=['user_id']).T
-                    # 最初の行のインデックスを "1分当たりの単語数" などに変更
-                    if 0 in past_data_transposed.index:
-                        past_data_transposed = past_data_transposed.rename(index={0: '1分当たりの単語数'})
-                        # 列の幅を自動調整する設定
-                        column_config = {}
-                        for col in past_data_transposed.columns:
-                            column_config[col] = st.column_config.Column(width="auto")
-                    st.dataframe(past_data_transposed)
+
+                    # インデックスの変更
+                    index_mapping = {
+                        "timestamp": "日時",
+                        "wpm": "1分当たりの単語数",
+                        "correct_answers": "正答数",
+                        "material_id": "教材 ID"
+                        # 必要に応じて他のインデックスも追加
+                    }
+                    past_data_transposed = past_data_transposed.rename(index=index_mapping)
+
+                    # 列の幅を自動調整する設定
+                    column_config = {}
+                    for col in past_data_transposed.columns:
+                        column_config[col] = st.column_config.Column(width="auto")
+
+                    st.dataframe(past_data_transposed, column_config=column_config)
                 else:
                     st.info("まだ学習履歴がありません。")
 
             except Exception as e:
                 st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
         else:
-            st.info("ユーザーIDがありません。")
-    
+            st.info("ユーザーIDがありません。")  
     with col2:
         DATA_PATH = "data.csv"
     data = load_material(DATA_PATH, int(st.session_state.row_to_load))
