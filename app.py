@@ -170,13 +170,14 @@ def start_reading(page_number):
 # --- サイドバーのコンテンツ ---
 def sidebar_content():
     st.sidebar.header("メニュー")
-    st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})") # 外部リンク
-    st.sidebar.markdown("[利用規約](#利用規約)") # ページ内リンク (未実装)
-    st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)") # ページ内リンク (未実装)
+    st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})")
+    st.sidebar.markdown("[利用規約](#利用規約)")
+    st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)")
     st.sidebar.markdown("---")
     st.sidebar.subheader("その他")
-    st.sidebar.write("アプリバージョン: 1.0")
-
+    st.sidebar.write("English Booster")
+    st.sidebar.write("Ver.1_01")
+    
 # --- メインの処理 ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
@@ -216,7 +217,7 @@ elif st.session_state.page == 5:
             df_results = pd.read_csv(GITHUB_CSV_URL)
             user_results = df_results[df_results['user_id'] == current_user_id].copy()
             if not user_results.empty:
-                fig = px.line(user_results.tail(5), x='年月', y='WPM', title='WPM推移')
+                fig = px.line(user_results.tail(5), x='年月', y='WPM', title='のWPM推移')
                 fig.update_xaxes(tickangle=0)
                 st.plotly_chart(fig, use_container_width=True)
             else:
