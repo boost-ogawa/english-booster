@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px # Plotly Express をインポート
+import plotly.express as px
 import time
 from datetime import datetime
 from pytz import timezone
@@ -8,9 +8,10 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import json
 import tempfile
-import re  # 正規表現ライブラリ
+import re
 
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
+HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true" # raw URLを使用
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -46,6 +47,27 @@ def save_results(wpm, correct_answers, material_id, first_name, last_name, user_
 
 # --- ページ設定（最初に書く必要あり） ---
 st.set_page_config(page_title="Speed Reading App", layout="wide")
+
+# --- スタイル設定 ---
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #000D36; /* Streamlitアプリ全体の背景色 (濃い紺色) */
+        color: #ffffff; /* デフォルトの文字色を白に */
+    }
+    .custom-paragraph {
+        font-family: Georgia, serif;
+        line-height: 1.8;
+        font-size: 1.3rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# --- ヘッダー画像の表示 ---
+st.image(HEADER_IMAGE_URL, use_column_width=True)
 
 # --- データ読み込み関数 ---
 def load_material(data_path, row_index):
@@ -155,13 +177,6 @@ elif st.session_state.page == 2:
     with col1:
         st.markdown(
             f"""
-            <style>
-            .custom-paragraph {{
-                font-family: Georgia, serif;
-                line-height: 1.8;
-                font-size: 1.3rem;
-            }}
-            </style>
             <div class="custom-paragraph">
             {data['main']}
             </div>
@@ -186,13 +201,6 @@ elif st.session_state.page == 3:
     with col1:
         st.markdown(
             f"""
-            <style>
-            .custom-paragraph {{
-                font-family: Georgia, serif;
-                line-height: 1.8;
-                font-size: 1.3rem;
-            }}
-            </style>
             <div class="custom-paragraph">
             {data['main']}
             </div>
@@ -225,9 +233,8 @@ elif st.session_state.page == 4:
                 user_results = df_results[df_results['user_id'] == current_user_id].copy()
 
                 if not user_results.empty:
-                    # '年月' カラムを文字列として扱う
                     fig = px.line(user_results, x='年月', y='WPM', title='WPM推移')
-                    fig.update_xaxes(tickangle=-45) # 横軸ラベルを-45度回転
+                    fig.update_xaxes(tickangle=0)  # 横軸ラベルを水平に
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("まだ学習履歴がありません。")
