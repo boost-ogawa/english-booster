@@ -158,7 +158,6 @@ if "show_full_graph" not in st.session_state:
     st.session_state.show_full_graph = False
 if "set_page_key" not in st.session_state:
     st.session_state["set_page_key"] = "unique_key_speed" # 適当なユニークなキー
-
 # --- ページ遷移関数 ---
 def set_page(page_number):
     st.session_state.page = page_number
@@ -333,10 +332,3 @@ elif st.session_state.page == 3:
                 st.session_state.submitted = True
         else:
             st.error("測定時間が記録されていません。もう一度お試しください。")
-
-if st.button("Restart"):
-        st.session_state.page = 1
-        st.session_state.start_time = None
-        st.session_state.stop_time = None
-        st.session_state.submitted = False
-        st.rerun()
