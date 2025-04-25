@@ -78,16 +78,22 @@ st.markdown(
     }
     .sidebar-button {
         width: 100%;
-        padding: 10px;
+        padding: 5px 0; /* 上下のpaddingを小さく */
         margin-bottom: 5px;
         border: none;
-        border-radius: 5px;
-        background-color: #007BFF;
+        border-radius: 0; /* 角をなくす */
+        background-color: transparent; /* 背景を透明に */
         color: white;
         text-align: left;
+        font-size: 1rem; /* フォントサイズを調整 */
     }
     .sidebar-button:hover {
-        background-color: #0056b3;
+        background-color: #0056b31a; /* ホバー時の背景色を薄くする */
+    }
+    .sidebar-header {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 10px;
     }
     </style>
     """,
@@ -157,8 +163,9 @@ def set_page(page_number):
 
 # --- サイドバーのコンテンツ ---
 def sidebar_content():
-    st.sidebar.header("メニュー")
-    st.sidebar.markdown("**スピード測定開始**")
+    st.sidebar.markdown("<p class='sidebar-header'>メニュー</p>", unsafe_allow_html=True)
+    if st.sidebar.button("スピード測定開始", key="sidebar_start_button", use_container_width=True, className="sidebar-button", on_click=set_page, args=(1,)):
+        pass
     st.sidebar.markdown("[測定履歴](#測定履歴)") # ページ内リンク (未実装)
     st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})") # 外部リンク
     st.sidebar.markdown("[利用規約](#利用規約)") # ページ内リンク (未実装)
@@ -199,7 +206,7 @@ elif st.session_state.page == 5:
     st.title(f"こんにちは、{st.session_state.first_name}さん！")
     left_col, right_col = st.columns([1, 3])
     with left_col:
-        if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, type="primary", on_click=set_page, args=(1,)):
+        if st.button("スピード測定開始", key="main_start_button", use_container_width=True, type="primary", on_click=set_page, args=(1,)):
             pass
         st.markdown(
             f"""
