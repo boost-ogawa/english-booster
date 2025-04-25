@@ -288,7 +288,6 @@ elif st.session_state.page == 3:
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
     col1, col2 = st.columns([1, 2])
     with col2:
-        st.subheader(f"{st.session_state.first_name}さんのWPM推移")
         current_user_id = st.session_state.get('user_id')
         if current_user_id:
             try:
