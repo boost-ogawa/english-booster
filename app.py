@@ -11,7 +11,7 @@ import tempfile
 import re
 
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
-HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true" # raw URLを使用
+HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true"
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -99,13 +99,11 @@ def get_user_data(github_raw_url, nickname, user_id):
 
 GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user.csv"
 
-# --- セッション変数の初期化 読み込みデータの変更---
+# --- セッション変数の初期化 ---
 if "row_to_load" not in st.session_state:
     st.session_state.row_to_load = 0
-
 if "fixed_row_index" not in st.session_state:
-    st.session_state.fixed_row_index = 1  # ← 固定の行番号を 1 に設定（2行目）
-
+    st.session_state.fixed_row_index = 1
 if "page" not in st.session_state:
     st.session_state.page = 0
 if "start_time" not in st.session_state:
@@ -124,7 +122,6 @@ if "first_name" not in st.session_state:
     st.session_state.first_name = ""
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
-
 
 # --- page == 0: ニックネームとIDの入力フォーム ---
 if st.session_state.page == 0:
@@ -145,12 +142,20 @@ if st.session_state.page == 0:
                         st.session_state.first_name = nickname.strip()
                         st.session_state.last_name = ""
                         st.session_state.user_id = user_id.strip()
-                        st.session_state.page = 1
+                        st.session_state.page = 5  # front_page に遷移
                         st.rerun()
                     else:
                         st.error("ニックネームまたはIDが正しくありません。")
             else:
                 st.warning("ニックネームとIDを入力してください。")
+
+# --- page == 5: front_page (仮) ---
+elif st.session_state.page == 5:
+    st.title("Front Page (仮)")
+    st.write("ここに何らかのコンテンツを表示します。")
+    if st.button("次へ"):
+        st.session_state.page = 1  # こんにちはのページに遷移
+        st.rerun()
 
 # --- page == 1: 挨拶とスタートボタン ---
 elif st.session_state.page == 1:
@@ -165,9 +170,8 @@ elif st.session_state.page == 1:
 
 # --- page == 2: 英文表示とStopボタン (2カラム) ---
 elif st.session_state.page == 2:
-    # CSVデータの読み込み
     DATA_PATH = "data.csv"
-    data = load_material(DATA_PATH, st.session_state.fixed_row_index)  # ← 変更
+    data = load_material(DATA_PATH, st.session_state.fixed_row_index)
 
     if data is None:
         st.stop()
@@ -189,9 +193,8 @@ elif st.session_state.page == 2:
 
 # --- page == 3: クイズの表示と解答処理 (2カラム) ---
 elif st.session_state.page == 3:
-    # CSVデータの読み込み
     DATA_PATH = "data.csv"
-    data = load_material(DATA_PATH, st.session_state.fixed_row_index)  # ← 変更
+    data = load_material(DATA_PATH, st.session_state.fixed_row_index)
 
     if data is None:
         st.stop()
@@ -234,7 +237,7 @@ elif st.session_state.page == 4:
 
                 if not user_results.empty:
                     fig = px.line(user_results, x='年月', y='WPM', title='WPM推移')
-                    fig.update_xaxes(tickangle=0)  # 横軸ラベルを水平に
+                    fig.update_xaxes(tickangle=0)
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("まだ学習履歴がありません。")
