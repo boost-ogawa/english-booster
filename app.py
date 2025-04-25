@@ -137,7 +137,6 @@ def sidebar_content():
 
 # --- page == 0: ニックネームとIDの入力フォーム ---
 if st.session_state.page == 0:
-    sidebar_content()
     st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
@@ -164,6 +163,7 @@ if st.session_state.page == 0:
 
 # --- page == 5: front_page (仮) ---
 elif st.session_state.page == 5:
+    sidebar_content()
     st.title("Front Page (仮)")
     st.write("ここに何らかのコンテンツを表示します。")
     if st.button("次へ"):
@@ -302,14 +302,8 @@ elif st.session_state.page == 4:
         st.rerun()
 
 # --- その他のページ (サイドバーなし) ---
-elif st.session_state.page in [1, 2, 3, 5]:
-    if st.session_state.page == 5:
-        st.title("Front Page (仮)")
-        st.write("ここに何らかのコンテンツを表示します。")
-        if st.button("次へ"):
-            st.session_state.page = 1  # こんにちはのページに遷移
-            st.rerun()
-    elif st.session_state.page == 1:
+elif st.session_state.page in [1, 2, 3]:
+    if st.session_state.page == 1:
         st.title("English Booster スピード測定")
         if st.session_state.first_name:
             st.subheader(f"こんにちは、{st.session_state.first_name}さん！")
@@ -344,3 +338,14 @@ elif st.session_state.page in [1, 2, 3, 5]:
             st.stop()
         st.info("問題を解いてSubmitボタンを押しましょう")
         col1, col2 = st.columns([2, 1])
+        with col1:
+            st.markdown(
+                f"""
+                <div class="custom-paragraph">
+                {data['main']}
+                </div>
+                """, unsafe_allow_html=True
+            )
+        with col2:
+            st.subheader("Questions")
+            st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']],
