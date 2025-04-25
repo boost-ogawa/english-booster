@@ -123,8 +123,21 @@ if "first_name" not in st.session_state:
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
 
+# --- サイドバーのコンテンツ ---
+def sidebar_content():
+    st.sidebar.header("メニュー")
+    st.sidebar.markdown("[測定開始](#測定開始)") # ページ内リンク (未実装)
+    st.sidebar.markdown("[測定履歴](#測定履歴)") # ページ内リンク (未実装)
+    st.sidebar.markdown(f"[Google Classroom](YOUR_GOOGLE_CLASSROOM_URL_HERE)") # 外部リンク
+    st.sidebar.markdown("[利用規約](#利用規約)") # ページ内リンク (未実装)
+    st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)") # ページ内リンク (未実装)
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("その他")
+    st.sidebar.write("アプリバージョン: 1.0")
+
 # --- page == 0: ニックネームとIDの入力フォーム ---
 if st.session_state.page == 0:
+    sidebar_content()
     st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
@@ -223,6 +236,7 @@ elif st.session_state.page == 3:
 
 # --- page == 4: 結果の表示と保存 (2カラム) ---
 elif st.session_state.page == 4:
+    sidebar_content()
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
     col1, col2 = st.columns([1, 2])
     with col2:
@@ -286,3 +300,47 @@ elif st.session_state.page == 4:
         st.session_state.q2 = None
         st.session_state.submitted = False
         st.rerun()
+
+# --- その他のページ (サイドバーなし) ---
+elif st.session_state.page in [1, 2, 3, 5]:
+    if st.session_state.page == 5:
+        st.title("Front Page (仮)")
+        st.write("ここに何らかのコンテンツを表示します。")
+        if st.button("次へ"):
+            st.session_state.page = 1  # こんにちはのページに遷移
+            st.rerun()
+    elif st.session_state.page == 1:
+        st.title("English Booster スピード測定")
+        if st.session_state.first_name:
+            st.subheader(f"こんにちは、{st.session_state.first_name}さん！")
+        st.info("下のStartボタンを押して英文を読みましょう.")
+        if st.button("Start"):
+            st.session_state.start_time = time.time()
+            st.session_state.page = 2
+            st.rerun()
+    elif st.session_state.page == 2:
+        DATA_PATH = "data.csv"
+        data = load_material(DATA_PATH, st.session_state.fixed_row_index)
+        if data is None:
+            st.stop()
+        st.info("読み終わったらStopボタンを押しましょう")
+        col1, _ = st.columns([2, 1])
+        with col1:
+            st.markdown(
+                f"""
+                <div class="custom-paragraph">
+                {data['main']}
+                </div>
+                """, unsafe_allow_html=True
+            )
+            if st.button("Stop"):
+                st.session_state.stop_time = time.time()
+                st.session_state.page = 3
+                st.rerun()
+    elif st.session_state.page == 3:
+        DATA_PATH = "data.csv"
+        data = load_material(DATA_PATH, st.session_state.fixed_row_index)
+        if data is None:
+            st.stop()
+        st.info("問題を解いてSubmitボタンを押しましょう")
+        col1, col2 = st.columns([2, 1])
