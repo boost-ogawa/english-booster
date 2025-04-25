@@ -214,28 +214,26 @@ elif st.session_state.page == 4:
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
     col1, col2 = st.columns([1, 1])
     with col2:
-        st.subheader(f"{st.session_state.first_name}さんのWPM推移")
+    st.subheader(f"{st.session_state.first_name}さんのWPM推移")
 
-        current_user_id = st.session_state.get('user_id')
+    current_user_id = st.session_state.get('user_id')
 
-        if current_user_id:
-            try:
-                df_results = pd.read_csv(GITHUB_CSV_URL)
-                user_results = df_results[df_results['user_id'] == current_user_id]
+    if current_user_id:
+        try:
+            df_results = pd.read_csv(GITHUB_CSV_URL)
+            user_results = df_results[df_results['user_id'] == current_user_id].copy() # 警告回避のためcopy()を追加
 
-                if not user_results.empty:
-                    # 'timestamp' カラムをdatetime型に変換
-                    user_results['timestamp'] = pd.to_datetime(user_results['timestamp'])
-                    # 'timestamp' でソート
-                    user_results = user_results.sort_values(by='timestamp')
-                    # WPMの履歴を折れ線グラフで表示
-                    st.line_chart(user_results, x='timestamp', y='wpm')
-                else:
-                    st.info("まだ学習履歴がありません。")
+            if not user_results.empty:
+                # '年月' カラムをインデックスに設定
+                user_results = user_results.set_index('年月')
+                # 'WPM' カラムのみをグラフで表示
+                st.line_chart(user_results[['WPM']])
+            else:
+                st.info("まだ学習履歴がありません。")
 
-            except Exception as e:
-                st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
-        else:
+        except Exception as e:
+            st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
+    else:
             st.info("ユーザーIDがありません。")
 
     with col1:
