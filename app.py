@@ -12,6 +12,9 @@ import re
 
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
 HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true"
+GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user.csv"
+DATA_PATH = "data.csv"
+GOOGLE_CLASSROOM_URL = "YOUR_GOOGLE_CLASSROOM_URL_HERE" # Google ClassroomのURLを設定してください
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -61,6 +64,18 @@ st.markdown(
         line-height: 1.8;
         font-size: 1.3rem;
     }
+    .google-classroom-button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin-top: 10px;
+        background-color: #4285F4;
+        color: white !important;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+    .google-classroom-button:hover {
+        background-color: #357AE8;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -97,8 +112,6 @@ def get_user_data(github_raw_url, nickname, user_id):
         print(f"ユーザーデータ取得エラー: {e}")
         return None
 
-GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user.csv"
-
 # --- セッション変数の初期化 ---
 if "row_to_load" not in st.session_state:
     st.session_state.row_to_load = 0
@@ -128,14 +141,14 @@ def sidebar_content():
     st.sidebar.header("メニュー")
     st.sidebar.markdown("[測定開始](#測定開始)") # ページ内リンク (未実装)
     st.sidebar.markdown("[測定履歴](#測定履歴)") # ページ内リンク (未実装)
-    st.sidebar.markdown(f"[Google Classroom](YOUR_GOOGLE_CLASSROOM_URL_HERE)") # 外部リンク
+    st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})") # 外部リンク
     st.sidebar.markdown("[利用規約](#利用規約)") # ページ内リンク (未実装)
     st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)") # ページ内リンク (未実装)
     st.sidebar.markdown("---")
     st.sidebar.subheader("その他")
     st.sidebar.write("アプリバージョン: 1.0")
 
-# --- page == 0: ニックネームとIDの入力フォーム ---
+# --- ニックネームとIDの入力フォーム ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
@@ -161,16 +174,42 @@ if st.session_state.page == 0:
             else:
                 st.warning("ニックネームとIDを入力してください。")
 
-# --- page == 5: front_page (仮) ---
+# --- front_page ---
 elif st.session_state.page == 5:
     sidebar_content()
-    st.title("Front Page (仮)")
-    st.write("ここに何らかのコンテンツを表示します。")
-    if st.button("次へ"):
-        st.session_state.page = 1  # こんにちはのページに遷移
-        st.rerun()
+    st.title("Front Page")
+    left_col, right_col = st.columns([1, 3])
+    with left_col:
+        if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, type="primary"):
+            st.session_state.page = 1  # こんにちはのページに遷移
+            st.rerun()
+        st.markdown(
+            f"""
+            <a href="{GOOGLE_CLASSROOM_URL}" target="_blank" class="google-classroom-button">
+                Google Classroomへ
+            </a>
+            """,
+            unsafe_allow_html=True,
+        )
+    with right_col:
+        st.subheader(f"{st.session_state.first_name}さんのWPM推移")
+        current_user_id = st.session_state.get('user_id')
+        if current_user_id:
+            try:
+                df_results = pd.read_csv(GITHUB_CSV_URL)
+                user_results = df_results[df_results['user_id'] == current_user_id].copy()
+                if not user_results.empty:
+                    fig = px.line(user_results, x='年月', y='WPM', title='WPM推移')
+                    fig.update_xaxes(tickangle=0)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("まだ学習履歴がありません。")
+            except Exception as e:
+                st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
+        else:
+            st.info("ユーザーIDがありません。")
 
-# --- page == 1: 挨拶とスタートボタン ---
+# --- 挨拶とスタートボタン ---
 elif st.session_state.page == 1:
     st.title("English Booster スピード測定")
     if st.session_state.first_name:
@@ -181,14 +220,11 @@ elif st.session_state.page == 1:
         st.session_state.page = 2
         st.rerun()
 
-# --- page == 2: 英文表示とStopボタン (2カラム) ---
+# --- 英文表示とStopボタン ---
 elif st.session_state.page == 2:
-    DATA_PATH = "data.csv"
     data = load_material(DATA_PATH, st.session_state.fixed_row_index)
-
     if data is None:
         st.stop()
-
     st.info("読み終わったらStopボタンを押しましょう")
     col1, _ = st.columns([2, 1])
     with col1:
@@ -204,14 +240,11 @@ elif st.session_state.page == 2:
             st.session_state.page = 3
             st.rerun()
 
-# --- page == 3: クイズの表示と解答処理 (2カラム) ---
+# --- クイズの表示と解答処理 ---
 elif st.session_state.page == 3:
-    DATA_PATH = "data.csv"
     data = load_material(DATA_PATH, st.session_state.fixed_row_index)
-
     if data is None:
         st.stop()
-
     st.info("問題を解いてSubmitボタンを押しましょう")
     col1, col2 = st.columns([2, 1])
     with col1:
@@ -234,40 +267,33 @@ elif st.session_state.page == 3:
                 st.session_state.page = 4
                 st.rerun()
 
-# --- page == 4: 結果の表示と保存 (2カラム) ---
+# --- 結果の表示と保存 ---
 elif st.session_state.page == 4:
     sidebar_content()
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
     col1, col2 = st.columns([1, 2])
     with col2:
         st.subheader(f"{st.session_state.first_name}さんのWPM推移")
-
         current_user_id = st.session_state.get('user_id')
-
         if current_user_id:
             try:
                 df_results = pd.read_csv(GITHUB_CSV_URL)
                 user_results = df_results[df_results['user_id'] == current_user_id].copy()
-
                 if not user_results.empty:
                     fig = px.line(user_results, x='年月', y='WPM', title='WPM推移')
                     fig.update_xaxes(tickangle=0)
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("まだ学習履歴がありません。")
-
             except Exception as e:
                 st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
         else:
             st.info("ユーザーIDがありません。")
 
     with col1:
-        DATA_PATH = "data.csv"
         data = load_material(DATA_PATH, st.session_state.fixed_row_index)
-
         if data is None:
             st.stop()
-
         st.subheader("Result")
         correct_answers_to_store = 0
         wpm = 0.0
@@ -300,90 +326,3 @@ elif st.session_state.page == 4:
         st.session_state.q2 = None
         st.session_state.submitted = False
         st.rerun()
-
-# --- その他のページ (サイドバーなし) ---
-elif st.session_state.page in [1, 2, 3]:
-    if st.session_state.page == 1:
-        st.title("English Booster スピード測定")
-        if st.session_state.first_name:
-            st.subheader(f"こんにちは、{st.session_state.first_name}さん！")
-        st.info("下のStartボタンを押して英文を読みましょう.")
-        if st.button("Start"):
-            st.session_state.start_time = time.time()
-            st.session_state.page = 2
-            st.rerun()
-    elif st.session_state.page == 2:
-        DATA_PATH = "data.csv"
-        data = load_material(DATA_PATH, st.session_state.fixed_row_index)
-        if data is None:
-            st.stop()
-        st.info("読み終わったらStopボタンを押しましょう")
-        col1, _ = st.columns([2, 1])
-        with col1:
-            st.markdown(
-                f"""
-                <div class="custom-paragraph">
-                {data['main']}
-                </div>
-                """, unsafe_allow_html=True
-            )
-            if st.button("Stop"):
-                st.session_state.stop_time = time.time()
-                st.session_state.page = 3
-                st.rerun()
-# --- その他のページ (サイドバーなし) ---
-elif st.session_state.page in [1, 2, 3]:
-    if st.session_state.page == 1:
-        st.title("English Booster スピード測定")
-        if st.session_state.first_name:
-            st.subheader(f"こんにちは、{st.session_state.first_name}さん！")
-        st.info("下のStartボタンを押して英文を読みましょう.")
-        if st.button("Start"):
-            st.session_state.start_time = time.time()
-            st.session_state.page = 2
-            st.rerun()
-    elif st.session_state.page == 2:
-        DATA_PATH = "data.csv"
-        data = load_material(DATA_PATH, st.session_state.fixed_row_index)
-        if data is None:
-            st.stop()
-        st.info("読み終わったらStopボタンを押しましょう")
-        col1, _ = st.columns([2, 1])
-        with col1:
-            st.markdown(
-                f"""
-                <div class="custom-paragraph">
-                {data['main']}
-                </div>
-                """, unsafe_allow_html=True
-            )
-            if st.button("Stop"):
-                st.session_state.stop_time = time.time()
-                st.session_state.page = 3
-                st.rerun()
-    elif st.session_state.page == 3:
-        DATA_PATH = "data.csv"
-        data = load_material(DATA_PATH, st.session_state.fixed_row_index)
-        if data is None:
-            st.stop()
-        st.info("問題を解いてSubmitボタンを押しましょう")
-        col1, col2 = st.columns([2, 1])
-        with col1:
-            st.markdown(
-                f"""
-                <div class="custom-paragraph">
-                {data['main']}
-                </div>
-                """, unsafe_allow_html=True
-            )
-        with col2:
-            st.subheader("Questions")
-            st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1")
-            st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
-
-            if st.button("Submit"):
-                if st.session_state.q1 is None or st.session_state.q2 is None:
-                    st.error("Please answer both questions.")
-                else:
-                    st.session_state.page = 4
-                    st.rerun()
