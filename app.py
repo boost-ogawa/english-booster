@@ -203,7 +203,7 @@ elif st.session_state.page == 5:
     sidebar_content()
     st.title(f"こんにちは、{st.session_state.first_name}さん！")
     left_col, right_col = st.columns([1, 3])
-    with left_col:
+     with left_col:
         if st.button("スピード測定開始", key="main_start_button", use_container_width=True, type="primary", on_click=set_page, args=(1,)):
             pass
         st.markdown(
@@ -214,6 +214,8 @@ elif st.session_state.page == 5:
             """,
             unsafe_allow_html=True,
         )
+        st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True) # ← ここに追加
+    with right_col:
     with right_col:
         st.subheader(f"{st.session_state.first_name}さんのWPM推移")
         current_user_id = st.session_state.get('user_id')
