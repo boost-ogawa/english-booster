@@ -332,7 +332,7 @@ elif st.session_state.page == 3:
                 st.session_state.submitted = True
 
         if st.button("Restart"):
-            st.session_state.page = 1
+            st.session_state.page = 5
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.submitted = False
