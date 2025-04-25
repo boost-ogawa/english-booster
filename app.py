@@ -335,8 +335,4 @@ elif st.session_state.page == 3:
     if st.button("Restart"):
         st.session_state.page = 1
         st.session_state.start_time = None
-        st.session_state.stop_time = None
-        st.session_state.q1 = None
-        st.session_state.q2 = None
-        st.session_state.submitted = False
-        st.rerun()
+        st.session
