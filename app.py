@@ -76,6 +76,19 @@ st.markdown(
     .google-classroom-button:hover {
         background-color: #357AE8;
     }
+    .sidebar-button {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 5px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007BFF;
+        color: white;
+        text-align: left;
+    }
+    .sidebar-button:hover {
+        background-color: #0056b3;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -135,18 +148,28 @@ if "first_name" not in st.session_state:
     st.session_state.first_name = ""
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
+if "show_full_graph" not in st.session_state:
+    st.session_state.show_full_graph = False
 
 # --- サイドバーのコンテンツ ---
 def sidebar_content():
     st.sidebar.header("メニュー")
-    st.sidebar.markdown("[測定開始](#測定開始)") # ページ内リンク (未実装)
-    st.sidebar.markdown("[測定履歴](#測定履歴)") # ページ内リンク (未実装)
+    if st.sidebar.button("スピード", key="sidebar_start_button", use_container_width=True, type="primary", on_click=set_page, args=(1,)):
+        pass
+    if st.sidebar.button("測定履歴", key="sidebar_history_button", use_container_width=True, on_click=toggle_full_graph):
+        pass
     st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})") # 外部リンク
     st.sidebar.markdown("[利用規約](#利用規約)") # ページ内リンク (未実装)
     st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)") # ページ内リンク (未実装)
     st.sidebar.markdown("---")
     st.sidebar.subheader("その他")
     st.sidebar.write("アプリバージョン: 1.0")
+
+def set_page(page_number):
+    st.session_state.page = page_number
+
+def toggle_full_graph():
+    st.session_state.show_full_graph = not st.session_state.show_full_graph
 
 # --- ニックネームとIDの入力フォーム ---
 if st.session_state.page == 0:
@@ -174,15 +197,12 @@ if st.session_state.page == 0:
             else:
                 st.warning("ニックネームとIDを入力してください。")
 
-# --- front_page ---
+# --- こんにちはの挨拶とWPM推移表示 ---
 elif st.session_state.page == 5:
     sidebar_content()
-    st.title("Front Page")
+    st.title(f"こんにちは、{st.session_state.first_name}さん！")
     left_col, right_col = st.columns([1, 3])
     with left_col:
-        if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, type="primary"):
-            st.session_state.page = 1  # こんにちはのページに遷移
-            st.rerun()
         st.markdown(
             f"""
             <a href="{GOOGLE_CLASSROOM_URL}" target="_blank" class="google-classroom-button">
@@ -199,9 +219,16 @@ elif st.session_state.page == 5:
                 df_results = pd.read_csv(GITHUB_CSV_URL)
                 user_results = df_results[df_results['user_id'] == current_user_id].copy()
                 if not user_results.empty:
-                    fig = px.line(user_results, x='年月', y='WPM', title='WPM推移')
-                    fig.update_xaxes(tickangle=0)
-                    st.plotly_chart(fig, use_container_width=True)
+                    if st.session_state.show_full_graph:
+                        fig = px.line(user_results, x='年月', y='WPM', title='WPM推移 (拡大)')
+                        fig.update_xaxes(tickangle=0)
+                        st.plotly_chart(fig, use_container_width=True)
+                        if st.button("閉じる", on_click=toggle_full_graph):
+                            pass
+                    else:
+                        fig = px.line(user_results.tail(5), x='年月', y='WPM', title='直近5回のWPM推移')
+                        fig.update_xaxes(tickangle=0)
+                        st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("まだ学習履歴がありません。")
             except Exception as e:
@@ -209,19 +236,8 @@ elif st.session_state.page == 5:
         else:
             st.info("ユーザーIDがありません。")
 
-# --- 挨拶とスタートボタン ---
-elif st.session_state.page == 1:
-    st.title("English Booster スピード測定")
-    if st.session_state.first_name:
-        st.subheader(f"こんにちは、{st.session_state.first_name}さん！")
-    st.info("下のStartボタンを押して英文を読みましょう.")
-    if st.button("Start"):
-        st.session_state.start_time = time.time()
-        st.session_state.page = 2
-        st.rerun()
-
 # --- 英文表示とStopボタン ---
-elif st.session_state.page == 2:
+elif st.session_state.page == 1:
     data = load_material(DATA_PATH, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -237,11 +253,11 @@ elif st.session_state.page == 2:
         )
         if st.button("Stop"):
             st.session_state.stop_time = time.time()
-            st.session_state.page = 3
+            st.session_state.page = 2
             st.rerun()
 
 # --- クイズの表示と解答処理 ---
-elif st.session_state.page == 3:
+elif st.session_state.page == 2:
     data = load_material(DATA_PATH, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -264,7 +280,7 @@ elif st.session_state.page == 3:
             if st.session_state.q1 is None or st.session_state.q2 is None:
                 st.error("Please answer both questions.")
             else:
-                st.session_state.page = 4
+                st.session_state.page = 3
                 st.rerun()
 
 # --- 結果の表示と保存 ---
