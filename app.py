@@ -331,6 +331,36 @@ elif st.session_state.page in [1, 2, 3]:
                 st.session_state.stop_time = time.time()
                 st.session_state.page = 3
                 st.rerun()
+# --- その他のページ (サイドバーなし) ---
+elif st.session_state.page in [1, 2, 3]:
+    if st.session_state.page == 1:
+        st.title("English Booster スピード測定")
+        if st.session_state.first_name:
+            st.subheader(f"こんにちは、{st.session_state.first_name}さん！")
+        st.info("下のStartボタンを押して英文を読みましょう.")
+        if st.button("Start"):
+            st.session_state.start_time = time.time()
+            st.session_state.page = 2
+            st.rerun()
+    elif st.session_state.page == 2:
+        DATA_PATH = "data.csv"
+        data = load_material(DATA_PATH, st.session_state.fixed_row_index)
+        if data is None:
+            st.stop()
+        st.info("読み終わったらStopボタンを押しましょう")
+        col1, _ = st.columns([2, 1])
+        with col1:
+            st.markdown(
+                f"""
+                <div class="custom-paragraph">
+                {data['main']}
+                </div>
+                """, unsafe_allow_html=True
+            )
+            if st.button("Stop"):
+                st.session_state.stop_time = time.time()
+                st.session_state.page = 3
+                st.rerun()
     elif st.session_state.page == 3:
         DATA_PATH = "data.csv"
         data = load_material(DATA_PATH, st.session_state.fixed_row_index)
@@ -348,4 +378,12 @@ elif st.session_state.page in [1, 2, 3]:
             )
         with col2:
             st.subheader("Questions")
-            st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']],
+            st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1")
+            st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
+
+            if st.button("Submit"):
+                if st.session_state.q1 is None or st.session_state.q2 is None:
+                    st.error("Please answer both questions.")
+                else:
+                    st.session_state.page = 4
+                    st.rerun()
