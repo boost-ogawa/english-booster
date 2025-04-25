@@ -158,45 +158,20 @@ if "show_full_graph" not in st.session_state:
     st.session_state.show_full_graph = False
 if "set_page_key" not in st.session_state:
     st.session_state["set_page_key"] = "unique_key_speed" # 適当なユニークなキー
-    
+
 # --- ページ遷移関数 ---
 def set_page(page_number):
     st.session_state.page = page_number
 
 # --- サイドバーのコンテンツ ---
 def sidebar_content():
-    st.sidebar.markdown("<p class='sidebar-header'>メニュー</p>", unsafe_allow_html=True)
-    st.sidebar.markdown(
-        f"""
-        <style>
-        .sidebar-button-link {{
-            width: 100%;
-            padding: 5px 0;
-            margin-bottom: 5px;
-            border: none;
-            border-radius: 0;
-            background-color: transparent;
-            color: white;
-            text-align: left;
-            font-size: 1rem;
-            text-decoration: none; /* 下線をなくす */
-        }}
-        .sidebar-button-link:hover {{
-            background-color: #0056b31a;
-        }}
-        </style>
-        <a href="#" onclick="parent.window.streamlitSetFrameHeight('{st.session_state.get('set_page_key', 'unique_key_speed')}', 1)" class="sidebar-button-link">スピード測定開始</a>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.sidebar.markdown("[測定履歴](#測定履歴)") # ページ内リンク (未実装)
+    st.sidebar.header("メニュー")
     st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})") # 外部リンク
     st.sidebar.markdown("[利用規約](#利用規約)") # ページ内リンク (未実装)
     st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)") # ページ内リンク (未実装)
     st.sidebar.markdown("---")
     st.sidebar.subheader("その他")
     st.sidebar.write("アプリバージョン: 1.0")
-
 # --- ニックネームとIDの入力フォーム ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
