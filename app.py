@@ -334,7 +334,9 @@ elif st.session_state.page == 3:
         else:
             st.error("測定時間が記録されていません。もう一度お試しください。")
 
-    if st.button("Restart"):
+if st.button("Restart"):
         st.session_state.page = 1
         st.session_state.start_time = None
-        st.session
+        st.session_state.stop_time = None
+        st.session_state.submitted = False
+        st.rerun()
