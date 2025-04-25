@@ -252,9 +252,9 @@ elif st.session_state.page == 4:
             total_time = st.session_state.stop_time - st.session_state.start_time
             word_count = len(data['main'].split())
             wpm = (word_count / total_time) * 60
-            st.write(f"今回の文章の総単語数: {word_count}")
-            st.write(f"文章を読んだ所要時間: {total_time:.2f} seconds")
-            st.write(f"１分間あたりの単語数: **{wpm:.1f}** words per minute")
+            st.write(f"総単語数: {word_count} 語")
+            st.write(f"所要時間: {total_time:.2f} 秒")
+            st.write(f"単語数/分: **{wpm:.1f}** WPM")
             correct1 = st.session_state.q1 == data['A1']
             correct2 = st.session_state.q2 == data['A2']
             st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
