@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px # Plotly Express をインポート
 import time
 from datetime import datetime
 from pytz import timezone
@@ -221,13 +222,13 @@ elif st.session_state.page == 4:
         if current_user_id:
             try:
                 df_results = pd.read_csv(GITHUB_CSV_URL)
-                user_results = df_results[df_results['user_id'] == current_user_id].copy() # 警告回避のためcopy()を追加
+                user_results = df_results[df_results['user_id'] == current_user_id].copy()
 
                 if not user_results.empty:
-                    # '年月' カラムをインデックスに設定
-                    user_results = user_results.set_index('年月')
-                    # 'WPM' カラムのみをグラフで表示
-                    st.line_chart(user_results[['WPM']])
+                    # '年月' カラムを文字列として扱う
+                    fig = px.line(user_results, x='年月', y='WPM', title='WPM推移')
+                    fig.update_xaxes(tickangle=0) # 横軸ラベルを-45度回転
+                    st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("まだ学習履歴がありません。")
 
