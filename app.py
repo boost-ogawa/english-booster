@@ -151,25 +151,22 @@ if "user_id" not in st.session_state:
 if "show_full_graph" not in st.session_state:
     st.session_state.show_full_graph = False
 
+# --- ページ遷移関数 ---
+def set_page(page_number):
+    st.session_state.page = page_number
+
 # --- サイドバーのコンテンツ ---
 def sidebar_content():
     st.sidebar.header("メニュー")
     if st.sidebar.button("スピード", key="sidebar_start_button", use_container_width=True, type="primary", on_click=set_page, args=(1,)):
         pass
-    if st.sidebar.button("測定履歴", key="sidebar_history_button", use_container_width=True, on_click=toggle_full_graph):
-        pass
+    st.sidebar.markdown("[測定履歴](#測定履歴)") # ページ内リンク (未実装)
     st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})") # 外部リンク
     st.sidebar.markdown("[利用規約](#利用規約)") # ページ内リンク (未実装)
     st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)") # ページ内リンク (未実装)
     st.sidebar.markdown("---")
     st.sidebar.subheader("その他")
     st.sidebar.write("アプリバージョン: 1.0")
-
-def set_page(page_number):
-    st.session_state.page = page_number
-
-def toggle_full_graph():
-    st.session_state.show_full_graph = not st.session_state.show_full_graph
 
 # --- ニックネームとIDの入力フォーム ---
 if st.session_state.page == 0:
@@ -190,7 +187,7 @@ if st.session_state.page == 0:
                         st.session_state.first_name = nickname.strip()
                         st.session_state.last_name = ""
                         st.session_state.user_id = user_id.strip()
-                        st.session_state.page = 5  # front_page に遷移
+                        st.session_state.page = 5  # こんにちはのページに遷移
                         st.rerun()
                     else:
                         st.error("ニックネームまたはIDが正しくありません。")
@@ -203,6 +200,8 @@ elif st.session_state.page == 5:
     st.title(f"こんにちは、{st.session_state.first_name}さん！")
     left_col, right_col = st.columns([1, 3])
     with left_col:
+        if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, type="primary", on_click=set_page, args=(1,)):
+            pass
         st.markdown(
             f"""
             <a href="{GOOGLE_CLASSROOM_URL}" target="_blank" class="google-classroom-button">
@@ -219,16 +218,9 @@ elif st.session_state.page == 5:
                 df_results = pd.read_csv(GITHUB_CSV_URL)
                 user_results = df_results[df_results['user_id'] == current_user_id].copy()
                 if not user_results.empty:
-                    if st.session_state.show_full_graph:
-                        fig = px.line(user_results, x='年月', y='WPM', title='WPM推移 (拡大)')
-                        fig.update_xaxes(tickangle=0)
-                        st.plotly_chart(fig, use_container_width=True)
-                        if st.button("閉じる", on_click=toggle_full_graph):
-                            pass
-                    else:
-                        fig = px.line(user_results.tail(5), x='年月', y='WPM', title='直近5回のWPM推移')
-                        fig.update_xaxes(tickangle=0)
-                        st.plotly_chart(fig, use_container_width=True)
+                    fig = px.line(user_results.tail(5), x='年月', y='WPM', title='直近5回のWPM推移')
+                    fig.update_xaxes(tickangle=0)
+                    st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("まだ学習履歴がありません。")
             except Exception as e:
@@ -284,7 +276,7 @@ elif st.session_state.page == 2:
                 st.rerun()
 
 # --- 結果の表示と保存 ---
-elif st.session_state.page == 4:
+elif st.session_state.page == 3:
     sidebar_content()
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
     col1, col2 = st.columns([1, 2])
@@ -296,7 +288,7 @@ elif st.session_state.page == 4:
                 df_results = pd.read_csv(GITHUB_CSV_URL)
                 user_results = df_results[df_results['user_id'] == current_user_id].copy()
                 if not user_results.empty:
-                    fig = px.line(user_results, x='年月', y='WPM', title='WPM推移')
+                    fig = px.line(user_results.tail(5), x='年月', y='WPM', title='直近5回のWPM推移')
                     fig.update_xaxes(tickangle=0)
                     st.plotly_chart(fig, use_container_width=True)
                 else:
