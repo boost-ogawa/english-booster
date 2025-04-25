@@ -67,7 +67,7 @@ st.markdown(
 )
 
 # --- ヘッダー画像の表示 ---
-st.image(HEADER_IMAGE_URL, use_column_width=True)
+st.image(HEADER_IMAGE_URL, use_container_width=True)
 
 # --- データ読み込み関数 ---
 def load_material(data_path, row_index):
