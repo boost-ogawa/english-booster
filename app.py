@@ -206,36 +206,27 @@ if st.session_state.page == 0:
 elif st.session_state.page == 5:
     sidebar_content()
     st.title(f"こんにちは、{st.session_state.first_name}さん！")
-    left_col, right_col = st.columns([1, 3])
-    with left_col:
-        if st.button("スピード測定開始", key="main_start_button", use_container_width=True, type="primary", on_click=start_reading, args=(1,)):
-            pass
-        st.markdown(
-            f"""
-            <a href="{GOOGLE_CLASSROOM_URL}" target="_blank" class="google-classroom-button">
-                Google Classroomへ
-            </a>
-            """,
-            unsafe_allow_html=True,
-        )
-        st.markdown("---")
-        st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
-    with right_col:
-        current_user_id = st.session_state.get('user_id')
-        if current_user_id:
-            try:
-                df_results = pd.read_csv(GITHUB_CSV_URL)
-                user_results = df_results[df_results['user_id'] == current_user_id].copy()
-                if not user_results.empty:
-                    fig = px.line(user_results.tail(5), x='年月', y='WPM', title='初見時のWPM推移')
-                    fig.update_xaxes(tickangle=0)
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("まだ学習履歴がありません。")
-            except Exception as e:
-                st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
-        else:
-            st.info("ユーザーIDがありません。")
+    if st.button("スピード測定開始", key="main_start_button", use_container_width=True, type="primary", on_click=start_reading, args=(1,)):
+        pass
+    st.markdown("---")
+    st.subheader(f"{st.session_state.first_name}さんのWPM推移")
+    current_user_id = st.session_state.get('user_id')
+    if current_user_id:
+        try:
+            df_results = pd.read_csv(GITHUB_CSV_URL)
+            user_results = df_results[df_results['user_id'] == current_user_id].copy()
+            if not user_results.empty:
+                fig = px.line(user_results.tail(5), x='年月', y='WPM', title='直近5回のWPM推移')
+                fig.update_xaxes(tickangle=0)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("まだ学習履歴がありません。")
+        except Exception as e:
+            st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
+    else:
+        st.info("ユーザーIDがありません。")
+    st.markdown("---")
+    st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
 elif st.session_state.page == 1:
     data = load_material(DATA_PATH, st.session_state.fixed_row_index)
