@@ -233,7 +233,7 @@ elif st.session_state.page == 5:
                 st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
         else:
             st.info("ユーザーIDがありません。")
-            
+
 # --- 英文表示とStopボタン ---
 elif st.session_state.page == 1:
     data = load_material(DATA_PATH, st.session_state.fixed_row_index)
