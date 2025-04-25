@@ -49,7 +49,7 @@ def save_results(wpm, correct_answers, material_id, first_name, last_name, user_
         st.error(f"結果の保存に失敗しました: {e}")
 
 # --- ページ設定（最初に書く必要あり） ---
-st.set_page_config(page_title="Speed Reading App", layout="wide")
+st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sidebar_state="collapsed")
 
 # --- スタイル設定 ---
 st.markdown(
@@ -158,8 +158,7 @@ def set_page(page_number):
 # --- サイドバーのコンテンツ ---
 def sidebar_content():
     st.sidebar.header("メニュー")
-    if st.sidebar.button("スピード", key="sidebar_start_button", use_container_width=True, type="primary", on_click=set_page, args=(1,)):
-        pass
+    st.sidebar.markdown("**スピード測定開始**")
     st.sidebar.markdown("[測定履歴](#測定履歴)") # ページ内リンク (未実装)
     st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})") # 外部リンク
     st.sidebar.markdown("[利用規約](#利用規約)") # ページ内リンク (未実装)
