@@ -330,5 +330,10 @@ elif st.session_state.page == 3:
                 save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
                              st.session_state.first_name, st.session_state.last_name, st.session_state.user_id)
                 st.session_state.submitted = True
-        else:
-            st.error("測定時間が記録されていません。もう一度お試しください。")
+
+        if st.button("Restart"):
+            st.session_state.page = 1
+            st.session_state.start_time = None
+            st.session_state.stop_time = None
+            st.session_state.submitted = False
+            st.rerun()
