@@ -163,6 +163,11 @@ if "set_page_key" not in st.session_state:
 def set_page(page_number):
     st.session_state.page = page_number
 
+# --- 「スピード測定開始」ボタンが押されたときに実行する関数 ---
+def start_reading(page_number):
+    st.session_state.start_time = time.time()
+    st.session_state.page = page_number
+
 # --- サイドバーのコンテンツ ---
 def sidebar_content():
     st.sidebar.header("メニュー")
@@ -172,7 +177,8 @@ def sidebar_content():
     st.sidebar.markdown("---")
     st.sidebar.subheader("その他")
     st.sidebar.write("アプリバージョン: 1.0")
-# --- ニックネームとIDの入力フォーム ---
+
+# --- メインの処理 ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
@@ -198,13 +204,12 @@ if st.session_state.page == 0:
             else:
                 st.warning("ニックネームとIDを入力してください。")
 
-# --- こんにちはの挨拶とWPM推移表示 ---
 elif st.session_state.page == 5:
     sidebar_content()
     st.title(f"こんにちは、{st.session_state.first_name}さん！")
     left_col, right_col = st.columns([1, 3])
     with left_col:
-        if st.button("スピード測定開始", key="main_start_button", use_container_width=True, type="primary", on_click=set_page, args=(1,)):
+        if st.button("スピード測定開始", key="main_start_button", use_container_width=True, type="primary", on_click=start_reading, args=(1,)):
             pass
         st.markdown(
             f"""
@@ -234,7 +239,6 @@ elif st.session_state.page == 5:
         else:
             st.info("ユーザーIDがありません。")
 
-# --- 英文表示とStopボタン ---
 elif st.session_state.page == 1:
     data = load_material(DATA_PATH, st.session_state.fixed_row_index)
     if data is None:
@@ -254,7 +258,6 @@ elif st.session_state.page == 1:
             st.session_state.page = 2
             st.rerun()
 
-# --- クイズの表示と解答処理 ---
 elif st.session_state.page == 2:
     data = load_material(DATA_PATH, st.session_state.fixed_row_index)
     if data is None:
@@ -281,7 +284,6 @@ elif st.session_state.page == 2:
                 st.session_state.page = 3
                 st.rerun()
 
-# --- 結果の表示と保存 ---
 elif st.session_state.page == 3:
     sidebar_content()
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
