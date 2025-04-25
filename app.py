@@ -224,15 +224,12 @@ elif st.session_state.page == 4:
                 user_results = df_results[df_results['user_id'] == current_user_id]
 
                 if not user_results.empty:
-                    # 'user_id' と '実施月' カラムを除外してWPMのデータのみ抽出
-                    wpm_history = user_results.drop(columns=['user_id', '実施月'], errors='ignore')
-                    if not wpm_history.empty:
-                        # 転置して表示しやすい形にする
-                        wpm_history_transposed = wpm_history.T
-                        wpm_history_transposed.columns = [f"WPM"] # カラム名をWPMに設定
-                        st.dataframe(wpm_history_transposed)
-                    else:
-                        st.info("まだ学習履歴がありません。")
+                    # 'timestamp' カラムをdatetime型に変換
+                    user_results['timestamp'] = pd.to_datetime(user_results['timestamp'])
+                    # 'timestamp' でソート
+                    user_results = user_results.sort_values(by='timestamp')
+                    # WPMの履歴を折れ線グラフで表示
+                    st.line_chart(user_results, x='timestamp', y='wpm')
                 else:
                     st.info("まだ学習履歴がありません。")
 
