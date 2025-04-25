@@ -214,8 +214,8 @@ elif st.session_state.page == 5:
             """,
             unsafe_allow_html=True,
         )
-        st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True) # ← ここに追加
-    with right_col:
+        st.markdown("---")
+        st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
     with right_col:
         st.subheader(f"{st.session_state.first_name}さんのWPM推移")
         current_user_id = st.session_state.get('user_id')
@@ -233,7 +233,7 @@ elif st.session_state.page == 5:
                 st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
         else:
             st.info("ユーザーIDがありません。")
-
+            
 # --- 英文表示とStopボタン ---
 elif st.session_state.page == 1:
     data = load_material(DATA_PATH, st.session_state.fixed_row_index)
