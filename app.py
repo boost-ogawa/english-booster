@@ -203,7 +203,8 @@ if st.session_state.page == 0:
                 st.warning("ニックネームを入力してください。")
             elif not user_id:
                 st.warning("IDを入力してください。")
-            elif not re.fullmatch(r'[0-9a-zA-Z]+', nickname):
+            elif not re.fullmatch(r'[0-9a-zA-Z_\- ]+', nickname):
+
                 st.error("ニックネームは半角英数字で入力してください。")
             elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
                 st.error("IDは半角英数字で入力してください。")
