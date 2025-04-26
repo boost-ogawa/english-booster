@@ -94,10 +94,7 @@ st.markdown(
     .google-classroom-button:hover {
         background-color: #357AE8;
     }
-    [data-testid="stSidebar"] {
-    min-width: 0% !important; /* 最小幅を0%に設定 */
-    max-width: 15% !important; /* 最大幅を15%に設定 */
-}
+    
     </style>
     """,
     unsafe_allow_html=True,
