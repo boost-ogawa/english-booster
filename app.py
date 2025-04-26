@@ -83,7 +83,7 @@ st.markdown(
     .custom-paragraph {
         font-family: Georgia, serif;
         line-height: 1.8;
-        font-size: 1.3rem;
+        font-size: 1.8rem;
     }
 
     /* スタートボタンのスタイル（高さ・フォントサイズ調整済み） */
