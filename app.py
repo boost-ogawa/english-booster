@@ -10,6 +10,7 @@ import json
 import tempfile
 import re
 
+GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data.csv"
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
 HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true"
 GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user.csv"
@@ -121,20 +122,17 @@ st.markdown(
 st.image(HEADER_IMAGE_URL, use_container_width=True)
 
 # --- データ読み込み関数 ---
-def load_material(data_path, row_index):
-    """CSVファイルから指定された行のデータを読み込む関数"""
+def load_material(github_url, row_index):
+    """GitHubのCSVファイルから指定された行のデータを読み込む関数"""
     try:
-        df = pd.read_csv(data_path)
+        df = pd.read_csv(github_url)
         if 0 <= row_index < len(df):
             return df.iloc[row_index]
         else:
             st.error(f"指定された行番号 ({row_index + 1}) はファイルに存在しません。")
             return None
-    except FileNotFoundError:
-        st.error(f"ファイル '{data_path}' が見つかりません。")
-        return None
     except Exception as e:
-        st.error(f"予期しないエラーが発生しました: {e}")
+        st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
         return None
 
 # --- GitHubからニックネームとIDでユーザー情報をロードする関数 ---
@@ -234,7 +232,7 @@ elif st.session_state.page == 5:
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
 elif st.session_state.page == 1:
-    data = load_material(DATA_PATH, st.session_state.fixed_row_index)
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
     st.info("読み終わったらStopボタンを押しましょう")
@@ -253,7 +251,7 @@ elif st.session_state.page == 1:
             st.rerun()
 
 elif st.session_state.page == 2:
-    data = load_material(DATA_PATH, st.session_state.fixed_row_index)
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
     st.info("問題を解いてSubmitボタンを押しましょう")
@@ -287,7 +285,7 @@ elif st.session_state.page == 3:
         display_wpm_history(current_user_id) # 関数を呼び出す
 
     with col1:
-        data = load_material(DATA_PATH, st.session_state.fixed_row_index)
+        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
         if data is None:
             st.stop()
         st.subheader("Result")
