@@ -214,7 +214,7 @@ if st.session_state.page == 0:
 elif st.session_state.page == 5:
     sidebar_content()
     st.title(f"こんにちは、{st.session_state.first_name}さん！")
-    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, type="primary", on_click=start_reading, args=(1,)):
+    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
         pass
     st.markdown("---")
     st.subheader(f"{st.session_state.first_name}さんのWPM推移")
