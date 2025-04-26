@@ -186,24 +186,24 @@ if st.session_state.page == 0:
         nickname = st.text_input("ニックネーム (半角英数字)", key="nickname_input", value=st.session_state.first_name)
         user_id = st.text_input("ID (半角英数字)", key="user_id_input", value=st.session_state.user_id)
         if st.button("次へ"):
-            if nickname and user_id:
-                if not re.fullmatch(r'[0-9a-zA-Z]+', nickname):
-                    st.error("ニックネームは半角英数字で入力してください。")
-                elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
-                    st.error("IDは半角英数字で入力してください。")
-                else:
-                    user_data = get_user_data(GITHUB_USER_CSV_URL, nickname.strip(), user_id.strip())
-                    if user_data:
-                        st.session_state.first_name = nickname.strip()
-                        st.session_state.last_name = ""
-                        st.session_state.user_id = user_id.strip()
-                        st.session_state.page = 5  # こんにちはのページに遷移
-                        st.rerun()
-                    else:
-                        st.error("ニックネームまたはIDが正しくありません。")
+            if not nickname:
+                st.warning("ニックネームを入力してください。")
+            elif not user_id:
+                st.warning("IDを入力してください。")
+            elif not re.fullmatch(r'[0-9a-zA-Z]+', nickname):
+                st.error("ニックネームは半角英数字で入力してください。")
+            elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
+                st.error("IDは半角英数字で入力してください。")
             else:
-                st.warning("ニックネームとIDを入力してください。")
-
+                user_data = get_user_data(GITHUB_USER_CSV_URL, nickname.strip(), user_id.strip())
+                if user_data:
+                    st.session_state.first_name = nickname.strip()
+                    st.session_state.last_name = ""
+                    st.session_state.user_id = user_id.strip()
+                    st.session_state.page = 5
+                    st.rerun()
+                else:
+                    st.error("ニックネームまたはIDが正しくありません。")
 elif st.session_state.page == 5:
     sidebar_content()
     st.title(f"こんにちは、{st.session_state.first_name}さん！")
