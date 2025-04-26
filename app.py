@@ -82,7 +82,17 @@ st.markdown(
         line-height: 1.8;
         font-size: 1.3rem;
     }
-    .google-classroom-button {
+    div.stButton > button:first-child {
+    background-color: #28a745;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 10px 20px;
+}
+div.stButton > button:first-child:hover {
+    background-color: #218838;
+}
+.google-classroom-button {
         display: inline-block;
         padding: 10px 20px;
         margin-top: 10px;
