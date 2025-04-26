@@ -73,26 +73,35 @@ st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sideba
 st.markdown(
     """
     <style>
+    /* アプリ全体の背景と文字色設定 */
     .stApp {
-        background-color: #000D36; /* Streamlitアプリ全体の背景色 (濃い紺色) */
-        color: #ffffff; /* デフォルトの文字色を白に */
+        background-color: #000D36;
+        color: #ffffff;
     }
+
+    /* 英文表示用のカスタム段落スタイル */
     .custom-paragraph {
         font-family: Georgia, serif;
         line-height: 1.8;
         font-size: 1.3rem;
     }
+
+    /* スタートボタンのスタイル（高さ・フォントサイズ調整済み） */
     div.stButton > button:first-child {
-    background-color: #28a745;
-    color: white;
-    font-weight: bold;
-    border-radius: 8px;
-    padding: 10px 20px;
-}
-div.stButton > button:first-child:hover {
-    background-color: #218838;
-}
-.google-classroom-button {
+        background-color: #28a745;
+        color: white;
+        font-weight: bold;
+        border-radius: 8px;
+        padding: 20px 40px;           /* 高さと横幅UP */
+        font-size: 1.5rem;            /* フォントサイズUP */
+    }
+
+    div.stButton > button:first-child:hover {
+        background-color: #218838;
+    }
+
+    /* Google Classroom風のボタン */
+    .google-classroom-button {
         display: inline-block;
         padding: 10px 20px;
         margin-top: 10px;
@@ -101,13 +110,13 @@ div.stButton > button:first-child:hover {
         text-decoration: none;
         border-radius: 5px;
     }
+
     .google-classroom-button:hover {
         background-color: #357AE8;
     }
-    
     </style>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
 )
 
 # --- ヘッダー画像の表示 ---
