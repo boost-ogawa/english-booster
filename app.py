@@ -56,7 +56,7 @@ def display_wpm_history(user_id):
             df_results = pd.read_csv(GITHUB_CSV_URL)
             user_results = df_results[df_results['user_id'] == user_id].copy()
             if not user_results.empty:
-                fig = px.line(user_results.tail(5), x='測定年月', y='WPM', title='WPM推移')
+                fig = px.line(user_results, x='測定年月', y='WPM', title='WPM推移')
                 fig.update_xaxes(tickangle=0)
                 st.plotly_chart(fig, use_container_width=True)
             else:
