@@ -217,7 +217,7 @@ elif st.session_state.page == 5:
             df_results = pd.read_csv(GITHUB_CSV_URL)
             user_results = df_results[df_results['user_id'] == current_user_id].copy()
             if not user_results.empty:
-                fig = px.line(user_results.tail(5), x='年月', y='WPM', title='のWPM推移')
+                fig = px.line(user_results.tail(5), x='測定年月', y='WPM', title='WPM推移')
                 fig.update_xaxes(tickangle=0)
                 st.plotly_chart(fig, use_container_width=True)
             else:
@@ -285,7 +285,7 @@ elif st.session_state.page == 3:
                 df_results = pd.read_csv(GITHUB_CSV_URL)
                 user_results = df_results[df_results['user_id'] == current_user_id].copy()
                 if not user_results.empty:
-                    fig = px.line(user_results.tail(5), x='年月', y='WPM', title='初見時のWPM推移')
+                    fig = px.line(user_results.tail(5), x='測定年月', y='WPM', title='WPM推移')
                     fig.update_xaxes(tickangle=0)
                     st.plotly_chart(fig, use_container_width=True)
                 else:
