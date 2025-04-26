@@ -94,25 +94,6 @@ st.markdown(
     .google-classroom-button:hover {
         background-color: #357AE8;
     }
-    .sidebar-button {
-        width: 100%;
-        padding: 5px 0; /* 上下のpaddingを小さく */
-        margin-bottom: 5px;
-        border: none;
-        border-radius: 0; /* 角をなくす */
-        background-color: transparent; /* 背景を透明に */
-        color: white;
-        text-align: left;
-        font-size: 1rem; /* フォントサイズを調整 */
-    }
-    .sidebar-button:hover {
-        background-color: #0056b31a; /* ホバー時の背景色を薄くする */
-    }
-    .sidebar-header {
-        font-size: 1.2rem;
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
     </style>
     """,
     unsafe_allow_html=True,
