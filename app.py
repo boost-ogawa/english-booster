@@ -57,7 +57,7 @@ def display_wpm_history(user_id):
             user_results = df_results[df_results['user_id'] == user_id].copy()
             if not user_results.empty:
                 fig = px.line(user_results, x='測定年月', y='WPM', title='WPM推移')
-                fig.update_xaxes(tickangle=0)
+                fig.update_xaxes(tickangle=-45)
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("まだ学習履歴がありません。")
