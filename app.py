@@ -83,7 +83,7 @@ st.markdown(
     .custom-paragraph {
         font-family: Georgia, serif;
         line-height: 1.8;
-        font-size: 1.8rem;
+        font-size: 1.5rem;
     }
 
     /* スタートボタンのスタイル（高さ・フォントサイズ調整済み） */
@@ -93,7 +93,7 @@ st.markdown(
         font-weight: bold;
         border-radius: 8px;
         padding: 20px 40px;           /* 高さと横幅UP */
-        font-size: 1.5rem;            /* フォントサイズUP */
+        font-size: 1.8rem;            /* フォントサイズUP */
     }
 
     div.stButton > button:first-child:hover {
