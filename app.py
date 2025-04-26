@@ -48,6 +48,23 @@ def save_results(wpm, correct_answers, material_id, first_name, last_name, user_
     except Exception as e:
         st.error(f"結果の保存に失敗しました: {e}")
 
+# --- WPM推移グラフ表示関数 ---
+def display_wpm_history(user_id):
+    if user_id:
+        try:
+            df_results = pd.read_csv(GITHUB_CSV_URL)
+            user_results = df_results[df_results['user_id'] == user_id].copy()
+            if not user_results.empty:
+                fig = px.line(user_results.tail(5), x='測定年月', y='WPM', title='WPM推移')
+                fig.update_xaxes(tickangle=0)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("まだ学習履歴がありません。")
+        except Exception as e:
+            st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
+    else:
+        st.info("ユーザーIDがありません。")
+
 # --- ページ設定（最初に書く必要あり） ---
 st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sidebar_state="collapsed")
 
@@ -212,20 +229,7 @@ elif st.session_state.page == 5:
     st.markdown("---")
     st.subheader(f"{st.session_state.first_name}さんのWPM推移")
     current_user_id = st.session_state.get('user_id')
-    if current_user_id:
-        try:
-            df_results = pd.read_csv(GITHUB_CSV_URL)
-            user_results = df_results[df_results['user_id'] == current_user_id].copy()
-            if not user_results.empty:
-                fig = px.line(user_results.tail(5), x='測定年月', y='WPM', title='WPM推移')
-                fig.update_xaxes(tickangle=0)
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("まだ学習履歴がありません。")
-        except Exception as e:
-            st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
-    else:
-        st.info("ユーザーIDがありません。")
+    display_wpm_history(current_user_id) # 関数を呼び出す
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
@@ -280,20 +284,7 @@ elif st.session_state.page == 3:
     col1, col2 = st.columns([1, 2])
     with col2:
         current_user_id = st.session_state.get('user_id')
-        if current_user_id:
-            try:
-                df_results = pd.read_csv(GITHUB_CSV_URL)
-                user_results = df_results[df_results['user_id'] == current_user_id].copy()
-                if not user_results.empty:
-                    fig = px.line(user_results.tail(5), x='測定年月', y='WPM', title='WPM推移')
-                    fig.update_xaxes(tickangle=0)
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("まだ学習履歴がありません。")
-            except Exception as e:
-                st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
-        else:
-            st.info("ユーザーIDがありません。")
+        display_wpm_history(current_user_id) # 関数を呼び出す
 
     with col1:
         data = load_material(DATA_PATH, st.session_state.fixed_row_index)
