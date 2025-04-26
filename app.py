@@ -29,14 +29,13 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
 db = firestore.client()
 
 # --- Firestoreに結果を保存する関数 ---
-def save_results(wpm, correct_answers, material_id, first_name, last_name, user_id):
+def save_results(wpm, correct_answers, material_id, nickname, user_id):
     jst = timezone('Asia/Tokyo')
     timestamp = datetime.now(jst).isoformat()
 
     result_data = {
         "user_id": user_id,
-        "last_name": last_name,
-        "first_name": first_name,
+        "nickname": nickname,
         "timestamp": timestamp,
         "material_id": material_id,
         "wpm": round(wpm, 1),
@@ -164,10 +163,8 @@ if "q2" not in st.session_state:
     st.session_state.q2 = None
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
-if "last_name" not in st.session_state:
-    st.session_state.last_name = ""
-if "first_name" not in st.session_state:
-    st.session_state.first_name = ""
+if "nickname" not in st.session_state:
+    st.session_state.nickname = ""
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
 if "show_full_graph" not in st.session_state:
@@ -199,7 +196,7 @@ if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
-        nickname = st.text_input("ニックネーム (半角英数字)", key="nickname_input", value=st.session_state.first_name)
+        nickname = st.text_input("ニックネーム (半角英数字)", key="nickname_input", value=st.session_state.nickname)
         user_id = st.text_input("ID (半角英数字)", key="user_id_input", value=st.session_state.user_id)
         if st.button("次へ"):
             if not nickname:
@@ -213,8 +210,7 @@ if st.session_state.page == 0:
             else:
                 user_data = get_user_data(GITHUB_USER_CSV_URL, nickname.strip(), user_id.strip())
                 if user_data:
-                    st.session_state.first_name = nickname.strip()
-                    st.session_state.last_name = ""
+                    st.session_state.nickname = nickname.strip()
                     st.session_state.user_id = user_id.strip()
                     st.session_state.page = 5
                     st.rerun()
@@ -222,11 +218,11 @@ if st.session_state.page == 0:
                     st.error("ニックネームまたはIDが正しくありません。")
 elif st.session_state.page == 5:
     sidebar_content()
-    st.title(f"こんにちは、{st.session_state.first_name}さん！")
+    st.title(f"こんにちは、{st.session_state.nickname}さん！")
     if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
         pass
     st.markdown("---")
-    st.subheader(f"{st.session_state.first_name}さんのWPM推移")
+    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
     current_user_id = st.session_state.get('user_id')
     display_wpm_history(current_user_id) # 関数を呼び出す
     st.markdown("---")
@@ -308,7 +304,7 @@ elif st.session_state.page == 3:
 
             if not st.session_state.submitted:
                 save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
-                             st.session_state.first_name, st.session_state.last_name, st.session_state.user_id)
+                             st.session_state.nickname, st.session_state.user_id)
                 st.session_state.submitted = True
 
         if st.button("Restart"):
