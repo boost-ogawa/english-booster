@@ -95,8 +95,8 @@ st.markdown(
         background-color: #357AE8;
     }
     [data-testid="stSidebar"] {
-    min-width: 15% !important; /* 最小幅を15%に設定 */
-    max-width: 15% !important; /* 最大幅を15%に設定 */
+    min-width: 10% !important; /* 最小幅を10%に設定 */
+    max-width: 10% !important; /* 最大幅を10%に設定 */
     }
     </style>
     """,
