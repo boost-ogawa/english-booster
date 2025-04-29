@@ -16,7 +16,7 @@ GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-boo
 DATA_PATH = "data_j.csv"
 GOOGLE_CLASSROOM_URL = "YOUR_GOOGLE_CLASSROOM_URL_HERE" # Google ClassroomのURLを設定してください
 ADMIN_USERNAME = "admin" # 例：管理者ユーザー名
-ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "SuperSecretAdmin123") # Streamlit Secrets から取得
+ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "7nBTVRXi1ars") # Streamlit Secrets から取得
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
