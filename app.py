@@ -127,14 +127,14 @@ def load_material(github_url, row_index):
     try:
         df = pd.read_csv(github_url)
         if 0 <= row_index < len(df):
-            return df.iloc[row_index]
+            return df.iloc[row_index].to_dict()
         else:
             st.error(f"指定された行番号 ({row_index + 1}) はファイルに存在しません。")
             return None
     except Exception as e:
         st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
         return None
-
+        
 # --- GitHubからニックネームとIDでユーザー情報をロードする関数 ---
 @st.cache_data
 def get_user_data(github_raw_url, nickname, user_id):
