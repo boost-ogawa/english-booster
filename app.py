@@ -260,8 +260,6 @@ elif st.session_state.page == 2:
         st.subheader("Questions")
         q1_choice = st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1")
         q2_choice = st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
-        st.write(f"st.session_state.q1 (選択中): {st.session_state.q1}") # デバッグ用
-        st.write(f"st.session_state.q2 (選択中): {st.session_state.q2}") # デバッグ用
 
     if st.button("Submit"): # ← col1 の外に移動
         if st.session_state.q1 is not None and st.session_state.q2 is not None:
@@ -273,8 +271,6 @@ elif st.session_state.page == 2:
 elif st.session_state.page == 3:
     sidebar_content()
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
-    st.write(f"**【デバッグ Page 3 (遷移直後)】st.session_state.q1:** {st.session_state.q1}") # ★ デバッグ用
-    st.write(f"**【デバッグ Page 3 (遷移直後)】st.session_state.q2:** {st.session_state.q2}") # ★ デバッグ用
     col1, col2 = st.columns([1, 2])
     with col2:
         current_user_id = st.session_state.get('user_id')
@@ -295,8 +291,6 @@ elif st.session_state.page == 3:
             st.write(f"総単語数: {word_count} 語")
             st.write(f"所要時間: {total_time:.2f} 秒")
             st.write(f"単語数/分: **{wpm:.1f}** WPM")
-            st.write(f"**【デバッグ Page 3 (比較前)】選択したQ1:** {st.session_state.q1}, **正解Q1:** {data['A1']}")
-            st.write(f"**【デバッグ Page 3 (比較前)】選択したQ2:** {st.session_state.q2}, **正解Q2:** {data['A2']}")
             correct1 = st.session_state.q1 == data['A1']
             correct2 = st.session_state.q2 == data['A2']
             st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
