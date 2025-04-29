@@ -252,16 +252,9 @@ elif st.session_state.page == 2:
     if data is None:
         st.stop()
     st.info("問題を解いてSubmitボタンを押しましょう")
-    st.write(f"**【デバッグ Page 2】読み込まれたデータ:** {data}")
     col1, col2 = st.columns([2, 1])
     with col1:
         st.markdown(f'<div class="custom-paragraph">{data["main"]}</div>', unsafe_allow_html=True)
-        if st.button("Submit"):
-            if st.session_state.q1 is not None and st.session_state.q2 is not None:
-                st.session_state.page = 3
-                st.rerun()
-            else:
-                st.error("両方の質問に答えてください。")
 
     with col2:
         st.subheader("Questions")
@@ -269,6 +262,13 @@ elif st.session_state.page == 2:
         q2_choice = st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
         st.write(f"st.session_state.q1 (選択中): {st.session_state.q1}") # デバッグ用
         st.write(f"st.session_state.q2 (選択中): {st.session_state.q2}") # デバッグ用
+
+    if st.button("Submit"): # ← col1 の外に移動
+        if st.session_state.q1 is not None and st.session_state.q2 is not None:
+            st.session_state.page = 3
+            st.rerun()
+        else:
+            st.error("両方の質問に答えてください。")
 
 elif st.session_state.page == 3:
     sidebar_content()
