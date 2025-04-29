@@ -128,7 +128,7 @@ def get_user_data(github_raw_url, nickname, user_id):
 if "row_to_load" not in st.session_state:
     st.session_state.row_to_load = 0
 if "fixed_row_index" not in st.session_state:
-    st.session_state.fixed_row_index = 3
+    st.session_state.fixed_row_index = 17
 if "page" not in st.session_state:
     st.session_state.page = 0
 if "start_time" not in st.session_state:
