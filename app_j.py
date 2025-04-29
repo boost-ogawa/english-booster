@@ -8,12 +8,15 @@ from firebase_admin import credentials, firestore
 import json
 import tempfile
 import re
+import os
 
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data_j.csv"
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results_j.csv"
 GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user_j.csv"
 DATA_PATH = "data_j.csv"
 GOOGLE_CLASSROOM_URL = "YOUR_GOOGLE_CLASSROOM_URL_HERE" # Google ClassroomのURLを設定してください
+ADMIN_USERNAME = "admin" # 例：管理者ユーザー名
+ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "your_admin_password") # Streamlit Secrets から取得
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -149,6 +152,9 @@ if "show_full_graph" not in st.session_state:
     st.session_state.show_full_graph = False
 if "set_page_key" not in st.session_state:
     st.session_state["set_page_key"] = "unique_key_speed" # 適当なユニークなキー
+if "is_admin" not in st.session_state:
+    st.session_state.is_admin = False # 管理者権限の状態を保持する変数
+
 # --- ページ遷移関数 ---
 def set_page(page_number):
     st.session_state.page = page_number
@@ -171,7 +177,6 @@ if st.session_state.page == 0:
             elif not user_id:
                 st.warning("IDを入力してください。")
             elif not re.fullmatch(r'[0-9a-zA-Z_\- ]+', nickname):
-
                 st.error("ニックネームは半角英数字で入力してください。")
             elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
                 st.error("IDは半角英数字で入力してください。")
@@ -180,11 +185,28 @@ if st.session_state.page == 0:
                 if user_data:
                     st.session_state.nickname = nickname.strip()
                     st.session_state.user_id = user_id.strip()
+                    # 管理者としてログインしたかを判定
+                    if nickname.strip() == ADMIN_USERNAME and user_id.strip() == ADMIN_PASSWORD:
+                        st.session_state.is_admin = True
+                    else:
+                        st.session_state.is_admin = False
                     st.session_state.page = 5
                     st.rerun()
                 else:
                     st.error("ニックネームまたはIDが正しくありません。")
 elif st.session_state.page == 5:
+    st.title(f"こんにちは、{st.session_state.nickname}さん！")
+
+    if st.session_state.is_admin:
+        st.subheader("管理者設定")
+        manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0))
+        if st.button("表示行番号を保存"):
+            st.session_state.fixed_row_index = manual_index
+            st.success(f"表示行番号を {manual_index} に設定しました。")
+
+    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
+        pass
+    elif st.session_state.page == 5:
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
     if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
         pass
