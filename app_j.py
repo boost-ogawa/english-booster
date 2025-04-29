@@ -206,10 +206,6 @@ elif st.session_state.page == 5:
 
     if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
         pass
-    elif st.session_state.page == 5:
-    st.title(f"こんにちは、{st.session_state.nickname}さん！")
-    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
-        pass
 
 elif st.session_state.page == 1:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
