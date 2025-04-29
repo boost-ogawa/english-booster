@@ -158,17 +158,6 @@ def start_reading(page_number):
     st.session_state.start_time = time.time()
     st.session_state.page = page_number
 
-# --- サイドバーのコンテンツ ---
-def sidebar_content():
-    st.sidebar.header("メニュー")
-    st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})")
-    st.sidebar.markdown("[利用規約](#利用規約)")
-    st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)")
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("その他")
-    st.sidebar.write("English Booster")
-    st.sidebar.write("Ver.1_01")
-
 # --- メインの処理 ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
@@ -196,12 +185,9 @@ if st.session_state.page == 0:
                 else:
                     st.error("ニックネームまたはIDが正しくありません。")
 elif st.session_state.page == 5:
-    sidebar_content()
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
     if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
         pass
-    st.markdown("---")
-    st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
 elif st.session_state.page == 1:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
@@ -249,9 +235,8 @@ elif st.session_state.page == 2:
         st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
 
 elif st.session_state.page == 3:
-    sidebar_content()
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
-    col1, _ = st.columns([1, 2]) # グラフ表示部分を削除したので、col2は不要になりました
+    col1, = st.columns(1) # グラフ表示部分を削除
 
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
