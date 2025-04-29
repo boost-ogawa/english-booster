@@ -222,17 +222,17 @@ elif st.session_state.page == 2:
             </div>
             """, unsafe_allow_html=True
         )
-        if st.button("Submit"):
-            if st.session_state.q1 is None or st.session_state.q2 is None:
-                st.error("Please answer both questions.")
-            else:
-                st.session_state.page = 3
-                st.rerun()
 
     with col2:
         st.subheader("Questions")
         st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1")
         st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
+    if st.button("Submit"):
+        if st.session_state.q1 is None or st.session_state.q2 is None:
+            st.error("Please answer both questions.")
+        else:
+            st.session_state.page = 3
+            st.rerun()
 
 elif st.session_state.page == 3:
     st.success("結果を記録しましょう。Restartを押すともう一度できます。")
