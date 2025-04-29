@@ -253,6 +253,7 @@ elif st.session_state.page == 2:
     if data is None:
         st.stop()
     st.info("問題を解いてSubmitボタンを押しましょう")
+    st.write(f"**【デバッグ Page 2】読み込まれたデータ:** {data}")
     col1, col2 = st.columns([2, 1])
     with col1:
         st.markdown(
@@ -297,6 +298,8 @@ elif st.session_state.page == 3:
             st.write(f"総単語数: {word_count} 語")
             st.write(f"所要時間: {total_time:.2f} 秒")
             st.write(f"単語数/分: **{wpm:.1f}** WPM")
+            st.write(f"**【デバッグ Page 3】選択したQ1:** {st.session_state.q1}, **正解Q1:** {data['A1']}")
+            st.write(f"**【デバッグ Page 3】選択したQ2:** {st.session_state.q2}, **正解Q2:** {data['A2']}")
             correct1 = st.session_state.q1 == data['A1']
             correct2 = st.session_state.q2 == data['A2']
             st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
