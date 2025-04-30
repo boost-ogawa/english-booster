@@ -279,8 +279,7 @@ elif st.session_state.page == 2:
 
 elif st.session_state.page == 3:
     st.success("結果を記録しました。") # メッセージを変更
-    col1 = st.columns(1)
-
+    col1 = st.columns(1)[0]
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
         if data is None:
