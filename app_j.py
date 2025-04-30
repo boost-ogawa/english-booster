@@ -16,7 +16,7 @@ GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-boo
 DATA_PATH = "data_j.csv"
 GOOGLE_CLASSROOM_URL = "YOUR_GOOGLE_CLASSROOM_URL_HERE" # Google ClassroomのURLを設定してください
 ADMIN_USERNAME = "admin" # 例：管理者ユーザー名
-ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "7nBTVRXi1ars") # Streamlit Secrets から取得
+ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "your_admin_password") # Streamlit Secrets から取得
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -29,109 +29,26 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
 
 db = firestore.client()
 
-# --- Firestoreに結果を保存する関数 ---
-def save_results(wpm, correct_answers, material_id, nickname, user_id):
-    jst = timezone('Asia/Tokyo')
-    timestamp = datetime.now(jst).isoformat()
-
-    result_data = {
-        "user_id": user_id,
-        "nickname": nickname,
-        "timestamp": timestamp,
-        "material_id": material_id,
-        "wpm": round(wpm, 1),
-        "correct_answers": correct_answers
-    }
-
+# --- Firestoreから設定を読み込む関数 ---
+def load_config():
     try:
-        db.collection("results").add(result_data)
-        print("結果が保存されました")
-    except Exception as e:
-        st.error(f"結果の保存に失敗しました: {e}")
-
-# --- ページ設定（最初に書く必要あり） ---
-st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sidebar_state="collapsed")
-
-# --- スタイル設定 ---
-st.markdown(
-    """
-    <style>
-    /* アプリ全体の背景と文字色設定 */
-    .stApp {
-        background-color: #000D36;
-        color: #ffffff;
-    }
-
-    /* 英文表示用のカスタム段落スタイル */
-    .custom-paragraph {
-        font-family: Georgia, serif;
-        line-height: 1.8;
-        font-size: 1.5rem;
-    }
-
-    /* スタートボタンのスタイル（高さ・フォントサイズ調整済み） */
-    div.stButton > button:first-child {
-        background-color: #28a745;
-        color: white;
-        font-weight: bold;
-        border-radius: 8px;
-        padding: 20px 40px;         /* 高さと横幅UP */
-        font-size: 1.8rem;           /* フォントサイズUP */
-    }
-
-    div.stButton > button:first-child:hover {
-        background-color: #218838;
-    }
-
-    /* Google Classroom風のボタン */
-    .google-classroom-button {
-        display: inline-block;
-        padding: 10px 20px;
-        margin-top: 10px;
-        background-color: #4285F4;
-        color: white !important;
-        text-decoration: none;
-        border-radius: 5px;
-    }
-
-    .google-classroom-button:hover {
-        background-color: #357AE8;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# --- データ読み込み関数 ---
-def load_material(github_url, row_index):
-    """GitHubのCSVファイルから指定された行のデータを読み込む関数"""
-    try:
-        df = pd.read_csv(github_url)
-        if 0 <= row_index < len(df):
-            return df.iloc[row_index]
+        doc_ref = db.collection("settings").document("app_config") # ドキュメントIDはあなたが設定したIDに
+        doc = doc_ref.get()
+        if doc.exists:
+            return doc.to_dict()
         else:
-            st.error(f"指定された行番号 ({row_index + 1}) はファイルに存在しません。")
-            return None
+            print("設定ドキュメントが存在しません。")
+            return {}
     except Exception as e:
-        st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
-        return None
-
-# --- GitHubからニックネームとIDでユーザー情報をロードする関数 ---
-@st.cache_data
-def get_user_data(github_raw_url, nickname, user_id):
-    try:
-        df = pd.read_csv(github_raw_url)
-        user = df[(df['nickname'] == nickname) & (df['user_id'] == user_id)].iloc[0].to_dict()
-        return user
-    except (IndexError, FileNotFoundError, KeyError) as e:
-        print(f"ユーザーデータ取得エラー: {e}")
-        return None
+        print(f"設定の読み込みに失敗しました: {e}")
+        return {}
 
 # --- セッション変数の初期化 ---
+config = load_config()
 if "row_to_load" not in st.session_state:
     st.session_state.row_to_load = 0
 if "fixed_row_index" not in st.session_state:
-    st.session_state.fixed_row_index = 17
+    st.session_state.fixed_row_index = config.get("fixed_row_index", 17) # Firestoreから読み込んだ値、なければデフォルトの17
 if "page" not in st.session_state:
     st.session_state.page = 0
 if "start_time" not in st.session_state:
