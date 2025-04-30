@@ -40,6 +40,40 @@ def get_user_data(github_raw_url, nickname, user_id):
         print(f"ユーザーデータ取得エラー: {e}")
         return None
 
+# --- データ読み込み関数 ---
+def load_material(github_url, row_index):
+    """GitHubのCSVファイルから指定された行のデータを読み込む関数"""
+    try:
+        df = pd.read_csv(github_url)
+        if 0 <= row_index < len(df):
+            return df.iloc[row_index]
+        else:
+            st.error(f"指定された行番号 ({row_index + 1}) はファイルに存在しません。")
+            return None
+    except Exception as e:
+        st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
+        return None
+
+# --- Firestoreに結果を保存する関数 ---
+def save_results(wpm, correct_answers, material_id, nickname, user_id):
+    jst = timezone('Asia/Tokyo')
+    timestamp = datetime.now(jst).isoformat()
+
+    result_data = {
+        "user_id": user_id,
+        "nickname": nickname,
+        "timestamp": timestamp,
+        "material_id": material_id,
+        "wpm": round(wpm, 1),
+        "correct_answers": correct_answers
+    }
+
+    try:
+        db.collection("results").add(result_data)
+        print("結果が保存されました")
+    except Exception as e:
+        st.error(f"結果の保存に失敗しました: {e}")
+
 # --- Firestoreから設定を読み込む関数 ---
 def load_config():
     try:
@@ -53,6 +87,59 @@ def load_config():
     except Exception as e:
         print(f"設定の読み込みに失敗しました: {e}")
         return {}
+
+# --- ページ設定（最初に書く必要あり） ---
+st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sidebar_state="collapsed")
+
+# --- スタイル設定 ---
+st.markdown(
+    """
+    <style>
+    /* アプリ全体の背景と文字色設定 */
+    .stApp {
+        background-color: #000D36;
+        color: #ffffff;
+    }
+
+    /* 英文表示用のカスタム段落スタイル */
+    .custom-paragraph {
+        font-family: Georgia, serif;
+        line-height: 1.8;
+        font-size: 1.5rem;
+    }
+
+    /* スタートボタンのスタイル（高さ・フォントサイズ調整済み） */
+    div.stButton > button:first-child {
+        background-color: #28a745;
+        color: white;
+        font-weight: bold;
+        border-radius: 8px;
+        padding: 20px 40px;         /* 高さと横幅UP */
+        font-size: 1.8rem;           /* フォントサイズUP */
+    }
+
+    div.stButton > button:first-child:hover {
+        background-color: #218838;
+    }
+
+    /* Google Classroom風のボタン */
+    .google-classroom-button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin-top: 10px;
+        background-color: #4285F4;
+        color: white !important;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    .google-classroom-button:hover {
+        background-color: #357AE8;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # --- セッション変数の初期化 ---
 config = load_config()
