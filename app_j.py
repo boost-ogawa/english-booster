@@ -286,16 +286,40 @@ elif st.session_state.page == 3:
         if data is None:
             st.stop()
         st.subheader("Result")
-        # ... (結果表示のコード) ...
+        correct_answers_to_store = 0
+        wpm = 0.0
+
+        if st.session_state.start_time and st.session_state.stop_time:
+            total_time = st.session_state.stop_time - st.session_state.start_time
+            word_count = len(data['main'].split())
+            wpm = (word_count / total_time) * 60
+            st.write(f"総単語数: {word_count} 語")
+            st.write(f"所要時間: {total_time:.2f} 秒")
+            st.write(f"単語数/分: **{wpm:.1f}** WPM")
+            correct1 = st.session_state.q1 == data['A1']
+            correct2 = st.session_state.q2 == data['A2']
+            st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
+            st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
+            correct_answers_to_store = int(correct1) + int(correct2)
+
+            if not st.session_state.submitted:
+                save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
+                             st.session_state.nickname, st.session_state.user_id)
+                st.session_state.submitted = True
+
         if st.button("次へ"):
-            # ... (ページ遷移のコード) ...
+            st.session_state.page = 4
+            st.session_state.start_time = None # 念のため、時間計測関連の変数をリセット
+            st.session_state.stop_time = None
+            st.session_state.submitted = False
+            st.session_state.q1 = None
+            st.session_state.q2 = None
+            st.rerun()
 
     with col2:
         st.subheader("指示") # 指示用のテキストエリアのラベル
         st.text_area("指示内容", value="意味を確認しましょう。確認したら「次へ」を押しましょう。", disabled=True)
         st.subheader("意味") # 意味表示用のテキストエリアのラベル
         japanese_text = data.get('japanese', 'データがありません') # 'japanese' 列が存在しない場合のデフォルト値
-        st.text_area("意味", value=japanese_text, height=150, disabled=True) # 少し高さを増やしましたelif st.session_state.page == 4:
-    st.title("新しいページ")
-    st.write("ここに新しい要素を配置します。")
-    # ここに新しいページのコンテンツを記述します
+        st.text_area("意味", value=japanese_text, height=150, disabled=True) # 少し高さを増やしました
+
