@@ -16,7 +16,7 @@ GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-boo
 DATA_PATH = "data_j.csv"
 GOOGLE_CLASSROOM_URL = "YOUR_GOOGLE_CLASSROOM_URL_HERE" # Google ClassroomのURLを設定してください
 ADMIN_USERNAME = "admin" # 例：管理者ユーザー名
-ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "your_admin_password") # Streamlit Secrets から取得
+ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "7nBTVRXi1ars") # Streamlit Secrets から取得
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -87,6 +87,16 @@ def load_config():
     except Exception as e:
         print(f"設定の読み込みに失敗しました: {e}")
         return {}
+
+# --- Firestoreに設定を保存する関数 ---
+def save_config(fixed_row_index):
+    try:
+        doc_ref = db.collection("settings").document("app_config") # ドキュメントIDはあなたが設定したIDに
+        doc_ref.set({"fixed_row_index": fixed_row_index})
+        print(f"設定を保存しました: fixed_row_index = {fixed_row_index}")
+        st.success(f"表示行番号を {fixed_row_index} に保存しました。")
+    except Exception as e:
+        st.error(f"設定の保存に失敗しました: {e}")
 
 # --- ページ設定（最初に書く必要あり） ---
 st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sidebar_state="collapsed")
@@ -217,7 +227,7 @@ elif st.session_state.page == 5:
         manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0))
         if st.button("表示行番号を保存"):
             st.session_state.fixed_row_index = manual_index
-            st.success(f"表示行番号を {manual_index} に設定しました。")
+            save_config(manual_index) # Firestore に保存する関数を呼び出す
 
     if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
         pass
