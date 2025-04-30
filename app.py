@@ -224,7 +224,7 @@ ADMIN_USERNAME = "admin" # 例：管理者ユーザー名
 ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "7nBTVRXi1ars") # Streamlit Secrets から取得
 
 # --- メインの処理 ---
-elif st.session_state.page == 0:
+if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
@@ -369,7 +369,7 @@ elif st.session_state.page == 3:
                 st.session_state.submitted = True
 
         if st.button("Restart"):
-            st.session_state.page = 5
+            st.session_state.page = 0 # 最初のログイン画面に戻るように変更
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.submitted = False
