@@ -69,8 +69,8 @@ def save_results(wpm, correct_answers, material_id, nickname, user_id):
     }
 
     try:
-        db.collection("results").add(result_data)
-        print("結果が保存されました")
+        db.collection("results_j").add(result_data)  # 保存先のコレクション名を "results_j" に変更
+        print("結果が results_j に保存されました")
     except Exception as e:
         st.error(f"結果の保存に失敗しました: {e}")
 
