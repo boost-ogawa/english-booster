@@ -29,6 +29,17 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
 
 db = firestore.client()
 
+# --- GitHubからニックネームとIDでユーザー情報をロードする関数 ---
+@st.cache_data
+def get_user_data(github_raw_url, nickname, user_id):
+    try:
+        df = pd.read_csv(github_raw_url)
+        user = df[(df['nickname'] == nickname) & (df['user_id'] == user_id)].iloc[0].to_dict()
+        return user
+    except (IndexError, FileNotFoundError, KeyError) as e:
+        print(f"ユーザーデータ取得エラー: {e}")
+        return None
+
 # --- Firestoreから設定を読み込む関数 ---
 def load_config():
     try:
