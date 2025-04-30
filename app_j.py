@@ -279,8 +279,9 @@ elif st.session_state.page == 2:
 
 elif st.session_state.page == 3:
     st.success("結果を記録しました。") # メッセージを変更
-    col1 = st.columns(1)[0]
-    with col1:
+    left_col, right_col = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
+
+    with left_col:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
         if data is None:
             st.stop()
@@ -306,11 +307,7 @@ elif st.session_state.page == 3:
                              st.session_state.nickname, st.session_state.user_id)
                 st.session_state.submitted = True
 
-        st.text_area("指示", value="意味を確認しましょう。確認したら「次へ」を押しましょう。", disabled=True)
-        japanese_text = data.get('japanese', 'データがありません') # 'japanese' 列が存在しない場合のデフォルト値
-        st.text_area("意味", value=japanese_text, height=100, disabled=True)
-
-        if st.button("次へ"):
+        if st.button("次へ"): # 「次へ」ボタンは左カラムに配置
             st.session_state.page = 4
             st.session_state.start_time = None # 念のため、時間計測関連の変数をリセット
             st.session_state.stop_time = None
