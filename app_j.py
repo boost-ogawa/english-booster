@@ -278,8 +278,8 @@ elif st.session_state.page == 2:
             st.rerun()
 
 elif st.session_state.page == 3:
-    st.success("結果を記録しましょう。Restartを押すともう一度できます。")
-    col1, = st.columns(1) # グラフ表示部分を削除
+    st.success("結果を記録しました。") # メッセージを変更
+    col1 = st.columns(1)
 
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
@@ -307,9 +307,20 @@ elif st.session_state.page == 3:
                              st.session_state.nickname, st.session_state.user_id)
                 st.session_state.submitted = True
 
-        if st.button("Restart"):
-            st.session_state.page = 5
-            st.session_state.start_time = None
+        st.text_area("指示", value="意味を確認しましょう。確認したら「次へ」を押しましょう。", disabled=True)
+        japanese_text = data.get('japanese', 'データがありません') # 'japanese' 列が存在しない場合のデフォルト値
+        st.text_area("意味", value=japanese_text, height=100, disabled=True)
+
+        if st.button("次へ"):
+            st.session_state.page = 4
+            st.session_state.start_time = None # 念のため、時間計測関連の変数をリセット
             st.session_state.stop_time = None
             st.session_state.submitted = False
+            st.session_state.q1 = None
+            st.session_state.q2 = None
             st.rerun()
+
+elif st.session_state.page == 4:
+    st.title("新しいページ")
+    st.write("ここに新しい要素を配置します。")
+    # ここに新しいページのコンテンツを記述します
