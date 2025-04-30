@@ -28,6 +28,30 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
 
 db = firestore.client()
 
+# --- Firestoreから設定を読み込む関数 ---
+def load_config():
+    try:
+        doc_ref = db.collection("settings").document("app_config") # ドキュメントIDはあなたが設定したIDに
+        doc = doc_ref.get()
+        if doc.exists:
+            return doc.to_dict()
+        else:
+            print("設定ドキュメントが存在しません。")
+            return {}
+    except Exception as e:
+        print(f"設定の読み込みに失敗しました: {e}")
+        return {}
+
+# --- Firestoreに設定を保存する関数 ---
+def save_config(fixed_row_index):
+    try:
+        doc_ref = db.collection("settings").document("app_config") # ドキュメントIDはあなたが設定したIDに
+        doc_ref.set({"fixed_row_index": fixed_row_index})
+        print(f"設定を保存しました: fixed_row_index = {fixed_row_index}")
+        st.success(f"表示行番号を {fixed_row_index} に保存しました。")
+    except Exception as e:
+        st.error(f"設定の保存に失敗しました: {e}")
+
 # --- Firestoreに結果を保存する関数 ---
 def save_results(wpm, correct_answers, material_id, nickname, user_id):
     jst = timezone('Asia/Tokyo')
@@ -150,7 +174,8 @@ def get_user_data(github_raw_url, nickname, user_id):
 if "row_to_load" not in st.session_state:
     st.session_state.row_to_load = 0
 if "fixed_row_index" not in st.session_state:
-    st.session_state.fixed_row_index = 2
+    config = load_config()
+    st.session_state.fixed_row_index = config.get("fixed_row_index", 2) # Firestoreから読み込んだ値、なければデフォルトの2
 if "page" not in st.session_state:
     st.session_state.page = 0
 if "start_time" not in st.session_state:
@@ -171,6 +196,9 @@ if "show_full_graph" not in st.session_state:
     st.session_state.show_full_graph = False
 if "set_page_key" not in st.session_state:
     st.session_state["set_page_key"] = "unique_key_speed" # 適当なユニークなキー
+if "is_admin" not in st.session_state:
+    st.session_state.is_admin = False # 管理者権限の状態を保持する変数
+    
 # --- ページ遷移関数 ---
 def set_page(page_number):
     st.session_state.page = page_number
@@ -190,9 +218,13 @@ def sidebar_content():
     st.sidebar.subheader("その他")
     st.sidebar.write("English Booster")
     st.sidebar.write("Ver.1_01")
-    
+
+# --- 管理者ユーザー名とパスワードの設定 ---
+ADMIN_USERNAME = "admin" # 例：管理者ユーザー名
+ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "7nBTVRXi1ars") # Streamlit Secrets から取得
+
 # --- メインの処理 ---
-if st.session_state.page == 0:
+elif st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
@@ -204,7 +236,6 @@ if st.session_state.page == 0:
             elif not user_id:
                 st.warning("IDを入力してください。")
             elif not re.fullmatch(r'[0-9a-zA-Z_\- ]+', nickname):
-
                 st.error("ニックネームは半角英数字で入力してください。")
             elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
                 st.error("IDは半角英数字で入力してください。")
@@ -213,11 +244,17 @@ if st.session_state.page == 0:
                 if user_data:
                     st.session_state.nickname = nickname.strip()
                     st.session_state.user_id = user_id.strip()
-                    st.session_state.page = 5
-                    st.rerun()
+                    # 管理者としてログインしたかを判定
+                    if nickname.strip() == ADMIN_USERNAME and user_id.strip() == ADMIN_PASSWORD:
+                        st.session_state.is_admin = True
+                        st.session_state.page = 5 # 管理者画面へ遷移
+                        st.rerun()
+                    else:
+                        st.session_state.page = 10 # 一般ユーザー用のページへ遷移 (新しいページ番号)
+                        st.rerun()
                 else:
                     st.error("ニックネームまたはIDが正しくありません。")
-elif st.session_state.page == 5:
+elif st.session_state.page == 10: # 一般ユーザー用のページ
     sidebar_content()
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
     if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
@@ -228,6 +265,35 @@ elif st.session_state.page == 5:
     display_wpm_history(current_user_id) # 関数を呼び出す
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
+elif st.session_state.page == 5:
+    sidebar_content()
+    st.title(f"こんにちは、{st.session_state.nickname}さん！")
+
+    if st.session_state.is_admin:
+        st.subheader("管理者設定")
+        manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0))
+        if st.button("表示行番号を保存"):
+            st.session_state.fixed_row_index = manual_index
+            save_config(manual_index) # Firestore に保存する関数を呼び出す
+
+    if st.session_state.is_admin: # 管理者も測定できるように
+        if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="admin_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
+            pass
+        st.markdown("---")
+        st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+        current_user_id = st.session_state.get('user_id')
+        display_wpm_history(current_user_id) # 関数を呼び出す
+        st.markdown("---")
+        st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
+    else: # 一般ユーザーの場合は測定開始ボタンのみ
+        if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
+            pass
+        st.markdown("---")
+        st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+        current_user_id = st.session_state.get('user_id')
+        display_wpm_history(current_user_id) # 関数を呼び出す
+        st.markdown("---")
+        st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
 elif st.session_state.page == 1:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
