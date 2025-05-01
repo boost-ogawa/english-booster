@@ -317,9 +317,49 @@ elif st.session_state.page == 3:
             st.rerun()
 
     with col2:
-        st.subheader("指示") # 指示用のテキストエリアのラベル
-        st.text_area("指示内容", value="意味を確認しましょう。確認したら「次へ」を押しましょう。", disabled=True)
-        st.subheader("意味") # 意味表示用のテキストエリアのラベル
+        st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。") # 指示用のテキストエリアのラベル
         japanese_text = data.get('japanese', 'データがありません') # 'japanese' 列が存在しない場合のデフォルト値
         st.text_area("意味", value=japanese_text, height=150, disabled=True) # 少し高さを増やしました
 
+elif st.session_state.page == 4:
+    st.title("テキストの問題を解きましょう")
+    st.info("問題を解いたら答えをチェックして次へを押しましょう")
+
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data:
+        page_number = data.get('id', '不明') # 'id' 列をページ番号として使用
+        st.write(f"ページ: {page_number}")
+
+        options_q1 = ['ア', 'イ', 'ウ', 'エ']
+        selected_order_q1 = st.multiselect("問１：並べかえ問題", options_q1, default=options_q1, key="q1_order")
+        st.write("問１の解答順:", selected_order_q1)
+
+        options_q2 = ['ア', 'イ', 'ウ', 'エ', 'オ']
+        selected_options_q2 = st.multiselect("問２：複数選択問題", options_q2, key="q2_multi")
+        st.write("問２の選択:", selected_options_q2)
+
+        if st.button("次へ"):
+            st.session_state.page = 6 # ページ 6 へ遷移
+            st.session_state["answer_q1"] = selected_order_q1 # 解答をセッション変数に保存
+            st.session_state["answer_q2"] = selected_options_q2 # 解答をセッション変数に保存
+            st.rerun()
+    else:
+        st.error("問題データの読み込みに失敗しました。")
+
+elif st.session_state.page == 6:
+    st.title("解答確認")
+    st.subheader("問１の解答")
+    if "answer_q1" in st.session_state:
+        st.write(st.session_state.answer_q1)
+    else:
+        st.write("解答がありません")
+
+    st.subheader("問２の解答")
+    if "answer_q2" in st.session_state:
+        st.write(st.session_state.answer_q2)
+    else:
+        st.write("解答がありません")
+
+    if st.button("戻る"):
+        st.session_state.page = 4
+        st.rerun()
