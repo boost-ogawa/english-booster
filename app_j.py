@@ -87,7 +87,7 @@ def load_config():
     except Exception as e:
         print(f"設定の読み込みに失敗しました: {e}")
         return {}
-
+"""
 # --- Firestoreに設定を保存する関数 ---
 def save_config(fixed_row_index):
     try:
@@ -97,7 +97,7 @@ def save_config(fixed_row_index):
         st.success(f"表示行番号を {fixed_row_index} に保存しました。")
     except Exception as e:
         st.error(f"設定の保存に失敗しました: {e}")
-
+"""
 # --- ページ設定（最初に書く必要あり） ---
 st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sidebar_state="collapsed")
 
@@ -299,10 +299,15 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
             st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
             correct_answers_to_store = int(correct1) + int(correct2)
-            if not st.session_state.submitted:
-                save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
-                             st.session_state.nickname, st.session_state.user_id)
-                st.session_state.submitted = True
+
+            st.session_state["wpm"] = wpm
+            st.session_state["correct_answers_to_store"] = correct_answers_to_store
+
+            # ここで save_results を呼び出す処理は削除またはコメントアウト
+            # if not st.session_state.submitted:
+            #     save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
+            #                  st.session_state.nickname, st.session_state.user_id)
+            #     st.session_state.submitted = True
         elif st.session_state.start_time and st.session_state.stop_time:
             st.info("回答の読み込み中です...") # 回答がまだ読み込まれていない場合のメッセージ
         if st.button("次へ"):
@@ -315,7 +320,7 @@ elif st.session_state.page == 4: # 結果表示ページ
         st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。")
         japanese_text = data.get('japanese', 'データがありません')
         st.text_area("意味", value=japanese_text, height=150, disabled=True)
-
+        
 elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
     st.info("問題を解いたら答えをチェックして次へを押しましょう")
@@ -370,7 +375,8 @@ elif st.session_state.page == 6:
     if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
         st.write(f"あなたの解答: {st.session_state.user_answer_q1}")
         st.write(f"正解: {st.session_state.correct_answer_q1}")
-        if st.session_state.is_correct_q1:
+        is_correct_q1 = st.session_state.is_correct_q1
+        if is_correct_q1:
             st.success("正解！")
         else:
             st.error("不正解...")
@@ -381,12 +387,46 @@ elif st.session_state.page == 6:
     if "user_answer_q2" in st.session_state and "correct_answer_q2" in st.session_state and "is_correct_q2" in st.session_state:
         st.write(f"あなたの解答: {st.session_state.user_answer_q2}")
         st.write(f"正解: {st.session_state.correct_answer_q2}")
-        if st.session_state.is_correct_q2:
+        is_correct_q2 = st.session_state.is_correct_q2
+        if is_correct_q2:
             st.success("正解！")
         else:
             st.error("不正解...")
     else:
         st.info("問２の解答データがありません")
+
+    if st.button("結果を送信"):
+        user_id = st.session_state.get("user_id")
+        row_index = st.session_state.get("fixed_row_index")
+        timestamp = time.time()
+        wpm = st.session_state.get("wpm", 0.0)
+        correct_answers_comprehension = st.session_state.get("correct_answers_to_store", 0)
+
+        answer_q1_text = st.session_state.get("user_answer_q1")
+        correct_q1_text = st.session_state.get("correct_answer_q1")
+        is_correct_q1_text = st.session_state.get("is_correct_q1")
+        answer_q2_text = st.session_state.get("user_answer_q2")
+        correct_q2_text = st.session_state.get("correct_answer_q2")
+        is_correct_q2_text = st.session_state.get("is_correct_q2")
+
+        if user_id and row_index:
+            doc_ref = db.collection("reading_quiz_results").document(f"{user_id}_{row_index}_{timestamp}")
+            doc_ref.set({
+                "user_id": user_id,
+                "row_index": row_index,
+                "timestamp": timestamp,
+                "wpm": wpm,
+                "comprehension_score": correct_answers_comprehension,
+                "answer_q1_text": answer_q1_text,
+                "correct_q1_text": correct_q1_text,
+                "is_correct_q1_text": is_correct_q1_text,
+                "answer_q2_text": answer_q2_text,
+                "correct_q2_text": correct_q2_text,
+                "is_correct_q2_text": is_correct_q2_text
+            })
+            st.success("結果を Firebase に送信しました！")
+        else:
+            st.error("ユーザーIDまたは行番号が見つかりませんでした。")
 
     if st.button("戻る"):
         st.session_state.page = 5
