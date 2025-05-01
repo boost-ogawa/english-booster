@@ -356,8 +356,7 @@ elif st.session_state.page == 4:
         for option in options_q2:
             if st.checkbox(option, key=f"q2_{option}"):
                 selected_options_q2.append(option)
-        st.write("問２の選択:", selected_options_q2)
-
+ 
         if st.button("次へ", disabled=disable_next):
             st.session_state.page = 6 # ページ 6 へ遷移
             st.session_state["answer_q1"] = selected_order_q1 # 解答をセッション変数に保存
