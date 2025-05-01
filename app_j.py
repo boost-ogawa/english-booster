@@ -53,7 +53,7 @@ def load_material(github_url, row_index):
     except Exception as e:
         st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
         return None
-
+"""
 # --- Firestoreに結果を保存する関数 ---
 def save_results(wpm, correct_answers, material_id, nickname, user_id):
     jst = timezone('Asia/Tokyo')
@@ -73,7 +73,7 @@ def save_results(wpm, correct_answers, material_id, nickname, user_id):
         print("結果が results_j に保存されました")
     except Exception as e:
         st.error(f"結果の保存に失敗しました: {e}")
-
+"""
 # --- Firestoreから設定を読み込む関数 ---
 def load_config():
     try:
@@ -87,7 +87,7 @@ def load_config():
     except Exception as e:
         print(f"設定の読み込みに失敗しました: {e}")
         return {}
-"""
+
 # --- Firestoreに設定を保存する関数 ---
 def save_config(fixed_row_index):
     try:
@@ -97,7 +97,7 @@ def save_config(fixed_row_index):
         st.success(f"表示行番号を {fixed_row_index} に保存しました。")
     except Exception as e:
         st.error(f"設定の保存に失敗しました: {e}")
-"""
+
 # --- ページ設定（最初に書く必要あり） ---
 st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sidebar_state="collapsed")
 
