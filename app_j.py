@@ -326,7 +326,7 @@ elif st.session_state.page == 4:
     st.info("問題を解いたら答えをチェックして次へを押しましょう")
 
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-    if data:
+    if data is not None and not data.empty: # DataFrame が None でなく、かつ空でない場合
         page_number = data.get('id', '不明') # 'id' 列をページ番号として使用
         st.write(f"ページ: {page_number}")
 
