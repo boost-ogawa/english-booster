@@ -414,9 +414,10 @@ elif st.session_state.page == 6:
                      st.session_state.nickname, st.session_state.user_id,
                      is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
         st.success("結果を Firebase に送信しました！")
-   else:
+    else:
         st.error("ユーザーIDまたは行番号が見つかりませんでした。")
 
     if st.button("戻る"):
         st.session_state.page = 5
         st.rerun()
+    
