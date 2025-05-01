@@ -277,49 +277,52 @@ elif st.session_state.page == 3: # 旧ページ 2
             st.session_state.page = 4 # ページ 3 → 4 に変更
             st.rerun()
 
-elif st.session_state.page == 4: # 旧ページ 3
-    st.success("結果を記録しました。") # メッセージを変更
-    col1, col2 = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
+elif st.session_state.page == 3:
+    if not st.session_state.submitted:
+        st.info("結果を集計中です...")
+    else:
+        st.success("結果を記録しました。") # メッセージを変更
+        col1, col2 = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
 
-    with col1:
-        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-        if data is None:
-            st.stop()
-        st.subheader("Result")
-        correct_answers_to_store = 0
-        wpm = 0.0
+        with col1:
+            data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+            if data is None:
+                st.stop()
+            st.subheader("Result")
+            correct_answers_to_store = 0
+            wpm = 0.0
 
-        if st.session_state.start_time and st.session_state.stop_time:
-            total_time = st.session_state.stop_time - st.session_state.start_time
-            word_count = len(data['main'].split())
-            wpm = (word_count / total_time) * 60
-            st.write(f"総単語数: {word_count} 語")
-            st.write(f"所要時間: {total_time:.2f} 秒")
-            st.write(f"単語数/分: **{wpm:.1f}** WPM")
-            correct1 = st.session_state.q1 == data['A1']
-            correct2 = st.session_state.q2 == data['A2']
-            st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
-            st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
-            correct_answers_to_store = int(correct1) + int(correct2)
+            if st.session_state.start_time and st.session_state.stop_time:
+                total_time = st.session_state.stop_time - st.session_state.start_time
+                word_count = len(data['main'].split())
+                wpm = (word_count / total_time) * 60
+                st.write(f"総単語数: {word_count} 語")
+                st.write(f"所要時間: {total_time:.2f} 秒")
+                st.write(f"単語数/分: **{wpm:.1f}** WPM")
+                correct1 = st.session_state.q1 == data['A1']
+                correct2 = st.session_state.q2 == data['A2']
+                st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
+                st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
+                correct_answers_to_store = int(correct1) + int(correct2)
 
-            if not st.session_state.submitted:
-                save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
-                             st.session_state.nickname, st.session_state.user_id)
-                st.session_state.submitted = True
+                if not st.session_state.submitted:
+                    save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
+                                 st.session_state.nickname, st.session_state.user_id)
+                    st.session_state.submitted = True
 
-        if st.button("次へ"):
-            st.session_state.page = 5 # ページ 4 → 5 に変更
-            st.session_state.start_time = None # 念のため、時間計測関連の変数をリセット
-            st.session_state.stop_time = None
-            st.session_state.submitted = False
-            st.session_state.q1 = None
-            st.session_state.q2 = None
-            st.rerun()
+            if st.button("次へ"):
+                st.session_state.page = 5
+                st.session_state.start_time = None # 念のため、時間計測関連の変数をリセット
+                st.session_state.stop_time = None
+                st.session_state.submitted = False
+                st.session_state.q1 = None
+                st.session_state.q2 = None
+                st.rerun()
 
-    with col2:
-        st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。") # 指示用のテキストエリアのラベル
-        japanese_text = data.get('japanese', 'データがありません') # 'japanese' 列が存在しない場合のデフォルト値
-        st.text_area("意味", value=japanese_text, height=150, disabled=True) # 少し高さを増やしました
+        with col2:
+            st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。") # 指示用のテキストエリアのラベル
+            japanese_text = data.get('japanese', 'データがありません') # 'japanese' 列が存在しない場合のデフォルト値
+            st.text_area("意味", value=japanese_text, height=150, disabled=True) # 少し高さを増やしました
 
 elif st.session_state.page == 5: # 旧ページ 4
     st.title("テキストの問題を解きましょう")
