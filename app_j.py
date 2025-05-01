@@ -320,10 +320,24 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.session_state.stop_time = None
             st.session_state.submitted = False
             st.rerun()
-    with col2:
+with col2:
         japanese_text = data.get('japanese', 'データがありません')
-        st.text_area("意味", value=japanese_text, height=150, disabled=True)
-
+        st.markdown(
+            f"""
+            <style>
+                .japanese-translation {{
+                    color: white;
+                    background-color: #333;
+                    font-size: 1.1em;
+                    padding: 10px;
+                    border-radius: 5px;
+                    white-space: pre-wrap;
+                }}
+            </style>
+            <div class="japanese-translation">{japanese_text}</div>
+            """,
+            unsafe_allow_html=True
+        )
 elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
     st.info("問題を解いたら答えをチェックして次へを押しましょう。")
@@ -432,13 +446,28 @@ elif st.session_state.page == 7:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None:
         japanese2_text = data.get('japanese2', '解説データがありません')
-        st.text_area("全訳と解説", value=japanese2_text, height=300, disabled=True) # height は適宜調整してください
+        st.markdown(
+            f"""
+            <style>
+                .japanese-explanation {{
+                    color: white;
+                    background-color: #333;
+                    font-size: 1.1em;
+                    padding: 10px;
+                    border-radius: 5px;
+                    white-space: pre-wrap;
+                }}
+            </style>
+            <div class="japanese-explanation">{japanese2_text}</div>
+            """,
+            unsafe_allow_html=True
+        )
     else:
         st.error("解説データの読み込みに失敗しました。")
 
     if st.button("終了"):
-        st.session_state.page = 0 # ログインページに戻る
-        st.session_state.start_time = None # 念のため、タイマー関連のセッション変数をリセット
+        st.session_state.page = 0
+        st.session_state.start_time = None
         st.session_state.stop_time = None
         st.session_state.q1 = None
         st.session_state.q2 = None
