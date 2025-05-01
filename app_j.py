@@ -282,7 +282,7 @@ elif st.session_state.page == 3: # 旧ページ 2
             st.rerun()
 
 elif st.session_state.page == 4: # 結果表示ページ
-    st.success("結果を確認して「次へ」を押しましょう。。") # メッセージを変更
+    st.success("結果と意味を確認して「次へ」を押しましょう。") # メッセージを変更
     col1, col2 = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
@@ -321,7 +321,6 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.session_state.submitted = False
             st.rerun()
     with col2:
-        st.info("意味を確認しましょう。確認したら「次へ」を押しましょう。")
         japanese_text = data.get('japanese', 'データがありません')
         st.text_area("意味", value=japanese_text, height=150, disabled=True)
 
