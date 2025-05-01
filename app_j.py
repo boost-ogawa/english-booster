@@ -330,7 +330,7 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None and not data.empty:
         page_number = data.get('page', '不明') # 'id' を 'page' に変更
-        st.write(f"ページ: {page_number}")
+        st.subheader(f"ページ: {page_number}")
         st.subheader("問１：並べかえ問題")
         col_q1_1, col_q1_2, col_q1_3, col_q1_4 = st.columns(4)
         options_q1 = ['ア', 'イ', 'ウ', 'エ']
@@ -372,7 +372,8 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
                 st.session_state.page = 6 # 解答確認ページへ遷移
                 st.rerun()
         else:
-            st.error("問題データの読み込みに失敗しました。")
+            st.error("両方の問題に答えてから「次へ」を押しましょう。")
+
 elif st.session_state.page == 6:
     st.title("解答確認")
 
@@ -400,7 +401,11 @@ elif st.session_state.page == 6:
     else:
         st.info("問２の解答データがありません")
 
+    if "results_sent" not in st.session_state:
+        st.session_state.results_sent = False
+
     if st.button("結果を送信"):
+        st.session_state.results_sent = True
         user_id = st.session_state.get("user_id")
         row_index = st.session_state.get("fixed_row_index")
         wpm = st.session_state.get("wpm", 0.0)
@@ -415,12 +420,11 @@ elif st.session_state.page == 6:
                      st.session_state.nickname, st.session_state.user_id,
                      is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
         st.success("「次へ」を押しましょう。")
-    else:
-        st.error("テキストの答え合わせをしたら「結果を送信」を押しましょう。")
 
-    if st.button("次へ（意味と解説）"):
-        st.session_state.page = 7
-        st.rerun()
+    if st.session_state.results_sent:
+        if st.button("次へ（意味と解説）"):
+            st.session_state.page = 7
+            st.rerun()
 
 elif st.session_state.page == 7:
     st.info("意味を確認しましょう。必要なところはメモしてください・")
