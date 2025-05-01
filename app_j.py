@@ -431,9 +431,7 @@ elif st.session_state.page == 7:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None:
         japanese2_text = data.get('japanese2', '解説データがありません')
-        st.markdown(f"<div style='white-space: pre-wrap;'>{japanese2_text}</div>", unsafe_allow_html=True)
-        st.text_area("全訳と解説", value=japanese_text, height=500, disabled=True)
-
+        st.text_area("全訳と解説", value=japanese2_text, height=300, disabled=True) # height は適宜調整してください
     else:
         st.error("解説データの読み込みに失敗しました。")
 
@@ -453,3 +451,4 @@ elif st.session_state.page == 7:
         st.session_state.correct_answer_q1 = None
         st.session_state.correct_answer_q2 = None
         st.rerun()
+        
