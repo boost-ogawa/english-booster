@@ -465,8 +465,8 @@ if data is not None:
             """,
             unsafe_allow_html=True
         )
-    else:
-        st.error("解説データの読み込みに失敗しました。")
+else:
+    st.error("解説データの読み込みに失敗しました。")
     if st.button("終了"):
         st.session_state.page = 0
         st.session_state.start_time = None
