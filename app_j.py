@@ -452,22 +452,17 @@ elif st.session_state.page == 7:
         st.markdown(
             f"""
             <style>
-                .japanese-explanation {{
-                    color: white;
-                    background-color: #333;
-                    font-size: 1.1em;
-                    padding: 10px;
-                    border-radius: 5px;
-                    white-space: pre-wrap;
-                    overflow-x: auto; /* 横スクロールバーが必要な場合に表示 */
+                .custom-paragraph {{
+                    white-space: pre-wrap; /* 改行を保持 */
                 }}
             </style>
-            <div class="japanese-explanation"><pre>{japanese2_text.replace('<', '&lt;').replace('>', '&gt;')}</pre></div>
+            <div class="custom-paragraph">{japanese2_text.replace('<', '&lt;').replace('>', '&gt;')}</div>
             """,
             unsafe_allow_html=True
         )
     else:
         st.error("解説データの読み込みに失敗しました。")
+        
     if st.button("終了"):
         st.session_state.page = 0
         st.session_state.start_time = None
