@@ -361,15 +361,13 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
         is_q1_answered = len(set(selected_order_q1)) == 4
 
         st.subheader("問２：正しいものをすべてクリック")
-        options_q2 = data.get('Q2', '').split(',')
-        correct_answers_q2_list = [ans.strip() for ans in data.get('A2', '').split(',')]
-
-        cols_q2 = st.columns(len(options_q2)) # 選択肢の数だけカラムを作成
+        options_q2 = ["ア", "イ", "ウ", "エ", "オ"] # 固定の選択肢
         selected_options_q2 = []
+        cols_q2 = st.columns(len(options_q2))
         for i, option in enumerate(options_q2):
             with cols_q2[i]:
-                if st.checkbox(option.strip(), key=f"q2_{i}"):
-                    selected_options_q2.append(option.strip())
+                if st.checkbox(option, key=f"q2_{i}"):
+                    selected_options_q2.append(option)
 
         is_q2_answered = len(selected_options_q2) > 0
 
@@ -397,7 +395,7 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
 
     else:
         st.error("問題データの読み込みに失敗しました。")
-
+        
 elif st.session_state.page == 6:
     st.title("解答確認")
 
