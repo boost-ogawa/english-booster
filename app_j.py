@@ -287,7 +287,7 @@ elif st.session_state.page == 4: # 結果表示ページ
         st.subheader("Result")
         correct_answers_to_store = 0
         wpm = 0.0
-        if st.session_state.start_time and st.session_state.stop_time:
+        if st.session_state.start_time and st.session_state.stop_time and st.session_state.q1 is not None and st.session_state.q2 is not None:
             total_time = st.session_state.stop_time - st.session_state.start_time
             word_count = len(data['main'].split())
             wpm = (word_count / total_time) * 60
@@ -303,8 +303,10 @@ elif st.session_state.page == 4: # 結果表示ページ
                 save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
                              st.session_state.nickname, st.session_state.user_id)
                 st.session_state.submitted = True
+        elif st.session_state.start_time and st.session_state.stop_time:
+            st.info("回答の読み込み中です...") # 回答がまだ読み込まれていない場合のメッセージ
         if st.button("次へ"):
-            st.session_state.page = 5 # 並べ替え・複数選択問題ページへ遷移
+            st.session_state.page = 5
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.submitted = False
@@ -313,6 +315,7 @@ elif st.session_state.page == 4: # 結果表示ページ
         st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。")
         japanese_text = data.get('japanese', 'データがありません')
         st.text_area("意味", value=japanese_text, height=150, disabled=True)
+
 elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
     st.info("問題を解いたら答えをチェックして次へを押しましょう")
