@@ -447,7 +447,7 @@ elif st.session_state.page == 7:
     st.info("意味を確認しましょう。必要なところはメモしてください。")
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     
-if data is not None:
+    if data is not None:
         japanese2_text = data.get('japanese2', '解説データがありません')
         st.markdown(
             f"""
@@ -459,14 +459,15 @@ if data is not None:
                     padding: 10px;
                     border-radius: 5px;
                     white-space: pre-wrap;
+                    overflow-x: auto; /* 横スクロールバーが必要な場合に表示 */
                 }}
             </style>
-            <div class="japanese-explanation">{japanese2_text.replace('<', '&lt;').replace('>', '&gt;')}</div>
+            <div class="japanese-explanation"><pre>{japanese2_text.replace('<', '&lt;').replace('>', '&gt;')}</pre></div>
             """,
             unsafe_allow_html=True
         )
-else:
-    st.error("解説データの読み込みに失敗しました。")
+    else:
+        st.error("解説データの読み込みに失敗しました。")
     if st.button("終了"):
         st.session_state.page = 0
         st.session_state.start_time = None
