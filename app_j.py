@@ -441,7 +441,6 @@ elif st.session_state.page == 6:
             st.success("結果を送信しました。別冊（全訳と解説）を見て復習しましょう。")
 
     if st.session_state.results_sent:
-        st.info("別冊（全訳と解説）を見て復習しましょう。")
         if st.button("終了"):
             st.session_state.page = 0
             st.session_state.start_time = None
