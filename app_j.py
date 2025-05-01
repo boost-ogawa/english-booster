@@ -363,19 +363,31 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     else:
         st.error("問題データの読み込みに失敗しました。")
 
-elif st.session_state.page == 6: # 解答確認ページ
+elif st.session_state.page == 6:
     st.title("解答確認")
-    st.subheader("問１の解答")
-    if "answer_q1" in st.session_state:
-        st.write(st.session_state.answer_q1)
+
+    st.subheader("問１：並べかえ問題")
+    if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
+        st.write(f"あなたの解答: {st.session_state.user_answer_q1}")
+        st.write(f"正解: {st.session_state.correct_answer_q1}")
+        if st.session_state.is_correct_q1:
+            st.success("正解！")
+        else:
+            st.error("不正解...")
     else:
-        st.write("解答がありません")
-    st.subheader("問２の解答")
-    if "answer_q2" in st.session_state:
-        st.write(st.session_state.answer_q2)
+        st.info("問１の解答データがありません")
+
+    st.subheader("問２：複数選択問題")
+    if "user_answer_q2" in st.session_state and "correct_answer_q2" in st.session_state and "is_correct_q2" in st.session_state:
+        st.write(f"あなたの解答: {st.session_state.user_answer_q2}")
+        st.write(f"正解: {st.session_state.correct_answer_q2}")
+        if st.session_state.is_correct_q2:
+            st.success("正解！")
+        else:
+            st.error("不正解...")
     else:
-        st.write("解答がありません")
+        st.info("問２の解答データがありません")
+
     if st.button("戻る"):
         st.session_state.page = 5
         st.rerun()
-
