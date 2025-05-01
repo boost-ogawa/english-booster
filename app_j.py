@@ -323,6 +323,12 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     if data is not None and not data.empty:
         page_number = data.get('page', '不明') # 'id' を 'page' に変更
         st.write(f"ページ: {page_number}")
+
+        # --------------------- デバッグ用に追加 ---------------------
+        correct_order_q1_raw = data.get('correct_order_q1', '')
+        st.write(f"取得した正解データ (文字列): '{correct_order_q1_raw}'")
+        # ------------------------------------------------------
+
         st.subheader("問１：並べかえ問題")
         col_q1_1, col_q1_2, col_q1_3, col_q1_4 = st.columns(4)
         options_q1 = ['ア', 'イ', 'ウ', 'エ']
