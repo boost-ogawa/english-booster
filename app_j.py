@@ -324,7 +324,7 @@ elif st.session_state.page == 4: # 結果表示ページ
         st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。")
         japanese_text = data.get('japanese', 'データがありません')
         st.text_area("意味", value=japanese_text, height=150, disabled=True)
-        
+
 elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
     st.info("問題を解いたら答えをチェックして次へを押しましょう")
@@ -351,27 +351,29 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
                 selected_options_q2.append(option)
 
         if st.button("次へ", disabled=disable_next_q):
-            correct_order_q1_str = data.get('correct_order_q1', '')
-            correct_order_q1 = [item.strip() for item in correct_order_q1_str.split(',')]
+            if not selected_options_q2:
+                st.error("問２の選択肢を少なくとも一つ選択してください。")
+            else:
+                correct_order_q1_str = data.get('correct_order_q1', '')
+                correct_order_q1 = [item.strip() for item in correct_order_q1_str.split(',')]
 
-            correct_answers_q2_str = data.get('correct_answers_q2', '')
-            correct_answers_q2 = [item.strip() for item in correct_answers_q2_str.split(',')]
+                correct_answers_q2_str = data.get('correct_answers_q2', '')
+                correct_answers_q2 = [item.strip() for item in correct_answers_q2_str.split(',')]
 
-            is_correct_q1 = selected_order_q1 == correct_order_q1
-            is_correct_q2 = set(selected_options_q2) == set(correct_answers_q2)
+                is_correct_q1 = selected_order_q1 == correct_order_q1
+                is_correct_q2 = set(selected_options_q2) == set(correct_answers_q2)
 
-            st.session_state["is_correct_q1"] = is_correct_q1
-            st.session_state["is_correct_q2"] = is_correct_q2
-            st.session_state["user_answer_q1"] = selected_order_q1
-            st.session_state["user_answer_q2"] = selected_options_q2
-            st.session_state["correct_answer_q1"] = correct_order_q1
-            st.session_state["correct_answer_q2"] = correct_answers_q2
+                st.session_state["is_correct_q1"] = is_correct_q1
+                st.session_state["is_correct_q2"] = is_correct_q2
+                st.session_state["user_answer_q1"] = selected_order_q1
+                st.session_state["user_answer_q2"] = selected_options_q2
+                st.session_state["correct_answer_q1"] = correct_order_q1
+                st.session_state["correct_answer_q2"] = correct_answers_q2
 
-            st.session_state.page = 6 # 解答確認ページへ遷移
-            st.rerun()
-    else:
-        st.error("問題データの読み込みに失敗しました。")
-
+                st.session_state.page = 6 # 解答確認ページへ遷移
+                st.rerun()
+        else:
+            st.error("問題データの読み込みに失敗しました。")
 elif st.session_state.page == 6:
     st.title("解答確認")
 
@@ -413,11 +415,36 @@ elif st.session_state.page == 6:
         save_results(wpm, correct_answers_comprehension, material_id,
                      st.session_state.nickname, st.session_state.user_id,
                      is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
-        st.success("結果を Firebase に送信しました！")
+        st.success("結果を送信しました！")
     else:
-        st.error("ユーザーIDまたは行番号が見つかりませんでした。")
+        st.error("テキストの答え合わせをしたら「結果を送信」を押しましょう")
 
-    if st.button("戻る"):
-        st.session_state.page = 5
+    if st.button("次へ（意味と解説）"):
+        st.session_state.page = 7
         st.rerun()
-    
+
+elif st.session_state.page == 7:
+    st.title("意味を確認しましょう　必要なところはメモしてください")
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data is not None:
+        japanese2_text = data.get('japanese2', '解説データがありません')
+        st.markdown(f"<div style='white-space: pre-wrap;'>{japanese2_text}</div>", unsafe_allow_html=True)
+    else:
+        st.error("解説データの読み込みに失敗しました。")
+
+    if st.button("終了"):
+        st.session_state.page = 0 # ログインページに戻る
+        st.session_state.start_time = None # 念のため、タイマー関連のセッション変数をリセット
+        st.session_state.stop_time = None
+        st.session_state.q1 = None
+        st.session_state.q2 = None
+        st.session_state.submitted = False
+        st.session_state.wpm = 0.0
+        st.session_state.correct_answers_to_store = 0
+        st.session_state.is_correct_q1 = None
+        st.session_state.is_correct_q2 = None
+        st.session_state.user_answer_q1 = None
+        st.session_state.user_answer_q2 = None
+        st.session_state.correct_answer_q1 = None
+        st.session_state.correct_answer_q2 = None
+        st.rerun()
