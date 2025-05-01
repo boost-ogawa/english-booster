@@ -326,19 +326,39 @@ elif st.session_state.page == 4:
     st.info("問題を解いたら答えをチェックして次へを押しましょう")
 
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-    if data is not None and not data.empty: # DataFrame が None でなく、かつ空でない場合
+    if data is not None and not data.empty:
         page_number = data.get('id', '不明') # 'id' 列をページ番号として使用
         st.write(f"ページ: {page_number}")
 
+        # 問１：並べかえ問題（ラジオボタンを横に配置）
+        st.subheader("問１：並べかえ問題")
+        col_q1_1, col_q1_2, col_q1_3, col_q1_4 = st.columns(4)
         options_q1 = ['ア', 'イ', 'ウ', 'エ']
-        selected_order_q1 = st.multiselect("問１：並べかえ問題", options_q1, default=options_q1, key="q1_order")
-        st.write("問１の解答順:", selected_order_q1)
 
+        selected_q1_1 = col_q1_1.radio("1番目", options_q1, key="q1_1")
+        selected_q1_2 = col_q1_2.radio("2番目", [o for o in options_q1 if o != selected_q1_1], key="q1_2")
+        selected_q1_3 = col_q1_3.radio("3番目", [o for o in options_q1 if o != selected_q1_1 and o != selected_q1_2], key="q1_3")
+        remaining_options_q1_4 = [o for o in options_q1 if o != selected_q1_1 and o != selected_q1_2 and o != selected_q1_3]
+        selected_q1_4 = col_q1_4.radio("4番目", remaining_options_q1_4, key="q1_4")
+
+        selected_order_q1 = [selected_q1_1, selected_q1_2, selected_q1_3, selected_q1_4]
+
+        if len(set(selected_order_q1)) < 4:
+            st.error("同じ選択肢を複数選ぶことはできません。")
+            disable_next = True
+        else:
+            disable_next = False
+
+        # 問２：複数選択問題（チェックボックス）
+        st.subheader("問２：複数選択問題")
         options_q2 = ['ア', 'イ', 'ウ', 'エ', 'オ']
-        selected_options_q2 = st.multiselect("問２：複数選択問題", options_q2, key="q2_multi")
+        selected_options_q2 = []
+        for option in options_q2:
+            if st.checkbox(option, key=f"q2_{option}"):
+                selected_options_q2.append(option)
         st.write("問２の選択:", selected_options_q2)
 
-        if st.button("次へ"):
+        if st.button("次へ", disabled=disable_next):
             st.session_state.page = 6 # ページ 6 へ遷移
             st.session_state["answer_q1"] = selected_order_q1 # 解答をセッション変数に保存
             st.session_state["answer_q2"] = selected_options_q2 # 解答をセッション変数に保存
