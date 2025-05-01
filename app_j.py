@@ -454,14 +454,20 @@ elif st.session_state.page == 7:
         st.markdown(
             f"""
             <style>
-                .custom-paragraph {{
-                    white-space: pre-wrap; /* 改行を保持 */
+                .japanese-translation {{
+                    color: white;
+                    background-color: #333;
+                    font-size: 1.1em;
+                    padding: 10px;
+                    border-radius: 5px;
+                    white-space: pre-wrap;
                 }}
             </style>
-            <div class="custom-paragraph">{japanese2_text.replace('<', '&lt;').replace('>', '&gt;')}</div>
+            <div class="japanese-translation">{japanese2_text}</div>
             """,
             unsafe_allow_html=True
         )
+
     else:
         st.error("解説データの読み込みに失敗しました。")
         
