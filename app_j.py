@@ -323,12 +323,6 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     if data is not None and not data.empty:
         page_number = data.get('page', '不明') # 'id' を 'page' に変更
         st.write(f"ページ: {page_number}")
-
-        # --------------------- デバッグ用に追加 ---------------------
-        correct_order_q1_raw = data.get('correct_order_q1', '')
-        st.write(f"取得した正解データ (文字列): '{correct_order_q1_raw}'")
-        # ------------------------------------------------------
-
         st.subheader("問１：並べかえ問題")
         col_q1_1, col_q1_2, col_q1_3, col_q1_4 = st.columns(4)
         options_q1 = ['ア', 'イ', 'ウ', 'エ']
@@ -375,13 +369,7 @@ elif st.session_state.page == 6:
     st.subheader("問１：並べかえ問題")
     if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
         st.write(f"あなたの解答: {st.session_state.user_answer_q1}")
-        st.write("あなたの解答 (要素):")
-        for item in st.session_state.user_answer_q1:
-            st.write(f"- {item}")
         st.write(f"正解: {st.session_state.correct_answer_q1}")
-        st.write("正解 (要素):")
-        for item in st.session_state.correct_answer_q1:
-            st.write(f"- {item}")
         if st.session_state.is_correct_q1:
             st.success("正解！")
         else:
@@ -392,13 +380,7 @@ elif st.session_state.page == 6:
     st.subheader("問２：複数選択問題")
     if "user_answer_q2" in st.session_state and "correct_answer_q2" in st.session_state and "is_correct_q2" in st.session_state:
         st.write(f"あなたの解答: {st.session_state.user_answer_q2}")
-        st.write("あなたの解答 (要素):")
-        for item in st.session_state.user_answer_q2:
-            st.write(f"- {item}")
         st.write(f"正解: {st.session_state.correct_answer_q2}")
-        st.write("正解 (要素):")
-        for item in st.session_state.correct_answer_q2:
-            st.write(f"- {item}")
         if st.session_state.is_correct_q2:
             st.success("正解！")
         else:
