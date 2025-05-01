@@ -432,6 +432,8 @@ elif st.session_state.page == 7:
     if data is not None:
         japanese2_text = data.get('japanese2', '解説データがありません')
         st.markdown(f"<div style='white-space: pre-wrap;'>{japanese2_text}</div>", unsafe_allow_html=True)
+        st.text_area("全訳と解説", value=japanese_text, height=500, disabled=True)
+
     else:
         st.error("解説データの読み込みに失敗しました。")
 
