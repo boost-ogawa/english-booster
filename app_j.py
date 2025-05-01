@@ -341,7 +341,6 @@ elif st.session_state.page == 4: # 結果表示ページ
             unsafe_allow_html=True
         )
 
-
 elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
     st.info("問題を解いたら答えをチェックして次へを押しましょう。")
@@ -349,7 +348,8 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     if data is not None and not data.empty:
         page_number = data.get('page', '不明') # 'id' を 'page' に変更
         st.subheader(f"ページ: {page_number}")
-        st.subheader("問１：並べかえ問題")
+
+        st.subheader("問１：１番目から順にクリック")
         col_q1_1, col_q1_2, col_q1_3, col_q1_4 = st.columns(4)
         options_q1 = ['ア', 'イ', 'ウ', 'エ']
         selected_q1_1 = col_q1_1.radio("1番目", options_q1, key="q1_1")
@@ -358,26 +358,29 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
         remaining_options_q1_4 = [o for o in options_q1 if o != selected_q1_1 and o != selected_q1_2 and o != selected_q1_3]
         selected_q1_4 = col_q1_4.radio("4番目", remaining_options_q1_4, key="q1_4")
         selected_order_q1 = [selected_q1_1, selected_q1_2, selected_q1_3, selected_q1_4]
-        disable_next_q = len(set(selected_order_q1)) < 4
+        is_q1_answered = len(set(selected_order_q1)) == 4
 
-        st.subheader("問２：複数選択問題")
-        options_q2 = ['ア', 'イ', 'ウ', 'エ', 'オ']
+        st.subheader("問２：正しいものをすべてクリック")
+        options_q2 = data.get('Q2', '').split(',')
+        correct_answers_q2_list = [ans.strip() for ans in data.get('A2', '').split(',')]
+
+        cols_q2 = st.columns(len(options_q2)) # 選択肢の数だけカラムを作成
         selected_options_q2 = []
-        for option in options_q2:
-            if st.checkbox(option, key=f"q2_{option}"):
-                selected_options_q2.append(option)
+        for i, option in enumerate(options_q2):
+            with cols_q2[i]:
+                if st.checkbox(option.strip(), key=f"q2_{i}"):
+                    selected_options_q2.append(option.strip())
 
-        if st.button("次へ", disabled=disable_next_q):
-            if not selected_options_q2:
-                st.error("問２の選択肢を少なくとも一つ選択してください。")
-            else:
+        is_q2_answered = len(selected_options_q2) > 0
+
+        if st.button("解答"):
+            if is_q1_answered and is_q2_answered:
                 correct_order_q1_str = data.get('correct_order_q1', '')
                 correct_order_q1 = [item.strip() for item in correct_order_q1_str.split(',')]
+                is_correct_q1 = selected_order_q1 == correct_order_q1
 
                 correct_answers_q2_str = data.get('correct_answers_q2', '')
                 correct_answers_q2 = [item.strip() for item in correct_answers_q2_str.split(',')]
-
-                is_correct_q1 = selected_order_q1 == correct_order_q1
                 is_correct_q2 = set(selected_options_q2) == set(correct_answers_q2)
 
                 st.session_state["is_correct_q1"] = is_correct_q1
@@ -389,8 +392,11 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
 
                 st.session_state.page = 6 # 解答確認ページへ遷移
                 st.rerun()
-        else:
-            st.error("両方の問題に答えてから「次へ」を押しましょう。")
+            else:
+                st.error("両方の問題に答えてから「解答」を押してください。")
+
+    else:
+        st.error("問題データの読み込みに失敗しました。")
 
 elif st.session_state.page == 6:
     st.title("解答確認")
