@@ -310,7 +310,7 @@ elif st.session_state.page == 4: # 結果表示ページ
             # ここで save_results を呼び出す処理は削除またはコメントアウト
             # if not st.session_state.submitted:
             #     save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
-            #                  st.session_state.nickname, st.session_state.user_id)
+            #                 st.session_state.nickname, st.session_state.user_id)
             #     st.session_state.submitted = True
         elif st.session_state.start_time and st.session_state.stop_time:
             st.info("回答の読み込み中です...") # 回答がまだ読み込まれていない場合のメッセージ
@@ -320,7 +320,8 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.session_state.stop_time = None
             st.session_state.submitted = False
             st.rerun()
-with col2:
+    with col2:
+        st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。")
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
             f"""
@@ -338,6 +339,7 @@ with col2:
             """,
             unsafe_allow_html=True
         )
+
 elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
     st.info("問題を解いたら答えをチェックして次へを押しましょう。")
