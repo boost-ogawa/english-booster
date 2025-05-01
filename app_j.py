@@ -321,7 +321,7 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.info("問題を解いたら答えをチェックして次へを押しましょう")
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None and not data.empty:
-        page_number = data.get('id', '不明')
+        page_number = data.get('page', '不明') # 'id' を 'page' に変更
         st.write(f"ページ: {page_number}")
         st.subheader("問１：並べかえ問題")
         col_q1_1, col_q1_2, col_q1_3, col_q1_4 = st.columns(4)
@@ -333,19 +333,36 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
         selected_q1_4 = col_q1_4.radio("4番目", remaining_options_q1_4, key="q1_4")
         selected_order_q1 = [selected_q1_1, selected_q1_2, selected_q1_3, selected_q1_4]
         disable_next_q = len(set(selected_order_q1)) < 4
+
         st.subheader("問２：複数選択問題")
         options_q2 = ['ア', 'イ', 'ウ', 'エ', 'オ']
         selected_options_q2 = []
         for option in options_q2:
             if st.checkbox(option, key=f"q2_{option}"):
                 selected_options_q2.append(option)
+
         if st.button("次へ", disabled=disable_next_q):
+            correct_order_q1_str = data.get('correct_order_q1', '')
+            correct_order_q1 = [item.strip() for item in correct_order_q1_str.split(',')]
+
+            correct_answers_q2_str = data.get('correct_answers_q2', '')
+            correct_answers_q2 = [item.strip() for item in correct_answers_q2_str.split(',')]
+
+            is_correct_q1 = selected_order_q1 == correct_order_q1
+            is_correct_q2 = set(selected_options_q2) == set(correct_answers_q2)
+
+            st.session_state["is_correct_q1"] = is_correct_q1
+            st.session_state["is_correct_q2"] = is_correct_q2
+            st.session_state["user_answer_q1"] = selected_order_q1
+            st.session_state["user_answer_q2"] = selected_options_q2
+            st.session_state["correct_answer_q1"] = correct_order_q1
+            st.session_state["correct_answer_q2"] = correct_answers_q2
+
             st.session_state.page = 6 # 解答確認ページへ遷移
-            st.session_state["answer_q1"] = selected_order_q1
-            st.session_state["answer_q2"] = selected_options_q2
             st.rerun()
     else:
         st.error("問題データの読み込みに失敗しました。")
+
 elif st.session_state.page == 6: # 解答確認ページ
     st.title("解答確認")
     st.subheader("問１の解答")
