@@ -240,7 +240,7 @@ elif st.session_state.page == 2: # 旧ページ 1
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
-    st.info("読み終わったらStopボタンを押しましょう")
+    st.info("読み終わったら「Stop」を押しましょう。")
     col1, _ = st.columns([2, 1])
     with col1:
         st.markdown(
@@ -259,7 +259,7 @@ elif st.session_state.page == 3: # 旧ページ 2
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
-    st.info("問題を解いてSubmitボタンを押しましょう")
+    st.info("問題を解いて「次へ」を押しましょう。")
     col1, col2 = st.columns([2, 1])
     with col1:
         st.markdown(
@@ -274,7 +274,7 @@ elif st.session_state.page == 3: # 旧ページ 2
         st.subheader("Questions")
         st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1")
         st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
-    if st.button("Submit"):
+    if st.button("次へ"):
         if st.session_state.q1 is None or st.session_state.q2 is None:
             st.error("Please answer both questions.")
         else:
@@ -282,7 +282,7 @@ elif st.session_state.page == 3: # 旧ページ 2
             st.rerun()
 
 elif st.session_state.page == 4: # 結果表示ページ
-    st.success("結果を記録しました。") # メッセージを変更
+    st.success("結果を確認して「次へ」を押しましょう。。") # メッセージを変更
     col1, col2 = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
@@ -321,13 +321,13 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.session_state.submitted = False
             st.rerun()
     with col2:
-        st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。")
+        st.info("意味を確認しましょう。確認したら「次へ」を押しましょう。")
         japanese_text = data.get('japanese', 'データがありません')
         st.text_area("意味", value=japanese_text, height=150, disabled=True)
 
 elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
-    st.info("問題を解いたら答えをチェックして次へを押しましょう")
+    st.info("問題を解いたら答えをチェックして次へを押しましょう。")
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None and not data.empty:
         page_number = data.get('page', '不明') # 'id' を 'page' に変更
@@ -377,7 +377,7 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
 elif st.session_state.page == 6:
     st.title("解答確認")
 
-    st.subheader("問１：並べかえ問題")
+    st.subheader("問１：１番目から順にクリック")
     if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
         st.write(f"あなたの解答: {st.session_state.user_answer_q1}")
         st.write(f"正解: {st.session_state.correct_answer_q1}")
@@ -389,7 +389,7 @@ elif st.session_state.page == 6:
     else:
         st.info("問１の解答データがありません")
 
-    st.subheader("問２：複数選択問題")
+    st.subheader("問２：正しいものをすべてクリック")
     if "user_answer_q2" in st.session_state and "correct_answer_q2" in st.session_state and "is_correct_q2" in st.session_state:
         st.write(f"あなたの解答: {st.session_state.user_answer_q2}")
         st.write(f"正解: {st.session_state.correct_answer_q2}")
@@ -415,16 +415,16 @@ elif st.session_state.page == 6:
         save_results(wpm, correct_answers_comprehension, material_id,
                      st.session_state.nickname, st.session_state.user_id,
                      is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
-        st.success("結果を送信しました！")
+        st.success("「次へ」を押しましょう。")
     else:
-        st.error("テキストの答え合わせをしたら「結果を送信」を押しましょう")
+        st.error("テキストの答え合わせをしたら「結果を送信」を押しましょう。")
 
     if st.button("次へ（意味と解説）"):
         st.session_state.page = 7
         st.rerun()
 
 elif st.session_state.page == 7:
-    st.title("意味を確認しましょう　必要なところはメモしてください")
+    st.info("意味を確認しましょう。必要なところはメモしてください・")
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None:
         japanese2_text = data.get('japanese2', '解説データがありません')
