@@ -320,6 +320,7 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.session_state.stop_time = None
             st.session_state.submitted = False
             st.rerun()
+            
     with col2:
         st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。")
         japanese_text = data.get('japanese', 'データがありません')
@@ -339,6 +340,7 @@ elif st.session_state.page == 4: # 結果表示ページ
             """,
             unsafe_allow_html=True
         )
+
 
 elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
