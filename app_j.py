@@ -54,8 +54,10 @@ def load_material(github_url, row_index):
         st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
         return None
 
-# --- Firestoreに結果を保存する関数 ---
-def save_results(wpm, correct_answers, material_id, nickname, user_id):
+
+# --- Firestoreに結果を保存する関数 (修正版 - 正誤判定のみ) ---
+def save_results(wpm, correct_answers_comprehension, material_id, nickname, user_id,
+                 is_correct_q1_text=None, is_correct_q2_text=None):
     jst = timezone('Asia/Tokyo')
     timestamp = datetime.now(jst).isoformat()
 
@@ -65,7 +67,9 @@ def save_results(wpm, correct_answers, material_id, nickname, user_id):
         "timestamp": timestamp,
         "material_id": material_id,
         "wpm": round(wpm, 1),
-        "correct_answers": correct_answers
+        "comprehension_score": correct_answers_comprehension, # 読解問題の正答数
+        "is_correct_q1_text": is_correct_q1_text,
+        "is_correct_q2_text": is_correct_q2_text
     }
 
     try:
@@ -398,34 +402,19 @@ elif st.session_state.page == 6:
     if st.button("結果を送信"):
         user_id = st.session_state.get("user_id")
         row_index = st.session_state.get("fixed_row_index")
-        timestamp = time.time()
         wpm = st.session_state.get("wpm", 0.0)
         correct_answers_comprehension = st.session_state.get("correct_answers_to_store", 0)
-
-        answer_q1_text = st.session_state.get("user_answer_q1")
-        correct_q1_text = st.session_state.get("correct_answer_q1")
         is_correct_q1_text = st.session_state.get("is_correct_q1")
-        answer_q2_text = st.session_state.get("user_answer_q2")
-        correct_q2_text = st.session_state.get("correct_answer_q2")
         is_correct_q2_text = st.session_state.get("is_correct_q2")
 
-        if user_id and row_index:
-            doc_ref = db.collection("reading_quiz_results").document(f"{user_id}_{row_index}_{timestamp}")
-            doc_ref.set({
-                "user_id": user_id,
-                "row_index": row_index,
-                "timestamp": timestamp,
-                "wpm": wpm,
-                "comprehension_score": correct_answers_comprehension,
-                "answer_q1_text": answer_q1_text,
-                "correct_q1_text": correct_q1_text,
-                "is_correct_q1_text": is_correct_q1_text,
-                "answer_q2_text": answer_q2_text,
-                "correct_q2_text": correct_q2_text,
-                "is_correct_q2_text": is_correct_q2_text
-            })
-            st.success("結果を Firebase に送信しました！")
-        else:
+        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+        material_id = str(data.get("id", f"row_{st.session_state.row_to_load}")) if data is not None else "unknown"
+
+        save_results(wpm, correct_answers_comprehension, material_id,
+                     st.session_state.nickname, st.session_state.user_id,
+                     is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
+        st.success("結果を Firebase に送信しました！")
+       else:
             st.error("ユーザーIDまたは行番号が見つかりませんでした。")
 
     if st.button("戻る"):
