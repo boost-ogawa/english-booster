@@ -447,30 +447,31 @@ elif st.session_state.page == 6:
 
 elif st.session_state.page == 7:
     st.info("意味を確認しましょう。必要なところはメモしてください。")
-    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-    
-    if data is not None:
-        japanese2_text = data.get('japanese2', '解説データがありません')
-        st.markdown(
-            f"""
-            <style>
-                .japanese-translation {{
-                    color: white;
-                    background-color: #333;
-                    font-size: 1.1em;
-                    padding: 10px;
-                    border-radius: 5px;
-                    white-space: pre-wrap;
-                }}
-            </style>
-            <div class="japanese-translation">{japanese2_text}</div>
-            """,
-            unsafe_allow_html=True
-        )
+    col1, col2 = st.columns([1, 4]) # 比率は任意で調整
+    with col2:
+        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+        if data is not None:
+            japanese2_text = data.get('japanese2', '解説データがありません')
+            st.markdown(
+                f"""
+                <style>
+                    .japanese-explanation {{
+                        color: white;
+                        background-color: #333;
+                        font-size: 1.1em;
+                        padding: 10px;
+                        border-radius: 5px;
+                        white-space: pre-wrap;
+                        overflow-x: auto;
+                    }}
+                </style>
+                <div class="japanese-explanation">{japanese2_text.replace('<', '&lt;').replace('>', '&gt;')}</div>
+                """,
+                unsafe_allow_html=True
+            )
+        else:
+            st.error("解説データの読み込みに失敗しました。")
 
-    else:
-        st.error("解説データの読み込みに失敗しました。")
-        
     if st.button("終了"):
         st.session_state.page = 0
         st.session_state.start_time = None
@@ -487,4 +488,3 @@ elif st.session_state.page == 7:
         st.session_state.correct_answer_q1 = None
         st.session_state.correct_answer_q2 = None
         st.rerun()
-        
