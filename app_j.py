@@ -215,11 +215,11 @@ if st.session_state.page == 0:
                         st.session_state.is_admin = True
                     else:
                         st.session_state.is_admin = False
-                    st.session_state.page = 5
+                    st.session_state.page = 1 # ページ 5 → 1 に変更
                     st.rerun()
                 else:
                     st.error("ニックネームまたはIDが正しくありません。")
-elif st.session_state.page == 5:
+elif st.session_state.page == 1: # 旧ページ 5
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
     if st.session_state.is_admin:
@@ -229,10 +229,10 @@ elif st.session_state.page == 5:
             st.session_state.fixed_row_index = manual_index
             save_config(manual_index) # Firestore に保存する関数を呼び出す
 
-    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
+    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(2,)): # ページ 1 → 2 に変更
         pass
 
-elif st.session_state.page == 1:
+elif st.session_state.page == 2: # 旧ページ 1
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -248,10 +248,10 @@ elif st.session_state.page == 1:
         )
         if st.button("Stop"):
             st.session_state.stop_time = time.time()
-            st.session_state.page = 2
+            st.session_state.page = 3 # ページ 2 → 3 に変更
             st.rerun()
 
-elif st.session_state.page == 2:
+elif st.session_state.page == 3: # 旧ページ 2
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -274,10 +274,10 @@ elif st.session_state.page == 2:
         if st.session_state.q1 is None or st.session_state.q2 is None:
             st.error("Please answer both questions.")
         else:
-            st.session_state.page = 3
+            st.session_state.page = 4 # ページ 3 → 4 に変更
             st.rerun()
 
-elif st.session_state.page == 3:
+elif st.session_state.page == 4: # 旧ページ 3
     st.success("結果を記録しました。") # メッセージを変更
     col1, col2 = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
 
@@ -308,7 +308,7 @@ elif st.session_state.page == 3:
                 st.session_state.submitted = True
 
         if st.button("次へ"):
-            st.session_state.page = 4
+            st.session_state.page = 5 # ページ 4 → 5 に変更
             st.session_state.start_time = None # 念のため、時間計測関連の変数をリセット
             st.session_state.stop_time = None
             st.session_state.submitted = False
@@ -321,7 +321,7 @@ elif st.session_state.page == 3:
         japanese_text = data.get('japanese', 'データがありません') # 'japanese' 列が存在しない場合のデフォルト値
         st.text_area("意味", value=japanese_text, height=150, disabled=True) # 少し高さを増やしました
 
-elif st.session_state.page == 4:
+elif st.session_state.page == 5: # 旧ページ 4
     st.title("テキストの問題を解きましょう")
     st.info("問題を解いたら答えをチェックして次へを押しましょう")
 
@@ -356,9 +356,9 @@ elif st.session_state.page == 4:
         for option in options_q2:
             if st.checkbox(option, key=f"q2_{option}"):
                 selected_options_q2.append(option)
- 
+
         if st.button("次へ", disabled=disable_next):
-            st.session_state.page = 6 # ページ 6 へ遷移
+            st.session_state.page = 6 # ページ 6 はそのまま
             st.session_state["answer_q1"] = selected_order_q1 # 解答をセッション変数に保存
             st.session_state["answer_q2"] = selected_options_q2 # 解答をセッション変数に保存
             st.rerun()
@@ -380,5 +380,5 @@ elif st.session_state.page == 6:
         st.write("解答がありません")
 
     if st.button("戻る"):
-        st.session_state.page = 4
+        st.session_state.page = 5 # ページ 4 → 5 に変更
         st.rerun()
