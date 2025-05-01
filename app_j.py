@@ -438,53 +438,23 @@ elif st.session_state.page == 6:
             save_results(wpm, correct_answers_comprehension, material_id,
                          st.session_state.nickname, st.session_state.user_id,
                          is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
-            st.success("「次へ」を押しましょう。")
+            st.success("結果を送信しました。別冊（全訳と解説）を見て復習しましょう。")
 
     if st.session_state.results_sent:
-        if st.button("次へ（意味と解説）"):
-            st.session_state.page = 7
+        st.info("別冊（全訳と解説）を見て復習しましょう。")
+        if st.button("終了"):
+            st.session_state.page = 0
+            st.session_state.start_time = None
+            st.session_state.stop_time = None
+            st.session_state.q1 = None
+            st.session_state.q2 = None
+            st.session_state.submitted = False
+            st.session_state.wpm = 0.0
+            st.session_state.correct_answers_to_store = 0
+            st.session_state.is_correct_q1 = None
+            st.session_state.is_correct_q2 = None
+            st.session_state.user_answer_q1 = None
+            st.session_state.user_answer_q2 = None
+            st.session_state.correct_answer_q1 = None
+            st.session_state.correct_answer_q2 = None
             st.rerun()
-
-elif st.session_state.page == 7:
-    st.info("意味を確認しましょう。必要なところはメモしてください。")
-    col1, col2 = st.columns([1, 4]) # 比率は任意で調整
-    with col2:
-        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-        if data is not None:
-            japanese2_text = data.get('japanese2', '解説データがありません')
-            st.markdown(
-                f"""
-                <style>
-                    .japanese-explanation {{
-                        color: white;
-                        background-color: #333;
-                        font-size: 1.1em;
-                        padding: 10px;
-                        border-radius: 5px;
-                        white-space: pre-wrap;
-                        overflow-x: auto;
-                    }}
-                </style>
-                <div class="japanese-explanation">{japanese2_text.replace('<', '&lt;').replace('>', '&gt;')}</div>
-                """,
-                unsafe_allow_html=True
-            )
-        else:
-            st.error("解説データの読み込みに失敗しました。")
-
-    if st.button("終了"):
-        st.session_state.page = 0
-        st.session_state.start_time = None
-        st.session_state.stop_time = None
-        st.session_state.q1 = None
-        st.session_state.q2 = None
-        st.session_state.submitted = False
-        st.session_state.wpm = 0.0
-        st.session_state.correct_answers_to_store = 0
-        st.session_state.is_correct_q1 = None
-        st.session_state.is_correct_q2 = None
-        st.session_state.user_answer_q1 = None
-        st.session_state.user_answer_q2 = None
-        st.session_state.correct_answer_q1 = None
-        st.session_state.correct_answer_q2 = None
-        st.rerun()
