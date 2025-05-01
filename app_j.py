@@ -277,111 +277,85 @@ elif st.session_state.page == 3: # 旧ページ 2
             st.session_state.page = 4 # ページ 3 → 4 に変更
             st.rerun()
 
-elif st.session_state.page == 3:
-    if not st.session_state.submitted:
-        st.info("結果を集計中です...")
-    else:
-        st.success("結果を記録しました。") # メッセージを変更
-        col1, col2 = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
-
-        with col1:
-            data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-            if data is None:
-                st.stop()
-            st.subheader("Result")
-            correct_answers_to_store = 0
-            wpm = 0.0
-
-            if st.session_state.start_time and st.session_state.stop_time:
-                total_time = st.session_state.stop_time - st.session_state.start_time
-                word_count = len(data['main'].split())
-                wpm = (word_count / total_time) * 60
-                st.write(f"総単語数: {word_count} 語")
-                st.write(f"所要時間: {total_time:.2f} 秒")
-                st.write(f"単語数/分: **{wpm:.1f}** WPM")
-                correct1 = st.session_state.q1 == data['A1']
-                correct2 = st.session_state.q2 == data['A2']
-                st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
-                st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
-                correct_answers_to_store = int(correct1) + int(correct2)
-
-                if not st.session_state.submitted:
-                    save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
-                                 st.session_state.nickname, st.session_state.user_id)
-                    st.session_state.submitted = True
-
-            if st.button("次へ"):
-                st.session_state.page = 5
-                st.session_state.start_time = None # 念のため、時間計測関連の変数をリセット
-                st.session_state.stop_time = None
-                st.session_state.submitted = False
-                st.session_state.q1 = None
-                st.session_state.q2 = None
-                st.rerun()
-
-        with col2:
-            st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。") # 指示用のテキストエリアのラベル
-            japanese_text = data.get('japanese', 'データがありません') # 'japanese' 列が存在しない場合のデフォルト値
-            st.text_area("意味", value=japanese_text, height=150, disabled=True) # 少し高さを増やしました
-
-elif st.session_state.page == 5: # 旧ページ 4
+elif st.session_state.page == 4: # 結果表示ページ
+    st.success("結果を記録しました。") # メッセージを変更
+    col1, col2 = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
+    with col1:
+        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+        if data is None:
+            st.stop()
+        st.subheader("Result")
+        correct_answers_to_store = 0
+        wpm = 0.0
+        if st.session_state.start_time and st.session_state.stop_time:
+            total_time = st.session_state.stop_time - st.session_state.start_time
+            word_count = len(data['main'].split())
+            wpm = (word_count / total_time) * 60
+            st.write(f"総単語数: {word_count} 語")
+            st.write(f"所要時間: {total_time:.2f} 秒")
+            st.write(f"単語数/分: **{wpm:.1f}** WPM")
+            correct1 = st.session_state.q1 == data['A1']
+            correct2 = st.session_state.q2 == data['A2']
+            st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
+            st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
+            correct_answers_to_store = int(correct1) + int(correct2)
+            if not st.session_state.submitted:
+                save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
+                             st.session_state.nickname, st.session_state.user_id)
+                st.session_state.submitted = True
+        if st.button("次へ"):
+            st.session_state.page = 5 # 並べ替え・複数選択問題ページへ遷移
+            st.session_state.start_time = None
+            st.session_state.stop_time = None
+            st.session_state.submitted = False
+            st.rerun()
+    with col2:
+        st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。")
+        japanese_text = data.get('japanese', 'データがありません')
+        st.text_area("意味", value=japanese_text, height=150, disabled=True)
+elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
     st.info("問題を解いたら答えをチェックして次へを押しましょう")
-
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None and not data.empty:
-        page_number = data.get('id', '不明') # 'id' 列をページ番号として使用
+        page_number = data.get('id', '不明')
         st.write(f"ページ: {page_number}")
-
-        # 問１：並べかえ問題（ラジオボタンを横に配置）
         st.subheader("問１：並べかえ問題")
         col_q1_1, col_q1_2, col_q1_3, col_q1_4 = st.columns(4)
         options_q1 = ['ア', 'イ', 'ウ', 'エ']
-
         selected_q1_1 = col_q1_1.radio("1番目", options_q1, key="q1_1")
         selected_q1_2 = col_q1_2.radio("2番目", [o for o in options_q1 if o != selected_q1_1], key="q1_2")
         selected_q1_3 = col_q1_3.radio("3番目", [o for o in options_q1 if o != selected_q1_1 and o != selected_q1_2], key="q1_3")
         remaining_options_q1_4 = [o for o in options_q1 if o != selected_q1_1 and o != selected_q1_2 and o != selected_q1_3]
         selected_q1_4 = col_q1_4.radio("4番目", remaining_options_q1_4, key="q1_4")
-
         selected_order_q1 = [selected_q1_1, selected_q1_2, selected_q1_3, selected_q1_4]
-
-        if len(set(selected_order_q1)) < 4:
-            st.error("同じ選択肢を複数選ぶことはできません。")
-            disable_next = True
-        else:
-            disable_next = False
-
-        # 問２：複数選択問題（チェックボックス）
+        disable_next_q = len(set(selected_order_q1)) < 4
         st.subheader("問２：複数選択問題")
         options_q2 = ['ア', 'イ', 'ウ', 'エ', 'オ']
         selected_options_q2 = []
         for option in options_q2:
             if st.checkbox(option, key=f"q2_{option}"):
                 selected_options_q2.append(option)
-
-        if st.button("次へ", disabled=disable_next):
-            st.session_state.page = 6 # ページ 6 はそのまま
-            st.session_state["answer_q1"] = selected_order_q1 # 解答をセッション変数に保存
-            st.session_state["answer_q2"] = selected_options_q2 # 解答をセッション変数に保存
+        if st.button("次へ", disabled=disable_next_q):
+            st.session_state.page = 6 # 解答確認ページへ遷移
+            st.session_state["answer_q1"] = selected_order_q1
+            st.session_state["answer_q2"] = selected_options_q2
             st.rerun()
     else:
         st.error("問題データの読み込みに失敗しました。")
-
-elif st.session_state.page == 6:
+elif st.session_state.page == 6: # 解答確認ページ
     st.title("解答確認")
     st.subheader("問１の解答")
     if "answer_q1" in st.session_state:
         st.write(st.session_state.answer_q1)
     else:
         st.write("解答がありません")
-
     st.subheader("問２の解答")
     if "answer_q2" in st.session_state:
         st.write(st.session_state.answer_q2)
     else:
         st.write("解答がありません")
-
     if st.button("戻る"):
-        st.session_state.page = 5 # ページ 4 → 5 に変更
+        st.session_state.page = 5
         st.rerun()
+
