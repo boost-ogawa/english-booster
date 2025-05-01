@@ -404,22 +404,23 @@ elif st.session_state.page == 6:
     if "results_sent" not in st.session_state:
         st.session_state.results_sent = False
 
-    if st.button("結果を送信"):
-        st.session_state.results_sent = True
-        user_id = st.session_state.get("user_id")
-        row_index = st.session_state.get("fixed_row_index")
-        wpm = st.session_state.get("wpm", 0.0)
-        correct_answers_comprehension = st.session_state.get("correct_answers_to_store", 0)
-        is_correct_q1_text = st.session_state.get("is_correct_q1")
-        is_correct_q2_text = st.session_state.get("is_correct_q2")
+    if not st.session_state.results_sent:
+        if st.button("結果を送信"):
+            st.session_state.results_sent = True
+            user_id = st.session_state.get("user_id")
+            row_index = st.session_state.get("fixed_row_index")
+            wpm = st.session_state.get("wpm", 0.0)
+            correct_answers_comprehension = st.session_state.get("correct_answers_to_store", 0)
+            is_correct_q1_text = st.session_state.get("is_correct_q1")
+            is_correct_q2_text = st.session_state.get("is_correct_q2")
 
-        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-        material_id = str(data.get("id", f"row_{st.session_state.row_to_load}")) if data is not None else "unknown"
+            data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+            material_id = str(data.get("id", f"row_{st.session_state.row_to_load}")) if data is not None else "unknown"
 
-        save_results(wpm, correct_answers_comprehension, material_id,
-                     st.session_state.nickname, st.session_state.user_id,
-                     is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
-        st.success("「次へ」を押しましょう。")
+            save_results(wpm, correct_answers_comprehension, material_id,
+                         st.session_state.nickname, st.session_state.user_id,
+                         is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
+            st.success("「次へ」を押しましょう。")
 
     if st.session_state.results_sent:
         if st.button("次へ（意味と解説）"):
@@ -427,7 +428,7 @@ elif st.session_state.page == 6:
             st.rerun()
 
 elif st.session_state.page == 7:
-    st.info("意味を確認しましょう。必要なところはメモしてください・")
+    st.info("意味を確認しましょう。必要なところはメモしてください。")
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None:
         japanese2_text = data.get('japanese2', '解説データがありません')
