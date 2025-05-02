@@ -408,29 +408,29 @@ elif st.session_state.page == 6:
     st.subheader("丸付けしましょう。全訳と解説を見て復習しましょう。")
 
     if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
+        formatted_user_answer_q1 = ' → '.join(st.session_state.user_answer_q1)
+        formatted_correct_answer_q1 = ' → '.join(st.session_state.correct_answer_q1)
+        is_correct_q1 = st.session_state.is_correct_q1
         if is_correct_q1:
             st.success("正解！")
         else:
             st.error("不正解...")
-        formatted_user_answer_q1 = ' → '.join(st.session_state.user_answer_q1)
-        formatted_correct_answer_q1 = ' → '.join(st.session_state.correct_answer_q1)
         st.write(f"問１　あなたの解答: {formatted_user_answer_q1}")
         st.write(f"正解: {formatted_correct_answer_q1}")
-        is_correct_q1 = st.session_state.is_correct_q1
 
     else:
         st.info("問１の解答データがありません")
         
     if "user_answer_q2" in st.session_state and "correct_answer_q2" in st.session_state and "is_correct_q2" in st.session_state:
+        formatted_user_answer_q2 = ', '.join(st.session_state.user_answer_q2)
+        formatted_correct_answer_q2 = ', '.join(st.session_state.correct_answer_q2)
+        is_correct_q2 = st.session_state.is_correct_q2
         if is_correct_q2:
             st.success("正解！")
         else:
             st.error("不正解...")
-        formatted_user_answer_q2 = ', '.join(st.session_state.user_answer_q2)
-        formatted_correct_answer_q2 = ', '.join(st.session_state.correct_answer_q2)
         st.write(f"問２　あなたの解答: {formatted_user_answer_q2}")
         st.write(f"正解: {formatted_correct_answer_q2}")
-        is_correct_q2 = st.session_state.is_correct_q2
 
     else:
         st.info("問２の解答データがありません")
