@@ -405,18 +405,18 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
         st.error("問題データの読み込みに失敗しました。")
 
 elif st.session_state.page == 6:
-    st.info("解答を確認して丸付けしましょう。別冊（全訳と解説）を見て復習しましょう。")
+    st.subheader("丸付けしましょう。別冊（全訳と解説）を見て復習しましょう。")
 
     if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
         formatted_user_answer_q1 = ' → '.join(st.session_state.user_answer_q1)
         formatted_correct_answer_q1 = ' → '.join(st.session_state.correct_answer_q1)
         is_correct_q1 = st.session_state.is_correct_q1
         if is_correct_q1:
-            st.success("正解！")
+            st.success("問１：正解！")
             st.write(f"あなたの解答: {formatted_user_answer_q1}")
             st.write(f"正解: {formatted_correct_answer_q1}")
         else:
-            st.error("不正解...")
+            st.error("問２：不正解...")
             st.write(f"あなたの解答: {formatted_user_answer_q1}")
             st.write(f"正解: {formatted_correct_answer_q1}")
     else:
@@ -427,11 +427,11 @@ elif st.session_state.page == 6:
         formatted_correct_answer_q2 = ', '.join(st.session_state.correct_answer_q2)
         is_correct_q2 = st.session_state.is_correct_q2
         if is_correct_q2:
-            st.success("正解！")
+            st.success("問１：正解！")
             st.write(f"あなたの解答: {formatted_user_answer_q2}")
             st.write(f"正解: {formatted_correct_answer_q2}")
         else:
-            st.error("不正解...")
+            st.error("問２：不正解...")
             st.write(f"あなたの解答: {formatted_user_answer_q2}")
             st.write(f"正解: {formatted_correct_answer_q2}")
     else:
