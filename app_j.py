@@ -307,11 +307,6 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.session_state["wpm"] = wpm
             st.session_state["correct_answers_to_store"] = correct_answers_to_store
 
-            # ここで save_results を呼び出す処理は削除またはコメントアウト
-            # if not st.session_state.submitted:
-            #     save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
-            #                 st.session_state.nickname, st.session_state.user_id)
-            #     st.session_state.submitted = True
         elif st.session_state.start_time and st.session_state.stop_time:
             st.info("回答の読み込み中です...") # 回答がまだ読み込まれていない場合のメッセージ
         if st.button("次へ"):
@@ -388,6 +383,20 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
                 st.session_state["correct_answer_q1"] = correct_order_q1
                 st.session_state["correct_answer_q2"] = correct_answers_q2
 
+                # ① ここで Firebase への転送を行う
+                user_id = st.session_state.get("user_id")
+                row_index = st.session_state.get("fixed_row_index")
+                wpm = st.session_state.get("wpm", 0.0)
+                correct_answers_comprehension = st.session_state.get("correct_answers_to_store", 0)
+                is_correct_q1_text = st.session_state.get("is_correct_q1")
+                is_correct_q2_text = st.session_state.get("is_correct_q2")
+
+                material_id = str(data.get("id", f"row_{st.session_state.row_to_load}")) if data is not None else "unknown"
+
+                save_results(wpm, correct_answers_comprehension, material_id,
+                             st.session_state.nickname, st.session_state.user_id,
+                             is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
+
                 st.session_state.page = 6 # 解答確認ページへ遷移
                 st.rerun()
             else:
@@ -395,9 +404,9 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
 
     else:
         st.error("問題データの読み込みに失敗しました。")
-        
+
 elif st.session_state.page == 6:
-    st.title("解答確認")
+    st.title("解答を確認して丸付けしましょう。別冊（全訳と解説）を見て復習しましょう。")
 
     st.subheader("問１：１番目から順にクリック")
     if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
@@ -423,41 +432,19 @@ elif st.session_state.page == 6:
     else:
         st.info("問２の解答データがありません")
 
-    if "results_sent" not in st.session_state:
-        st.session_state.results_sent = False
-
-    if not st.session_state.results_sent:
-        if st.button("結果を送信"):
-            st.session_state.results_sent = True
-            user_id = st.session_state.get("user_id")
-            row_index = st.session_state.get("fixed_row_index")
-            wpm = st.session_state.get("wpm", 0.0)
-            correct_answers_comprehension = st.session_state.get("correct_answers_to_store", 0)
-            is_correct_q1_text = st.session_state.get("is_correct_q1")
-            is_correct_q2_text = st.session_state.get("is_correct_q2")
-
-            data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-            material_id = str(data.get("id", f"row_{st.session_state.row_to_load}")) if data is not None else "unknown"
-
-            save_results(wpm, correct_answers_comprehension, material_id,
-                         st.session_state.nickname, st.session_state.user_id,
-                         is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
-            st.success("結果を送信しました。別冊（全訳と解説）を見て復習しましょう。")
-
-    if st.session_state.results_sent:
-        if st.button("終了"):
-            st.session_state.page = 0
-            st.session_state.start_time = None
-            st.session_state.stop_time = None
-            st.session_state.q1 = None
-            st.session_state.q2 = None
-            st.session_state.submitted = False
-            st.session_state.wpm = 0.0
-            st.session_state.correct_answers_to_store = 0
-            st.session_state.is_correct_q1 = None
-            st.session_state.is_correct_q2 = None
-            st.session_state.user_answer_q1 = None
-            st.session_state.user_answer_q2 = None
-            st.session_state.correct_answer_q1 = None
-            st.session_state.correct_answer_q2 = None
-            st.rerun()
+    if st.button("終了"):
+        st.session_state.page = 0
+        st.session_state.start_time = None
+        st.session_state.stop_time = None
+        st.session_state.q1 = None
+        st.session_state.q2 = None
+        st.session_state.submitted = False
+        st.session_state.wpm = 0.0
+        st.session_state.correct_answers_to_store = 0
+        st.session_state.is_correct_q1 = None
+        st.session_state.is_correct_q2 = None
+        st.session_state.user_answer_q1 = None
+        st.session_state.user_answer_q2 = None
+        st.session_state.correct_answer_q1 = None
+        st.session_state.correct_answer_q2 = None
+        st.rerun()
