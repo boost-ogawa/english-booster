@@ -405,7 +405,7 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
         st.error("問題データの読み込みに失敗しました。")
 
 elif st.session_state.page == 6:
-    st.subheader("丸付けしましょう。全訳と解説を見て復習しましょう。")
+    st.info("解答を確認して丸付けしましょう。別冊（全訳と解説）を見て復習しましょう。")
 
     if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
         formatted_user_answer_q1 = ' → '.join(st.session_state.user_answer_q1)
@@ -413,27 +413,30 @@ elif st.session_state.page == 6:
         is_correct_q1 = st.session_state.is_correct_q1
         if is_correct_q1:
             st.success("正解！")
+            st.write(f"あなたの解答: {formatted_user_answer_q1}")
+            st.write(f"正解: {formatted_correct_answer_q1}")
         else:
             st.error("不正解...")
-        st.write(f"問１　あなたの解答: {formatted_user_answer_q1}")
-        st.write(f"正解: {formatted_correct_answer_q1}")
-
+            st.write(f"あなたの解答: {formatted_user_answer_q1}")
+            st.write(f"正解: {formatted_correct_answer_q1}")
     else:
         st.info("問１の解答データがありません")
-        
+
     if "user_answer_q2" in st.session_state and "correct_answer_q2" in st.session_state and "is_correct_q2" in st.session_state:
         formatted_user_answer_q2 = ', '.join(st.session_state.user_answer_q2)
         formatted_correct_answer_q2 = ', '.join(st.session_state.correct_answer_q2)
         is_correct_q2 = st.session_state.is_correct_q2
         if is_correct_q2:
             st.success("正解！")
+            st.write(f"あなたの解答: {formatted_user_answer_q2}")
+            st.write(f"正解: {formatted_correct_answer_q2}")
         else:
             st.error("不正解...")
-        st.write(f"問２　あなたの解答: {formatted_user_answer_q2}")
-        st.write(f"正解: {formatted_correct_answer_q2}")
-
+            st.write(f"あなたの解答: {formatted_user_answer_q2}")
+            st.write(f"正解: {formatted_correct_answer_q2}")
     else:
         st.info("問２の解答データがありません")
+
     if st.button("終了"):
         st.session_state.page = 0
         st.session_state.start_time = None
@@ -450,3 +453,4 @@ elif st.session_state.page == 6:
         st.session_state.correct_answer_q1 = None
         st.session_state.correct_answer_q2 = None
         st.rerun()
+
