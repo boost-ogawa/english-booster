@@ -408,10 +408,11 @@ elif st.session_state.page == 6:
     st.info("解答を確認して丸付けしましょう。別冊（全訳と解説）を見て復習しましょう。")
 
     if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
-        # 問１の解答を整形して表示
-        formatted_answer_q1 = ' → '.join(st.session_state.user_answer_q1)
-        st.write(f"問１　あなたの解答: {formatted_answer_q1}")
-        st.write(f"正解: {st.session_state.correct_answer_q1}")
+        # 問１の解答と正解を整形して表示
+        formatted_user_answer_q1 = ' → '.join(st.session_state.user_answer_q1)
+        formatted_correct_answer_q1 = ' → '.join(st.session_state.correct_answer_q1)
+        st.write(f"問１　あなたの解答: {formatted_user_answer_q1}")
+        st.write(f"正解: {formatted_correct_answer_q1}")
         is_correct_q1 = st.session_state.is_correct_q1
         if is_correct_q1:
             st.success("正解！")
@@ -419,7 +420,7 @@ elif st.session_state.page == 6:
             st.error("不正解...")
     else:
         st.info("問１の解答データがありません")
-
+        
     if "user_answer_q2" in st.session_state and "correct_answer_q2" in st.session_state and "is_correct_q2" in st.session_state:
         st.write(f"問２　あなたの解答: {st.session_state.user_answer_q2}")
         st.write(f"正解: {st.session_state.correct_answer_q2}")
