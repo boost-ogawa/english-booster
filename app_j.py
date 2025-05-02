@@ -337,7 +337,7 @@ elif st.session_state.page == 4: # 結果表示ページ
 
 elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
-    st.info("問題を解いたら答えをチェックして次へを押しましょう。")
+    st.info("問題を解いたら答えをチェックして「提出」を押しましょう。")
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None and not data.empty:
         page_number = data.get('page', '不明') # 'id' を 'page' に変更
@@ -365,7 +365,7 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
 
         is_q2_answered = len(selected_options_q2) > 0
 
-        if st.button("解答"):
+        if st.button("提出"):
             if is_q1_answered and is_q2_answered:
                 correct_order_q1_str = data.get('correct_order_q1', '')
                 correct_order_q1 = [item.strip() for item in correct_order_q1_str.split(',')]
@@ -414,11 +414,11 @@ elif st.session_state.page == 6:
         if is_correct_q1:
             st.success("問１：正解！")
             st.write(f"あなたの解答: {formatted_user_answer_q1}")
-            st.write(f"正解: {formatted_correct_answer_q1}")
+            st.write(f"正しい順番　: {formatted_correct_answer_q1}")
         else:
             st.error("問２：不正解...")
             st.write(f"あなたの解答: {formatted_user_answer_q1}")
-            st.write(f"正解: {formatted_correct_answer_q1}")
+            st.write(f"正しい選択肢: {formatted_correct_answer_q1}")
     else:
         st.info("問１の解答データがありません")
 
