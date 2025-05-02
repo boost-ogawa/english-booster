@@ -317,7 +317,6 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.rerun()
             
     with col2:
-        st.subheader("意味を確認しましょう。確認したら「次へ」を押しましょう。")
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
             f"""
@@ -406,9 +405,9 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
         st.error("問題データの読み込みに失敗しました。")
 
 elif st.session_state.page == 6:
-    st.title("解答を確認して丸付けしましょう。別冊（全訳と解説）を見て復習しましょう。")
+    st.info("解答を確認して丸付けしましょう。別冊（全訳と解説）を見て復習しましょう。")
 
-    st.subheader("問１：１番目から順にクリック")
+    st.write("問１：１番目から順にクリック")
     if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
         st.write(f"あなたの解答: {st.session_state.user_answer_q1}")
         st.write(f"正解: {st.session_state.correct_answer_q1}")
@@ -420,7 +419,7 @@ elif st.session_state.page == 6:
     else:
         st.info("問１の解答データがありません")
 
-    st.subheader("問２：正しいものをすべてクリック")
+    st.write("問２：正しいものをすべてクリック")
     if "user_answer_q2" in st.session_state and "correct_answer_q2" in st.session_state and "is_correct_q2" in st.session_state:
         st.write(f"あなたの解答: {st.session_state.user_answer_q2}")
         st.write(f"正解: {st.session_state.correct_answer_q2}")
