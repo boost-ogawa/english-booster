@@ -357,10 +357,19 @@ elif st.session_state.page == 3:
             st.write(f"総単語数: {word_count} 語")
             st.write(f"所要時間: {total_time:.2f} 秒")
             st.write(f"単語数/分: **{wpm:.1f}** WPM")
+
+            # Q1 の結果表示
             correct1 = st.session_state.q1 == data['A1']
-            correct2 = st.session_state.q2 == data['A2']
             st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
+            st.write(f"あなたの解答 (Q1): {st.session_state.q1}")
+            st.write(f"正解 (Q1): {data['A1']}")
+
+            # Q2 の結果表示
+            correct2 = st.session_state.q2 == data['A2']
             st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
+            st.write(f"あなたの解答 (Q2): {st.session_state.q2}")
+            st.write(f"正解 (Q2): {data['A2']}")
+
             correct_answers_to_store = int(correct1) + int(correct2)
 
             if not st.session_state.submitted:
@@ -369,7 +378,7 @@ elif st.session_state.page == 3:
                 st.session_state.submitted = True
 
         if st.button("Restart"):
-            st.session_state.page = 0 # 最初のログイン画面に戻るように変更
+            st.session_state.page = 5
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.submitted = False
