@@ -336,7 +336,7 @@ elif st.session_state.page == 2:
 
 elif st.session_state.page == 3:
     sidebar_content()
-    st.success("結果を記録しましょう。Restartを押すともう一度できます。")
+    st.success("結果を記録しました。") # メッセージを変更
     col1, col2 = st.columns([1, 2])
     with col2:
         current_user_id = st.session_state.get('user_id')
@@ -377,9 +377,33 @@ elif st.session_state.page == 3:
                              st.session_state.nickname, st.session_state.user_id)
                 st.session_state.submitted = True
 
-        if st.button("Restart"):
-            st.session_state.page = 5
-            st.session_state.start_time = None
-            st.session_state.stop_time = None
-            st.session_state.submitted = False
+        # 「Restart」ボタンを削除し、「意味を確認」ボタンを追加
+        if st.button("意味を確認"):
+            st.session_state.page = 4
             st.rerun()
+
+elif st.session_state.page == 4:
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data is None:
+        st.stop()
+    st.title("英文と日本語訳")
+    col_en, col_ja = st.columns(2)
+    with col_en:
+        st.subheader("英文")
+        st.markdown(
+            f"""
+            <div class="custom-paragraph">
+            {data['main']}
+            </div>
+            """, unsafe_allow_html=True
+        )
+    with col_ja:
+        st.subheader("日本語訳")
+        st.write(data['japanese']) # CSVに'japanese'列がある前提
+
+    if st.button("終了"):
+        st.session_state.page = 5 # トップページに戻るように変更
+        st.session_state.start_time = None
+        st.session_state.stop_time = None
+        st.session_state.submitted = False
+        st.rerun()
