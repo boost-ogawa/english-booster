@@ -399,7 +399,12 @@ elif st.session_state.page == 4:
         )
     with col_ja:
         st.subheader("日本語訳")
-        st.write(data['japanese']) # CSVに'japanese'列がある前提
+        if 'japanese' in data:
+            # フォントサイズを調整するためにstyle属性を追加
+            st.markdown(f"<div style='font-size: 1.5rem;'>{data['japanese']}</div>", unsafe_allow_html=True)
+        else:
+            st.error("CSVファイルに'japanese'列が存在しません。")
+            st.stop()
 
     if st.button("終了"):
         st.session_state.page = 5 # トップページに戻るように変更
