@@ -400,8 +400,15 @@ elif st.session_state.page == 4:
     with col_ja:
         st.subheader("日本語訳")
         if 'japanese' in data:
-            # フォントサイズを調整するためにstyle属性を追加
-            st.markdown(f"<div style='font-size: 1.5rem;'>{data['japanese']}</div>", unsafe_allow_html=True)
+            # 英文と同じスタイルを適用
+            st.markdown(
+                f"""
+                <div style="font-family: Georgia, serif; line-height: 1.8; font-size: 1.5rem;">
+                {data['japanese']}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
         else:
             st.error("CSVファイルに'japanese'列が存在しません。")
             st.stop()
