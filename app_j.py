@@ -453,4 +453,20 @@ elif st.session_state.page == 6:
         st.session_state.correct_answer_q1 = None
         st.session_state.correct_answer_q2 = None
         st.rerun()
+    # --- ここに日本語速読への遷移ボタンを追加 ---
+    if st.button("日本語縦書き速読へ"):
+        st.session_state.page = 7
+        st.rerun()
+
+elif st.session_state.page == 7:
+    st.title("日本語縦書き速読")
+    st.info("ここに日本語の縦書き速読の画像を表示します。")
+
+    # --- GitHubの画像URLをここに記述 ---
+    japanese_image_url = "https://raw.githubusercontent.com/ユーザー名/リポジトリ名/main/images/縦書きテキスト.png"
+    st.image(japanese_image_url)
+
+    if st.button("英語速読に戻る"):
+        st.session_state.page = 0 # 最初のページに戻るように設定 (必要に応じて変更)
+        st.rerun()
 
