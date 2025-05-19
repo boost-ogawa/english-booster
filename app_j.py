@@ -353,14 +353,11 @@ elif st.session_state.page == 3: # 英語問題ページ
             </div>
             """, unsafe_allow_html=True
         )
-
     with col2:
         st.subheader("Questions")
-        initial_q1 = None # または、選択肢にない値を設定
-        initial_q2 = None # または、選択肢にない値を設定
-        st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1", index=None) # index=None で初期選択なし
-        st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2", index=None) # index=None で初期選択なし
-    if st.button("次へ"):
+        st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1_unique") # keyを変更
+        st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2_unique") # keyを変更
+     if st.button("次へ"):
         if st.session_state.q1 is None or st.session_state.q2 is None:
             st.error("Please answer both questions.")
         else:
