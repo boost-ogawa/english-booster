@@ -363,7 +363,6 @@ elif st.session_state.page == 3: # 英語問題ページ
             st.error("Please answer both questions.")
         else:
             st.session_state.page = 4
-            st.rerun()
 
 elif st.session_state.page == 4: # 英語結果表示ページ
     st.success("結果と意味を確認して「次へ」を押しましょう。")
