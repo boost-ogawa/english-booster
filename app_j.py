@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import time
@@ -57,8 +58,7 @@ def load_material(github_url, row_index):
 
 # --- Firestoreに結果を保存する関数 (修正版 - 正誤判定のみ) ---
 def save_results(wpm, correct_answers_comprehension, material_id, nickname, user_id,
-                 is_correct_q1_text=None, is_correct_q2_text=None,
-                 is_correct_q1_jp=None, is_correct_q2_jp=None): # 日本語問題の正誤判定を追加
+                 is_correct_q1_text=None, is_correct_q2_text=None):
     jst = timezone('Asia/Tokyo')
     timestamp = datetime.now(jst).isoformat()
 
@@ -68,11 +68,9 @@ def save_results(wpm, correct_answers_comprehension, material_id, nickname, user
         "timestamp": timestamp,
         "material_id": material_id,
         "wpm": round(wpm, 1),
-        "comprehension_score": correct_answers_comprehension, # 英語読解問題の正答数
-        "is_correct_q1_text": is_correct_q1_text, # 英語テキスト問題1の正誤
-        "is_correct_q2_text": is_correct_q2_text, # 英語テキスト問題2の正誤
-        "is_correct_q1_jp": is_correct_q1_jp,     # 日本語テキスト問題1の正誤
-        "is_correct_q2_jp": is_correct_q2_jp      # 日本語テキスト問題2の正誤
+        "comprehension_score": correct_answers_comprehension, # 読解問題の正答数
+        "is_correct_q1_text": is_correct_q1_text,
+        "is_correct_q2_text": is_correct_q2_text
     }
 
     try:
@@ -125,15 +123,14 @@ st.markdown(
         font-size: 1.5rem;
     }
 
-    /* ボタンのスタイル */
+    /* スタートボタンのスタイル（高さ・フォントサイズ調整済み） */
     div.stButton > button:first-child {
         background-color: #28a745;
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        padding: 15px 30px;
-        font-size: 1.2rem;
-        margin-top: 5px;
+        padding: 20px 40px;         /* 高さと横幅UP */
+        font-size: 1.8rem;           /* フォントサイズUP */
     }
 
     div.stButton > button:first-child:hover {
@@ -153,14 +150,6 @@ st.markdown(
 
     .google-classroom-button:hover {
         background-color: #357AE8;
-    }
-
-    /* 縦書きテキストのスタイル */
-    .vertical-text {
-        writing-mode: vertical-rl;
-        text-orientation: upright;
-        font-size: 2rem;
-        line-height: 2;
     }
     </style>
     """,
@@ -195,84 +184,15 @@ if "set_page_key" not in st.session_state:
     st.session_state["set_page_key"] = "unique_key_speed" # 適当なユニークなキー
 if "is_admin" not in st.session_state:
     st.session_state.is_admin = False # 管理者権限の状態を保持する変数
-if "reading_started" not in st.session_state:
-    st.session_state.reading_started = False
-if "japanese_q1" not in st.session_state:
-    st.session_state.japanese_q1 = None
-if "japanese_q2" not in st.session_state:
-    st.session_state.japanese_q2 = None
 
 # --- ページ遷移関数 ---
 def set_page(page_number):
     st.session_state.page = page_number
 
 # --- 「スピード測定開始」ボタンが押されたときに実行する関数 ---
-def start_reading():
+def start_reading(page_number):
     st.session_state.start_time = time.time()
-    st.session_state.reading_started = True
-
-# --- タイマー停止関数 ---
-def stop_reading(next_page):
-    if st.session_state.reading_started:
-        st.session_state.stop_time = time.time()
-        st.session_state.reading_started = False
-        st.session_state.page = next_page
-        st.rerun()
-    else:
-        st.warning("先に「開始」ボタンを押してください。")
-
-# --- 結果送信と初期化関数 ---
-def submit_and_reset():
-    # ここで結果を Firestore に保存する処理を呼び出す
-    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-    if data:
-        wpm = 0.0
-        if st.session_state.start_time and st.session_state.stop_time and data.get('main'):
-            total_time = st.session_state.stop_time - st.session_state.start_time
-            word_count = len(data['main'].split())
-            wpm = (word_count / total_time) * 60
-
-        correct_answers_comprehension = 0
-        if st.session_state.q1 == data['A1']:
-            correct_answers_comprehension += 1
-        if st.session_state.q2 == data['A2']:
-            correct_answers_comprehension += 1
-
-        is_correct_q1_jp = None
-        is_correct_q2_jp = None
-        if "is_correct_q1_jp" in st.session_state:
-            is_correct_q1_jp = st.session_state.is_correct_q1_jp
-        if "is_correct_q2_jp" in st.session_state:
-            is_correct_q2_jp = st.session_state.is_correct_q2_jp
-
-        material_id = str(data.get("id", f"row_{st.session_state.row_to_load}")) if data is not None else "unknown"
-
-        save_results(wpm, correct_answers_comprehension, material_id,
-                     st.session_state.nickname, st.session_state.user_id,
-                     is_correct_q1_text=st.session_state.get("is_correct_q1"),
-                     is_correct_q2_text=st.session_state.get("is_correct_q2"),
-                     is_correct_q1_jp=is_correct_q1_jp,
-                     is_correct_q2_jp=is_correct_q2_jp)
-
-    # セッション変数の初期化
-    st.session_state.page = 0
-    st.session_state.start_time = None
-    st.session_state.stop_time = None
-    st.session_state.q1 = None
-    st.session_state.q2 = None
-    st.session_state.submitted = False
-    st.session_state.wpm = 0.0
-    st.session_state.correct_answers_to_store = 0
-    st.session_state.is_correct_q1 = None
-    st.session_state.is_correct_q2 = None
-    st.session_state.user_answer_q1 = None
-    st.session_state.user_answer_q2 = None
-    st.session_state.correct_answer_q1 = None
-    st.session_state.correct_answer_q2 = None
-    st.session_state.reading_started = False
-    st.session_state.japanese_q1 = None
-    st.session_state.japanese_q2 = None
-    st.rerun()
+    st.session_state.page = page_number
 
 # --- メインの処理 ---
 if st.session_state.page == 0:
@@ -300,11 +220,11 @@ if st.session_state.page == 0:
                         st.session_state.is_admin = True
                     else:
                         st.session_state.is_admin = False
-                    st.session_state.page = 1
+                    st.session_state.page = 1 # ページ 5 → 1 に変更
                     st.rerun()
                 else:
                     st.error("ニックネームまたはIDが正しくありません。")
-elif st.session_state.page == 1: # 言語選択ページ
+elif st.session_state.page == 1: # 旧ページ 5
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
     if st.session_state.is_admin:
@@ -314,15 +234,10 @@ elif st.session_state.page == 1: # 言語選択ページ
             st.session_state.fixed_row_index = manual_index
             save_config(manual_index) # Firestore に保存する関数を呼び出す
 
-    if st.button("英語の学習開始（表示される英文を読んでStopをおしましょう）", key="start_english", use_container_width=True, on_click=start_reading, args=()):
-        st.session_state.page = 2
-        st.rerun()
+    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(2,)): # ページ 1 → 2 に変更
+        pass
 
-    if st.button("国語の学習開始（表示される文章を読んでStopをおしましょう）", key="start_japanese", use_container_width=True, on_click=start_reading, args=()):
-        st.session_state.page = 7
-        st.rerun()
-
-elif st.session_state.page == 2: # 英語テキスト表示ページ
+elif st.session_state.page == 2: # 旧ページ 1
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -336,10 +251,12 @@ elif st.session_state.page == 2: # 英語テキスト表示ページ
             </div>
             """, unsafe_allow_html=True
         )
-        if st.button("Stop", on_click=stop_reading, args=(3,)):
-            pass
+        if st.button("Stop"):
+            st.session_state.stop_time = time.time()
+            st.session_state.page = 3 # ページ 2 → 3 に変更
+            st.rerun()
 
-elif st.session_state.page == 3: # 英語問題ページ
+elif st.session_state.page == 3: # 旧ページ 2
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -353,19 +270,21 @@ elif st.session_state.page == 3: # 英語問題ページ
             </div>
             """, unsafe_allow_html=True
         )
+
     with col2:
         st.subheader("Questions")
-        st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1_unique") # keyを変更
-        st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2_unique") # keyを変更
+        st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1")
+        st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
     if st.button("次へ"):
         if st.session_state.q1 is None or st.session_state.q2 is None:
             st.error("Please answer both questions.")
         else:
-            st.session_state.page = 4
+            st.session_state.page = 4 # ページ 3 → 4 に変更
+            st.rerun()
 
-elif st.session_state.page == 4: # 英語結果表示ページ
-    st.success("結果と意味を確認して「次へ」を押しましょう。")
-    col1, col2 = st.columns([1, 4])
+elif st.session_state.page == 4: # 結果表示ページ
+    st.success("結果と意味を確認して「次へ」を押しましょう。") # メッセージを変更
+    col1, col2 = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
         if data is None:
@@ -390,14 +309,14 @@ elif st.session_state.page == 4: # 英語結果表示ページ
             st.session_state["correct_answers_to_store"] = correct_answers_to_store
 
         elif st.session_state.start_time and st.session_state.stop_time:
-            st.info("回答の読み込み中です...")
+            st.info("回答の読み込み中です...") # 回答がまだ読み込まれていない場合のメッセージ
         if st.button("次へ"):
             st.session_state.page = 5
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.submitted = False
             st.rerun()
-
+            
     with col2:
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
@@ -417,12 +336,12 @@ elif st.session_state.page == 4: # 英語結果表示ページ
             unsafe_allow_html=True
         )
 
-elif st.session_state.page == 5: # 英語並べ替え・複数選択問題ページ
+elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
     st.info("問題を解いたら答えをチェックして「提出」を押しましょう。")
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None and not data.empty:
-        page_number = data.get('page', '不明')
+        page_number = data.get('page', '不明') # 'id' を 'page' に変更
         st.subheader(f"ページ: {page_number}")
 
         st.subheader("問１：１番目から順にクリック")
@@ -481,12 +400,12 @@ elif st.session_state.page == 5: # 英語並べ替え・複数選択問題ペー
                 st.session_state.page = 6 # 解答確認ページへ遷移
                 st.rerun()
             else:
-                st.error("両方の問題に答えてから「提出」を押してください。")
+                st.error("両方の問題に答えてから「解答」を押してください。")
 
     else:
         st.error("問題データの読み込みに失敗しました。")
 
-elif st.session_state.page == 6: # 英語解答確認ページ
+elif st.session_state.page == 6:
     st.subheader("丸付けしましょう。別冊（全訳と解説）を見て復習しましょう。")
 
     if "user_answer_q1" in st.session_state and "correct_answer_q1" in st.session_state and "is_correct_q1" in st.session_state:
@@ -498,7 +417,7 @@ elif st.session_state.page == 6: # 英語解答確認ページ
             st.write(f"あなたの解答: {formatted_user_answer_q1}")
             st.write(f"正しい順番　: {formatted_correct_answer_q1}")
         else:
-            st.error("問１：不正解...")
+            st.error("問２：不正解...")
             st.write(f"あなたの解答: {formatted_user_answer_q1}")
             st.write(f"正しい順番　: {formatted_correct_answer_q1}")
     else:
@@ -509,7 +428,7 @@ elif st.session_state.page == 6: # 英語解答確認ページ
         formatted_correct_answer_q2 = ', '.join(st.session_state.correct_answer_q2)
         is_correct_q2 = st.session_state.is_correct_q2
         if is_correct_q2:
-            st.success("問２：正解！")
+            st.success("問１：正解！")
             st.write(f"あなたの解答: {formatted_user_answer_q2}")
             st.write(f"正しい選択肢: {formatted_correct_answer_q2}")
         else:
@@ -519,78 +438,41 @@ elif st.session_state.page == 6: # 英語解答確認ページ
     else:
         st.info("問２の解答データがありません")
 
-    if st.button("ホーム", on_click=submit_and_reset): # 「終了」ボタンを「ホーム」に変更
-        pass
-    # --- 「日本語縦書き速読へ」ボタンを「国語の学習開始」に変更 ---
-    if st.button("国語の学習開始（表示される文章を読んでStopをおしましょう）", on_click=start_reading):
+    if st.button("終了"):
+        st.session_state.page = 0
+        st.session_state.start_time = None
+        st.session_state.stop_time = None
+        st.session_state.q1 = None
+        st.session_state.q2 = None
+        st.session_state.submitted = False
+        st.session_state.wpm = 0.0
+        st.session_state.correct_answers_to_store = 0
+        st.session_state.is_correct_q1 = None
+        st.session_state.is_correct_q2 = None
+        st.session_state.user_answer_q1 = None
+        st.session_state.user_answer_q2 = None
+        st.session_state.correct_answer_q1 = None
+        st.session_state.correct_answer_q2 = None
+        st.rerun()
+    # --- ここに日本語速読への遷移ボタンを追加 ---
+    if st.button("日本語縦書き速読へ"):
         st.session_state.page = 7
         st.rerun()
 
-elif st.session_state.page == 7: # 日本語縦書き速読ページ
-    col_left, col_right = st.columns([1, 9])
-    with col_left:
-        if st.button("Stop", key="stop_japanese", on_click=stop_reading, args=(8,)):
-            pass
-    with col_right:
-        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-        if data is not None:
-            japanese_image_url = data.get('japanese_image_url')
-            if japanese_image_url:
-                st.image(japanese_image_url)
-            else:
-                st.error("対応する日本語画像のURLが見つかりませんでした。")
-        else:
-            st.error("データ読み込みに失敗しました。")
+elif st.session_state.page == 7:
+    st.title("日本語縦書き速読")
+    st.info("ここに日本語の縦書き速読の画像を表示します。")
 
-elif st.session_state.page == 8: # 日本語問題ページ
-    st.title("日本語の文章に対する問題")
-    st.info("問題を解いて「次へ」を押しましょう。")
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is not None:
-        st.subheader("問題")
-        st.radio(data['japanese_q1'], ['はい', 'いいえ'], key="japanese_q1")
-        st.radio(data['japanese_q2'], ['はい', 'いいえ'], key="japanese_q2")
-        if st.button("次へ"):
-            if st.session_state.japanese_q1 is None or st.session_state.japanese_q2 is None:
-                st.error("両方の問題に答えてください。")
-            else:
-                st.session_state.page = 9
+        japanese_image_url = data.get('japanese_image_url')
+        if japanese_image_url:
+            st.image(japanese_image_url)
+        else:
+            st.error("対応する日本語画像のURLが見つかりませんでした。")
     else:
-        st.error("問題データの読み込みに失敗しました。")
+        st.error("英文素材の読み込みに失敗しました。")
 
-elif st.session_state.page == 9: # 日本語正誤判定と提出ページ
-    st.title("解答確認")
-    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-    if data is not None:
-        is_correct_q1_jp = (st.session_state.japanese_q1 == data['japanese_a1']) if 'japanese_a1' in data else None
-        is_correct_q2_jp = (st.session_state.japanese_q2 == data['japanese_a2']) if 'japanese_a2' in data else None
-
-        if is_correct_q1_jp is not None:
-            if is_correct_q1_jp:
-                st.success("問１：正解！")
-            else:
-                st.error("問１：不正解...")
-        else:
-            st.warning("問１の正答データがありません。")
-
-        if is_correct_q2_jp is not None:
-            if is_correct_q2_jp:
-                st.success("問２：正解！")
-            else:
-                st.error("問２：不正解...")
-        else:
-            st.warning("問２の正答データがありません。")
-
-        if st.button("提出"):
-            # ここで日本語の解答も Firestore に保存する
-            wpm = 0.0 # 日本語のWPMは今回は計算しない
-            correct_answers_comprehension = 0 # 英語の読解問題の正答数はそのまま
-            material_id = str(data.get("id", f"row_{st.session_state.row_to_load}")) if data is not None else "unknown"
-
-            save_results(wpm, correct_answers_comprehension, material_id,
-                         st.session_state.nickname, st.session_state.user_id,
-                         is_correct_q1_jp=is_correct_q1_jp, is_correct_q2_jp=is_correct_q2_jp)
-
-            st.session_state.page = 0 # ページ 1 に戻る
-            st.session_state.start_time = None
-            st.session_state.stop_time
+    if st.button("英語速読に戻る"):
+        st.session_state.page = 0 # 最初のページに戻るように設定 (必要に応じて変更)
+        st.rerun()
