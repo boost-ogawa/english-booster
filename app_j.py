@@ -462,11 +462,16 @@ elif st.session_state.page == 7:
     st.title("日本語縦書き速読")
     st.info("ここに日本語の縦書き速読の画像を表示します。")
 
-    # --- GitHubの画像URLをここに記述 ---
-    japanese_image_url = "https://raw.githubusercontent.com/ユーザー名/リポジトリ名/main/images/縦書きテキスト.png"
-    st.image(japanese_image_url)
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data is not None:
+        japanese_image_url = data.get('japanese_image_url')
+        if japanese_image_url:
+            st.image(japanese_image_url)
+        else:
+            st.error("対応する日本語画像のURLが見つかりませんでした。")
+    else:
+        st.error("英文素材の読み込みに失敗しました。")
 
     if st.button("英語速読に戻る"):
         st.session_state.page = 0 # 最初のページに戻るように設定 (必要に応じて変更)
         st.rerun()
-
