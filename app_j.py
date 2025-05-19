@@ -556,7 +556,6 @@ elif st.session_state.page == 8: # 日本語問題ページ
                 st.error("両方の問題に答えてください。")
             else:
                 st.session_state.page = 9
-                st.rerun()
     else:
         st.error("問題データの読み込みに失敗しました。")
 
