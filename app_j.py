@@ -357,7 +357,7 @@ elif st.session_state.page == 3: # 英語問題ページ
         st.subheader("Questions")
         st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1_unique") # keyを変更
         st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2_unique") # keyを変更
-     if st.button("次へ"):
+    if st.button("次へ"):
         if st.session_state.q1 is None or st.session_state.q2 is None:
             st.error("Please answer both questions.")
         else:
