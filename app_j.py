@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import time
@@ -15,7 +14,6 @@ GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results_j.csv"
 GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user_j.csv"
 DATA_PATH = "data_j.csv"
-GOOGLE_CLASSROOM_URL = "YOUR_GOOGLE_CLASSROOM_URL_HERE" # Google ClassroomのURLを設定してください
 ADMIN_USERNAME = "admin" # 例：管理者ユーザー名
 ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "7nBTVRXi1ars") # Streamlit Secrets から取得
 
@@ -45,7 +43,7 @@ def get_user_data(github_raw_url, nickname, user_id):
 def load_material(github_url, row_index):
     """GitHubのCSVファイルから指定された行のデータを読み込む関数"""
     try:
-        df = pd.read_csv(github_url)
+        df = pd.read_csv(github_raw_url)
         if 0 <= row_index < len(df):
             return df.iloc[row_index]
         else:
@@ -74,7 +72,7 @@ def save_results(wpm, correct_answers_comprehension, material_id, nickname, user
     }
 
     try:
-        db.collection("results_j").add(result_data)  # 保存先のコレクション名を "results_j" に変更
+        db.collection("results_j").add(result_data) 
         print("結果が results_j に保存されました")
     except Exception as e:
         st.error(f"結果の保存に失敗しました: {e}")
@@ -161,7 +159,7 @@ config = load_config()
 if "row_to_load" not in st.session_state:
     st.session_state.row_to_load = 0
 if "fixed_row_index" not in st.session_state:
-    st.session_state.fixed_row_index = config.get("fixed_row_index", 17) # Firestoreから読み込んだ値、なければデフォルトの17
+    st.session_state.fixed_row_index = config.get("fixed_row_index", 0)
 if "page" not in st.session_state:
     st.session_state.page = 0
 if "start_time" not in st.session_state:
@@ -184,6 +182,8 @@ if "set_page_key" not in st.session_state:
     st.session_state["set_page_key"] = "unique_key_speed" # 適当なユニークなキー
 if "is_admin" not in st.session_state:
     st.session_state.is_admin = False # 管理者権限の状態を保持する変数
+if "japanese_reading_started" not in st.session_state:
+    st.session_state.japanese_reading_started = False
 
 # --- ページ遷移関数 ---
 def set_page(page_number):
@@ -193,6 +193,12 @@ def set_page(page_number):
 def start_reading(page_number):
     st.session_state.start_time = time.time()
     st.session_state.page = page_number
+
+# --- 「国語の学習開始」ボタンが押されたときに実行する関数 ---
+def start_japanese_reading():
+    st.session_state.page = 7
+    st.session_state.start_time = time.time()
+    st.session_state.japanese_reading_started = True
 
 # --- メインの処理 ---
 if st.session_state.page == 0:
@@ -234,10 +240,12 @@ elif st.session_state.page == 1: # 旧ページ 5
             st.session_state.fixed_row_index = manual_index
             save_config(manual_index) # Firestore に保存する関数を呼び出す
 
-    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(2,)): # ページ 1 → 2 に変更
+    if st.button("英語の学習開始（表示される英文を読んでStopをおしましょう）", key="english_start_button", use_container_width=True, on_click=start_reading, args=(2,)): 
+        pass
+    if st.button("国語の学習開始（表示される文章を読んでStopをおしましょう）", key="japanese_start_button", use_container_width=True, on_click=start_japanese_reading):
         pass
 
-elif st.session_state.page == 2: # 旧ページ 1
+elif st.session_state.page == 2:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -253,10 +261,10 @@ elif st.session_state.page == 2: # 旧ページ 1
         )
         if st.button("Stop"):
             st.session_state.stop_time = time.time()
-            st.session_state.page = 3 # ページ 2 → 3 に変更
+            st.session_state.page = 3
             st.rerun()
 
-elif st.session_state.page == 3: # 旧ページ 2
+elif st.session_state.page == 3:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -279,12 +287,12 @@ elif st.session_state.page == 3: # 旧ページ 2
         if st.session_state.q1 is None or st.session_state.q2 is None:
             st.error("Please answer both questions.")
         else:
-            st.session_state.page = 4 # ページ 3 → 4 に変更
+            st.session_state.page = 4
             st.rerun()
 
 elif st.session_state.page == 4: # 結果表示ページ
-    st.success("結果と意味を確認して「次へ」を押しましょう。") # メッセージを変更
-    col1, col2 = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
+    st.success("結果と意味を確認して「次へ」を押しましょう。")
+    col1, col2 = st.columns([1, 4])
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
         if data is None:
@@ -453,7 +461,7 @@ elif st.session_state.page == 6:
         st.session_state.user_answer_q2 = None
         st.session_state.correct_answer_q1 = None
         st.session_state.correct_answer_q2 = None
-        st.rerun()
+        st.session_state.rerun()
     # --- ここに日本語速読への遷移ボタンを追加 ---
     if st.button("日本語縦書き速読へ"):
         st.session_state.page = 7
