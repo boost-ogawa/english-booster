@@ -468,7 +468,7 @@ elif st.session_state.page == 6:
         pass
     
 elif st.session_state.page == 7:
-    col1, col2 = st.columns([1, 9]) # 幅を1:9に分割
+    col1, col2 = st.columns([1, 8]) # 幅を1:9に分割
 
     with col1:
         # 左カラムにStopボタンを配置
