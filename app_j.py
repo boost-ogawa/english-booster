@@ -54,29 +54,28 @@ def load_material(github_url, row_index):
         st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
         return None
 
-
-# --- Firestoreに結果を保存する関数 (修正版 - 正誤判定のみ) ---
-def save_results(wpm, correct_answers_comprehension, material_id, nickname, user_id,
-                 is_correct_q1_text=None, is_correct_q2_text=None):
+# --- Firestoreに英語の結果を保存する関数 ---
+# save_english_resultsという関数名に変更して、より明確に区別できるようにします。
+def save_english_results(wpm, correct_answers_comprehension, material_id, nickname, # user_idを削除
+                         is_correct_q1_text=None, is_correct_q2_text=None):
     jst = timezone('Asia/Tokyo')
     timestamp = datetime.now(jst).isoformat()
 
     result_data = {
-        "user_id": user_id,
         "nickname": nickname,
         "timestamp": timestamp,
         "material_id": material_id,
         "wpm": round(wpm, 1),
-        "comprehension_score": correct_answers_comprehension, # 読解問題の正答数
+        "comprehension_score": correct_answers_comprehension,
         "is_correct_q1_text": is_correct_q1_text,
         "is_correct_q2_text": is_correct_q2_text
     }
 
     try:
-        db.collection("results_j").add(result_data)  # 保存先のコレクション名を "results_j" に変更
-        print("結果が results_j に保存されました")
+        db.collection("english_results").add(result_data)
+        print("英語の結果が english_results に保存されました")
     except Exception as e:
-        st.error(f"結果の保存に失敗しました: {e}")
+        st.error(f"英語結果の保存に失敗しました: {e}")
 
 # --- Firestoreから設定を読み込む関数 ---
 def load_config():
@@ -398,18 +397,19 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
                 st.session_state["correct_answer_q1"] = correct_order_q1
                 st.session_state["correct_answer_q2"] = correct_answers_q2
 
+
                 # ① ここで Firebase への転送を行う
-                user_id = st.session_state.get("user_id")
-                row_index = st.session_state.get("fixed_row_index")
+                # user_id = st.session_state.get("user_id") # ★削除
                 wpm = st.session_state.get("wpm", 0.0)
                 correct_answers_comprehension = st.session_state.get("correct_answers_to_store", 0)
                 is_correct_q1_text = st.session_state.get("is_correct_q1")
                 is_correct_q2_text = st.session_state.get("is_correct_q2")
 
-                material_id = str(data.get("id", f"row_{st.session_state.row_to_load}")) if data is not None else "unknown"
+                material_id = str(data.get("id", f"row_{st.session_state.fixed_row_index}")) if data is not None else "unknown"
 
-                save_results(wpm, correct_answers_comprehension, material_id,
-                             st.session_state.nickname, st.session_state.user_id,
+               # ★ここを修正: save_results の関数名と引数を変更
+                save_english_results(wpm, correct_answers_comprehension, material_id,
+                             st.session_state.nickname, # user_idを削除
                              is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
 
                 st.session_state.page = 6 # 解答確認ページへ遷移
