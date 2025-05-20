@@ -43,7 +43,7 @@ def get_user_data(github_raw_url, nickname, user_id):
 def load_material(github_url, row_index):
     """GitHubのCSVファイルから指定された行のデータを読み込む関数"""
     try:
-        df = pd.read_csv(github_raw_url)
+        df = pd.read_csv(github_url) # 引数として渡された github_url を使用
         if 0 <= row_index < len(df):
             return df.iloc[row_index]
         else:
@@ -52,7 +52,6 @@ def load_material(github_url, row_index):
     except Exception as e:
         st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
         return None
-
 
 # --- Firestoreに結果を保存する関数 (修正版 - 正誤判定のみ) ---
 def save_results(wpm, correct_answers_comprehension, material_id, nickname, user_id,
