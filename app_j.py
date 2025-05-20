@@ -55,8 +55,7 @@ def load_material(github_url, row_index):
         return None
 
 # --- Firestoreに英語の結果を保存する関数 ---
-# save_english_resultsという関数名に変更して、より明確に区別できるようにします。
-def save_english_results(wpm, correct_answers_comprehension, material_id, nickname, # user_idを削除
+def save_english_results(wpm, correct_answers_comprehension, material_id, nickname,
                          is_correct_q1_text=None, is_correct_q2_text=None):
     jst = timezone('Asia/Tokyo')
     timestamp = datetime.now(jst).isoformat()
@@ -76,6 +75,27 @@ def save_english_results(wpm, correct_answers_comprehension, material_id, nickna
         print("英語の結果が english_results に保存されました")
     except Exception as e:
         st.error(f"英語結果の保存に失敗しました: {e}")
+
+# --- ★新規追加：Firestoreに日本語の結果を保存する関数 ---
+def save_japanese_results(wpm_japanese, material_id, nickname,
+                          is_correct_q1_ja=None, is_correct_q2_ja=None):
+    jst = timezone('Asia/Tokyo')
+    timestamp = datetime.now(jst).isoformat()
+
+    result_data = {
+        "nickname": nickname,
+        "timestamp": timestamp,
+        "material_id": material_id,
+        "wpm_japanese": round(wpm_japanese, 1) if wpm_japanese is not None else None,
+        "is_correct_q1_ja": is_correct_q1_ja,
+        "is_correct_q2_ja": is_correct_q2_ja
+    }
+
+    try:
+        db.collection("japanese_results").add(result_data) # ★日本語結果用のコレクション名
+        print("日本語の結果が japanese_results に保存されました")
+    except Exception as e:
+        st.error(f"日本語結果の保存に失敗しました: {e}")
 
 # --- Firestoreから設定を読み込む関数 ---
 def load_config():
@@ -525,11 +545,24 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
             st.session_state.is_correct_q1_ja = (st.session_state.q1_ja == data['correct_answer_q1_ja'])
             st.session_state.is_correct_q2_ja = (st.session_state.q2_ja == data['correct_answer_q2_ja'])
 
-            # ★Firebaseへの保存処理はまだ呼び出さない（前回同様、動作確認後に）
+            # ★ここから追加★
+            # 日本語WPMを計算
+            wpm_japanese_calculated = 0.0
+            if st.session_state.get("start_time") and st.session_state.get("stop_time_japanese") and st.session_state.word_count_japanese > 0:
+                total_time_japanese = st.session_state.stop_time_japanese - st.session_state.start_time
+                wpm_japanese_calculated = (st.session_state.word_count_japanese / total_time_japanese) * 60
+
+            # 日本語の結果をFirestoreに送信
+            material_id_ja = str(data.get("id", f"row_{st.session_state.fixed_row_index}_ja")) if data is not None else "unknown_ja" # 英語と区別するため_jaを付ける
+            save_japanese_results(wpm_japanese_calculated, material_id_ja,
+                                  st.session_state.nickname,
+                                  is_correct_q1_ja=st.session_state.is_correct_q1_ja,
+                                  is_correct_q2_ja=st.session_state.is_correct_q2_ja)
+            # ★ここまで追加★
 
             st.session_state.page = 9 # ページ9へ遷移
             st.rerun()
-
+    
 elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
     st.title("日本語学習結果")
     st.success("本日の日本語学習お疲れ様でした！")
