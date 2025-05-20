@@ -489,7 +489,6 @@ elif st.session_state.page == 7:
         else:
             st.error("コンテンツデータの読み込みに失敗しました。")
 
----
 elif st.session_state.page == 8:
     st.title("日本語速読 終了")
     st.write("日本語速読の練習が終了しました。")
