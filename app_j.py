@@ -507,22 +507,6 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
 
     st.info("問題を解いて「次へ」を押しましょう。")
     st.subheader("日本語読解問題")
-
-    # 所要時間の表示
-    if st.session_state.get("start_time") and st.session_state.get("stop_time_japanese"):
-        total_time_japanese = st.session_state.stop_time_japanese - st.session_state.start_time
-        st.write(f"所要時間: {total_time_japanese:.2f} 秒")
-        # 日本語WPMの計算と表示 (word_count_japaneseが0でないことを確認)
-        if st.session_state.word_count_japanese > 0:
-            wpm_japanese = (st.session_state.word_count_japanese / total_time_japanese) * 60
-            st.write(f"日本語単語数/分: **{wpm_japanese:.1f}** WPM")
-        else:
-            st.info("日本語の単語数データがありません。")
-    else:
-        st.info("まだ日本語速読が開始されていないか、停止されていません。")
-
-    st.markdown("---") # 区切り線
-
     # 日本語問題 問1
     st.subheader("問１")
     st.write(data['q1_ja']) # q1_ja列のテキストを表示
@@ -537,20 +521,60 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
         if st.session_state.q1_ja is None or st.session_state.q2_ja is None:
             st.error("両方の問題に答えてから「次へ」を押してください。")
         else:
-            # 回答の正誤判定（表示はしないが、セッションステートに保持は可能）
-            is_correct_q1_ja = (st.session_state.q1_ja == data['correct_answer_q1_ja'])
-            is_correct_q2_ja = (st.session_state.q2_ja == data['correct_answer_q2_ja'])
+            # 回答の正誤判定（セッションステートに保持）
+            st.session_state.is_correct_q1_ja = (st.session_state.q1_ja == data['correct_answer_q1_ja'])
+            st.session_state.is_correct_q2_ja = (st.session_state.q2_ja == data['correct_answer_q2_ja'])
 
-            # ★Firebaseへの保存処理は一旦削除
-            # save_results(...) はここには呼び出さない
+            # ★Firebaseへの保存処理はまだ呼び出さない（前回同様、動作確認後に）
 
             st.session_state.page = 9 # ページ9へ遷移
             st.rerun()
 
-elif st.session_state.page == 9: # 日本語学習の最終ページ
-    st.title("日本語学習 完了")
+elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
+    st.title("日本語学習結果")
     st.success("本日の日本語学習お疲れ様でした！")
-    st.write("結果は記録されました。（※現在、結果は送信されていません）") # メッセージを追加
+
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data is None:
+        st.stop()
+
+    st.subheader("📖 読書データ")
+    if st.session_state.get("start_time") and st.session_state.get("stop_time_japanese"):
+        total_time_japanese = st.session_state.stop_time_japanese - st.session_state.start_time
+        st.write(f"読書時間: **{total_time_japanese:.2f} 秒**")
+
+        if st.session_state.word_count_japanese > 0:
+            wpm_japanese = (st.session_state.word_count_japanese / total_time_japanese) * 60
+            st.write(f"1分あたりの文字数: **{wpm_japanese:.1f} WPM**") # 文字数/分をWPMで表現
+        else:
+            st.info("日本語の文字数データがありませんでした。")
+    else:
+        st.info("日本語速読の計測データがありません。")
+
+    st.subheader("📝 問題結果")
+    # 問1の結果表示
+    if "is_correct_q1_ja" in st.session_state:
+        if st.session_state.is_correct_q1_ja:
+            st.write("問１: ✅ **正解**")
+        else:
+            st.write("問１: ❌ **不正解**")
+        st.write(f"あなたの回答: **{st.session_state.q1_ja}**")
+        st.write(f"正解: **{data['correct_answer_q1_ja']}**")
+    else:
+        st.info("問１の解答データがありません。")
+
+    # 問2の結果表示
+    if "is_correct_q2_ja" in st.session_state:
+        if st.session_state.is_correct_q2_ja:
+            st.write("問２: ✅ **正解**")
+        else:
+            st.write("問２: ❌ **不正解**")
+        st.write(f"あなたの回答: **{st.session_state.q2_ja}**")
+        st.write(f"正解: **{data['correct_answer_q2_ja']}**")
+    else:
+        st.info("問２の解答データがありません。")
+
+    st.markdown("---")
 
     if st.button("ホームへ戻る"):
         # セッションステートをリセットしてページ1へ
