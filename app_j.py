@@ -183,7 +183,8 @@ if "set_page_key" not in st.session_state:
     st.session_state["set_page_key"] = "unique_key_speed" # 適当なユニークなキー
 if "is_admin" not in st.session_state:
     st.session_state.is_admin = False # 管理者権限の状態を保持する変数
-
+if "stop_time_japanese" not in st.session_state:
+    st.session_state.stop_time_japanese = None
 # --- ページ遷移関数 ---
 def set_page(page_number):
     st.session_state.page = page_number
@@ -482,4 +483,63 @@ elif st.session_state.page == 7:
 
     if st.button("英語速読に戻る"):
         st.session_state.page = 1 # 最初のページに戻るように設定 (必要に応じて変更)
+        st.rerun()
+
+---
+elif st.session_state.page == 7:
+    col1, col2 = st.columns([1, 9]) # 幅を1:9に分割
+
+    with col1:
+        # 左カラムにStopボタンを配置
+        if st.button("Stop", key="stop_japanese_reading_button"): # on_clickを削除
+            st.session_state.stop_time_japanese = time.time() # 日本語速読のタイマーを停止
+            st.session_state.page = 8 # ページ8へ遷移
+            st.rerun() # アプリを再実行
+
+    with col2:
+        # 右カラムに日本語縦書き画像を配置
+        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+        if data is not None:
+            japanese_image_url = data.get('japanese_image_url')
+            if japanese_image_url:
+                st.image(japanese_image_url)
+            else:
+                st.error("対応する画像のURLが見つかりませんでした。")
+        else:
+            st.error("コンテンツデータの読み込みに失敗しました。")
+
+---
+elif st.session_state.page == 8:
+    st.title("日本語速読 終了")
+    st.write("日本語速読の練習が終了しました。")
+
+    # 必要であれば、ここでWPMなどの結果を表示する
+    if st.session_state.get("start_time") and st.session_state.get("stop_time_japanese"):
+        total_time_japanese = st.session_state.stop_time_japanese - st.session_state.start_time
+        st.write(f"所要時間: {total_time_japanese:.2f} 秒")
+        # word_count_japanese = ... （もし日本語の単語数を数える場合はここに追加）
+        # if word_count_japanese > 0:
+        #     wpm_japanese = (word_count_japanese / total_time_japanese) * 60
+        #     st.write(f"日本語単語数/分: {wpm_japanese:.1f} WPM")
+    else:
+        st.info("まだ日本語速読が開始されていないか、停止されていません。")
+
+
+    if st.button("ホームへ戻る"):
+        # セッションステートをリセットしてページ1へ
+        st.session_state.page = 1
+        st.session_state.start_time = None
+        st.session_state.stop_time_japanese = None # 日本語速読用のタイマーをリセット
+        # 必要に応じて他のセッションステートもリセット
+        st.session_state.q1 = None
+        st.session_state.q2 = None
+        st.session_state.submitted = False
+        st.session_state.wpm = 0.0
+        st.session_state.correct_answers_to_store = 0
+        st.session_state.is_correct_q1 = None
+        st.session_state.is_correct_q2 = None
+        st.session_state.user_answer_q1 = None
+        st.session_state.user_answer_q2 = None
+        st.session_state.correct_answer_q1 = None
+        st.session_state.correct_answer_q2 = None
         st.rerun()
