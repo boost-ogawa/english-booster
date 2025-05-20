@@ -9,6 +9,7 @@ import json
 import tempfile
 import re
 import os
+from io import StringIO # ここを追加または確認
 
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data_j.csv"
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results_j.csv"
@@ -41,17 +42,32 @@ def get_user_data(github_raw_url, nickname, user_id):
         return None
 
 # --- データ読み込み関数 ---
+@st.cache_data # @st.cache_data を追加
 def load_material(github_url, row_index):
     """GitHubのCSVファイルから指定された行のデータを読み込む関数"""
     try:
-        df = pd.read_csv(github_url)
+        response = requests.get(github_url)
+        response.raise_for_status() # HTTPエラー (4xx, 5xx) があれば例外を発生させる
+
+        # CSVファイルをDataFrameとして読み込む
+        # エンコーディングを明示的に指定し、エラー処理を追加
+        df = pd.read_csv(StringIO(response.text), encoding='utf-8', errors='replace')
+
+        # 指定された行番号がデータ範囲内にあるか確認
         if 0 <= row_index < len(df):
-            return df.iloc[row_index]
+            # ★★★ ここを修正: .to_dict() を追加して辞書形式で返す ★★★
+            return df.iloc[row_index].to_dict()
         else:
-            st.error(f"指定された行番号 ({row_index + 1}) はファイルに存在しません。")
+            st.error(f"指定された行番号 ({row_index}) がデータ範囲外です。データは {len(df)} 行あります。")
             return None
+    except requests.exceptions.RequestException as e:
+        st.error(f"URLからのデータ取得に失敗しました。URLを確認してください: {github_url} エラー: {e}")
+        return None
+    except pd.errors.EmptyDataError:
+        st.error("CSVファイルが空です。または形式が不正です。")
+        return None
     except Exception as e:
-        st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
+        st.error(f"データの読み込み中に予期せぬエラーが発生しました: {e}")
         return None
 
 
@@ -128,7 +144,7 @@ st.markdown(
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        padding: 20px 40px;         /* 高さと横幅UP */
+        padding: 20px 40px;          /* 高さと横幅UP */
         font-size: 1.8rem;           /* フォントサイズUP */
     }
 
@@ -349,7 +365,7 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
     st.info("問題を解いたら答えをチェックして「提出」を押しましょう。")
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-    if data is not None and not data.empty:
+    if data is not None and not data.empty: # ここも 'data.empty' のチェックがありますが、load_materialが辞書を返すなら不要
         page_number = data.get('page', '不明') # 'id' を 'page' に変更
         st.subheader(f"ページ: {page_number}")
 
@@ -411,8 +427,9 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
             else:
                 st.error("両方の問題に答えてから「解答」を押してください。")
 
-    else:
+    else: # load_material が None を返した場合
         st.error("問題データの読み込みに失敗しました。")
+
 
 elif st.session_state.page == 6:
     st.subheader("丸付けしましょう。別冊（全訳と解説）を見て復習しましょう。")
@@ -495,7 +512,7 @@ elif st.session_state.page == 8:
 
     # CSVから日本語の問題を取得
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-    if data:
+    if data is not None: # ここを if data: から if data is not None: に変更
         q1_ja = data.get("q1_ja") # 日本語の問題1
         q2_ja = data.get("q2_ja") # 日本語の問題2
         correct_answer_q1_ja = data.get("correct_answer_q1_ja") # 日本語の問題1の正答
@@ -518,7 +535,7 @@ elif st.session_state.page == 8:
                 st.rerun()
         else:
             st.error("日本語の問題文または正答が見つかりませんでした。")
-    else:
+    else: # load_material から None が返された場合
         st.error("コンテンツデータの読み込みに失敗しました。")
 
     if st.button("ホームへ戻る"): # ページ8に残しておきます
@@ -543,7 +560,7 @@ elif st.session_state.page == 9:
     st.title("結果")
     st.write("結果表示")
 
-    if st.session_state.user_answer_q1 and st.session_state.user_answer_q2:
+    if st.session_state.user_answer_q1 is not None and st.session_state.user_answer_q2 is not None:
         # ユーザーの回答と正答を比較
         is_correct_q1 = st.session_state.user_answer_q1 == st.session_state.correct_answer_q1
         is_correct_q2 = st.session_state.user_answer_q2 == st.session_state.correct_answer_q2
