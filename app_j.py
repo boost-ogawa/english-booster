@@ -446,8 +446,8 @@ elif st.session_state.page == 6:
     else:
         st.info("問２の解答データがありません")
 
-    if st.button("終了"):
-        st.session_state.page = 0
+    if st.button("ホームへ戻る"):
+        st.session_state.page = 1
         st.session_state.start_time = None
         st.session_state.stop_time = None
         st.session_state.q1 = None
@@ -463,10 +463,9 @@ elif st.session_state.page == 6:
         st.session_state.correct_answer_q2 = None
         st.rerun()
     # --- ここに日本語速読への遷移ボタンを追加 ---
-    if st.button("日本語縦書き速読へ"):
-        st.session_state.page = 7
-        st.rerun()
-
+    if st.button("国語の学習開始（表示される文章を読んでStopをおしましょう）", key="japanese_reading_from_page6", on_click=start_japanese_reading):
+        pass
+    
 elif st.session_state.page == 7:
     st.title("日本語縦書き速読")
     st.info("ここに日本語の縦書き速読の画像を表示します。")
@@ -482,5 +481,5 @@ elif st.session_state.page == 7:
         st.error("英文素材の読み込みに失敗しました。")
 
     if st.button("英語速読に戻る"):
-        st.session_state.page = 0 # 最初のページに戻るように設定 (必要に応じて変更)
+        st.session_state.page = 1 # 最初のページに戻るように設定 (必要に応じて変更)
         st.rerun()
