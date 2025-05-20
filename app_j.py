@@ -223,7 +223,8 @@ if st.session_state.page == 0:
                     st.rerun()
                 else:
                     st.error("ニックネームまたはIDが正しくありません。")
-elif st.session_state.page == 1: # 旧ページ 5
+
+elif st.session_state.page == 1:
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
     if st.session_state.is_admin:
@@ -233,7 +234,9 @@ elif st.session_state.page == 1: # 旧ページ 5
             st.session_state.fixed_row_index = manual_index
             save_config(manual_index) # Firestore に保存する関数を呼び出す
 
-    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(2,)):
+    if st.button("英語の学習開始（表示される英文を読んでStopをおしましょう）", key="english_start_button", use_container_width=True, on_click=start_reading, args=(2,)):
+        pass
+    if st.button("国語の学習開始（表示される文章を読んでStopをおしましょう）", key="japanese_start_button", use_container_width=True, on_click=start_japanese_reading):
         pass
 
 elif st.session_state.page == 2:
