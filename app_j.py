@@ -10,6 +10,7 @@ import tempfile
 import re
 import os
 from io import StringIO # ここを追加または確認
+import requests
 
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data_j.csv"
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results_j.csv"
