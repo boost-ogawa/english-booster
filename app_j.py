@@ -193,6 +193,12 @@ def start_reading(page_number):
     st.session_state.start_time = time.time()
     st.session_state.page = page_number
 
+# --- 「国語の学習開始」ボタンが押されたときに実行する関数 ---
+def start_japanese_reading():
+    st.session_state.page = 7
+    st.session_state.start_time = time.time()
+    st.session_state.japanese_reading_started = True
+
 # --- メインの処理 ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
