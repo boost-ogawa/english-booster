@@ -490,27 +490,91 @@ elif st.session_state.page == 7:
             st.error("コンテンツデータの読み込みに失敗しました。")
 
 elif st.session_state.page == 8:
-    st.title("日本語速読 終了")
-    st.write("日本語速読の練習が終了しました。")
+    st.title("問題に挑戦")
+    st.info("問題を解いて「次へ」を押しましょう。")
 
-    # 必要であれば、ここでWPMなどの結果を表示する
-    if st.session_state.get("start_time") and st.session_state.get("stop_time_japanese"):
-        total_time_japanese = st.session_state.stop_time_japanese - st.session_state.start_time
-        st.write(f"所要時間: {total_time_japanese:.2f} 秒")
-        # word_count_japanese = ... （もし日本語の単語数を数える場合はここに追加）
-        # if word_count_japanese > 0:
-        #     wpm_japanese = (word_count_japanese / total_time_japanese) * 60
-        #     st.write(f"日本語単語数/分: {wpm_japanese:.1f} WPM")
+    # CSVから日本語の問題を取得
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data:
+        q1_ja = data.get("q1_ja") # 日本語の問題1
+        q2_ja = data.get("q2_ja") # 日本語の問題2
+        correct_answer_q1_ja = data.get("correct_answer_q1_ja") # 日本語の問題1の正答
+        correct_answer_q2_ja = data.get("correct_answer_q2_ja") # 日本語の問題2の正答
+
+        if q1_ja and q2_ja and correct_answer_q1_ja and correct_answer_q2_ja: # 問題文と正答がある場合のみ表示
+            st.write(f"**問1:** {q1_ja}")
+            user_answer_q1 = st.radio("選択してください", ("正しい", "正しくない"), key="radio_q1_ja")
+
+            st.write(f"**問2:** {q2_ja}")
+            user_answer_q2 = st.radio("選択してください", ("正しい", "正しくない"), key="radio_q2_ja")
+
+            if st.button("次へ"):
+                # ユーザーの回答をセッションステートに保存
+                st.session_state.user_answer_q1 = user_answer_q1
+                st.session_state.user_answer_q2 = user_answer_q2
+                st.session_state.correct_answer_q1 = correct_answer_q1_ja # 正答も保存
+                st.session_state.correct_answer_q2 = correct_answer_q2_ja
+                st.session_state.page = 9
+                st.rerun()
+        else:
+            st.error("日本語の問題文または正答が見つかりませんでした。")
     else:
-        st.info("まだ日本語速読が開始されていないか、停止されていません。")
+        st.error("コンテンツデータの読み込みに失敗しました。")
 
+    if st.button("ホームへ戻る"): # ページ8に残しておきます
+        # セッションステートをリセットしてページ1へ
+        st.session_state.page = 1
+        st.session_state.start_time = None
+        st.session_state.stop_time_japanese = None
+        st.session_state.q1 = None
+        st.session_state.q2 = None
+        st.session_state.submitted = False
+        st.session_state.wpm = 0.0
+        st.session_state.correct_answers_to_store = 0
+        st.session_state.is_correct_q1 = None
+        st.session_state.is_correct_q2 = None
+        st.session_state.user_answer_q1 = None
+        st.session_state.user_answer_q2 = None
+        st.session_state.correct_answer_q1 = None
+        st.session_state.correct_answer_q2 = None
+        st.rerun()
+
+elif st.session_state.page == 9:
+    st.title("結果")
+    st.write("結果表示")
+
+    if st.session_state.user_answer_q1 and st.session_state.user_answer_q2:
+        # ユーザーの回答と正答を比較
+        is_correct_q1 = st.session_state.user_answer_q1 == st.session_state.correct_answer_q1
+        is_correct_q2 = st.session_state.user_answer_q2 == st.session_state.correct_answer_q2
+
+        # 結果をセッションステートに保存
+        st.session_state.is_correct_q1 = is_correct_q1
+        st.session_state.is_correct_q2 = is_correct_q2
+
+        # 結果を表示
+        st.write(f"問1のあなたの回答: {st.session_state.user_answer_q1} (正答: {st.session_state.correct_answer_q1})")
+        st.write(f"問2のあなたの回答: {st.session_state.user_answer_q2} (正答: {st.session_state.correct_answer_q2})")
+
+        # 正誤を表示
+        if is_correct_q1:
+            st.write("問1: 正解！")
+        else:
+            st.write("問1: 不正解...")
+
+        if is_correct_q2:
+            st.write("問2: 正解！")
+        else:
+            st.write("問2: 不正解...")
+
+    else:
+        st.write("回答が保存されていません。")
 
     if st.button("ホームへ戻る"):
         # セッションステートをリセットしてページ1へ
         st.session_state.page = 1
         st.session_state.start_time = None
-        st.session_state.stop_time_japanese = None # 日本語速読用のタイマーをリセット
-        # 必要に応じて他のセッションステートもリセット
+        st.session_state.stop_time_japanese = None
         st.session_state.q1 = None
         st.session_state.q2 = None
         st.session_state.submitted = False
