@@ -345,7 +345,7 @@ elif st.session_state.page == 4: # 結果表示ページ
         elif st.session_state.start_time and st.session_state.stop_time:
             st.info("回答の読み込み中です...") # 回答がまだ読み込まれていない場合のメッセージ
         if st.button("次へ"):
-            st.session_state.page = 5
+            st.session_state.page = 45
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.submitted = False
@@ -369,6 +369,44 @@ elif st.session_state.page == 4: # 結果表示ページ
             """,
             unsafe_allow_html=True
         )
+
+elif st.session_state.page == 45: # 復習音声ページ (ページ4と5の間)
+    st.title("復習：音声を聞いてみましょう")
+    st.info("英文の音声を聞いて内容を確認しましょう。")
+
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data is None:
+        st.error("データの読み込みに失敗しました。")
+        st.stop()
+
+    audio_url = data.get('audio_url') # CSVの'audio_url'列からURLを取得することを想定
+    main_text = data.get('main') # 英文も表示できるように
+
+    if audio_url:
+        st.subheader("💡 音声を聞く")
+        st.audio(audio_url, format="audio/mp3") # 音声ファイルの形式に合わせて変更してください
+
+        st.subheader("原文")
+        st.markdown(
+            f"""
+            <div class="custom-paragraph">
+            {main_text}
+            </div>
+            """, unsafe_allow_html=True
+        )
+    else:
+        st.warning("この英文には音声データがありません。")
+        st.write(f"""
+            <div class="custom-paragraph">
+            {main_text}
+            </div>
+            """, unsafe_allow_html=True
+        )
+
+    st.markdown("---")
+    if st.button("次の問題へ進む"):
+        st.session_state.page = 5 # ページ5へ遷移
+        st.rerun()
 
 elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
     st.title("テキストの問題を解きましょう")
