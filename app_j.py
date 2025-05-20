@@ -185,6 +185,12 @@ if "is_admin" not in st.session_state:
     st.session_state.is_admin = False # 管理者権限の状態を保持する変数
 if "stop_time_japanese" not in st.session_state:
     st.session_state.stop_time_japanese = None
+if "q1_ja" not in st.session_state:
+    st.session_state.q1_ja = None
+if "q2_ja" not in st.session_state:
+    st.session_state.q2_ja = None
+if "word_count_japanese" not in st.session_state: # 日本語の単語数を保存
+    st.session_state.word_count_japanese = 0
 # --- ページ遷移関数 ---
 def set_page(page_number):
     st.session_state.page = page_number
@@ -466,16 +472,16 @@ elif st.session_state.page == 6:
     # --- ここに日本語速読への遷移ボタンを追加 ---
     if st.button("国語の学習開始（表示される文章を読んでStopをおしましょう）", key="japanese_reading_from_page6", on_click=start_japanese_reading):
         pass
-    
+
 elif st.session_state.page == 7:
     col1, col2 = st.columns([1, 9]) # 幅を1:9に分割
 
     with col1:
         # 左カラムにStopボタンを配置
-        if st.button("Stop", key="stop_japanese_reading_button"): # on_clickを削除
-            st.session_state.stop_time_japanese = time.time() # 日本語速読のタイマーを停止
+        if st.button("Stop", key="stop_japanese_reading_button"):
+            st.session_state.stop_time_japanese = time.time()
             st.session_state.page = 8 # ページ8へ遷移
-            st.rerun() # アプリを再実行
+            st.rerun()
 
     with col2:
         # 右カラムに日本語縦書き画像を配置
@@ -484,35 +490,78 @@ elif st.session_state.page == 7:
             japanese_image_url = data.get('japanese_image_url')
             if japanese_image_url:
                 st.image(japanese_image_url)
+                # ★ここから追加★
+                # 日本語の単語数をセッションステートに保存
+                # 'word_count_ja' 列がCSVに存在することを前提としています
+                st.session_state.word_count_japanese = data.get('word_count_ja', 0)
+                # ★ここまで追加★
             else:
                 st.error("対応する画像のURLが見つかりませんでした。")
         else:
             st.error("コンテンツデータの読み込みに失敗しました。")
 
-elif st.session_state.page == 8:
-    st.title("日本語速読 終了")
-    st.write("日本語速読の練習が終了しました。")
+elif st.session_state.page == 8: # 日本語読解問題ページ
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data is None:
+        st.stop()
 
-    # 必要であれば、ここでWPMなどの結果を表示する
+    st.info("問題を解いて「次へ」を押しましょう。")
+    st.subheader("日本語読解問題")
+
+    # 所要時間の表示
     if st.session_state.get("start_time") and st.session_state.get("stop_time_japanese"):
         total_time_japanese = st.session_state.stop_time_japanese - st.session_state.start_time
         st.write(f"所要時間: {total_time_japanese:.2f} 秒")
-        # word_count_japanese = ... （もし日本語の単語数を数える場合はここに追加）
-        # if word_count_japanese > 0:
-        #     wpm_japanese = (word_count_japanese / total_time_japanese) * 60
-        #     st.write(f"日本語単語数/分: {wpm_japanese:.1f} WPM")
+        # 日本語WPMの計算と表示 (word_count_japaneseが0でないことを確認)
+        if st.session_state.word_count_japanese > 0:
+            wpm_japanese = (st.session_state.word_count_japanese / total_time_japanese) * 60
+            st.write(f"日本語単語数/分: **{wpm_japanese:.1f}** WPM")
+        else:
+            st.info("日本語の単語数データがありません。")
     else:
         st.info("まだ日本語速読が開始されていないか、停止されていません。")
 
+    st.markdown("---") # 区切り線
+
+    # 日本語問題 問1
+    st.subheader("問１")
+    st.write(data['q1_ja']) # q1_ja列のテキストを表示
+    st.radio("問１の回答", ["正しい", "正しくない"], key="q1_ja")
+
+    # 日本語問題 問2
+    st.subheader("問２")
+    st.write(data['q2_ja']) # q2_ja列のテキストを表示
+    st.radio("問２の回答", ["正しい", "正しくない"], key="q2_ja")
+
+    if st.button("次へ"):
+        if st.session_state.q1_ja is None or st.session_state.q2_ja is None:
+            st.error("両方の問題に答えてから「次へ」を押してください。")
+        else:
+            # 回答の正誤判定（表示はしないが、セッションステートに保持は可能）
+            is_correct_q1_ja = (st.session_state.q1_ja == data['correct_answer_q1_ja'])
+            is_correct_q2_ja = (st.session_state.q2_ja == data['correct_answer_q2_ja'])
+
+            # ★Firebaseへの保存処理は一旦削除
+            # save_results(...) はここには呼び出さない
+
+            st.session_state.page = 9 # ページ9へ遷移
+            st.rerun()
+
+elif st.session_state.page == 9: # 日本語学習の最終ページ
+    st.title("日本語学習 完了")
+    st.success("本日の日本語学習お疲れ様でした！")
+    st.write("結果は記録されました。（※現在、結果は送信されていません）") # メッセージを追加
 
     if st.button("ホームへ戻る"):
         # セッションステートをリセットしてページ1へ
         st.session_state.page = 1
         st.session_state.start_time = None
-        st.session_state.stop_time_japanese = None # 日本語速読用のタイマーをリセット
-        # 必要に応じて他のセッションステートもリセット
-        st.session_state.q1 = None
-        st.session_state.q2 = None
+        st.session_state.stop_time = None # 英語用
+        st.session_state.stop_time_japanese = None # 日本語用
+        st.session_state.q1 = None # 英語Q1
+        st.session_state.q2 = None # 英語Q2
+        st.session_state.q1_ja = None # 日本語Q1
+        st.session_state.q2_ja = None # 日本語Q2
         st.session_state.submitted = False
         st.session_state.wpm = 0.0
         st.session_state.correct_answers_to_store = 0
@@ -522,4 +571,5 @@ elif st.session_state.page == 8:
         st.session_state.user_answer_q2 = None
         st.session_state.correct_answer_q1 = None
         st.session_state.correct_answer_q2 = None
+        st.session_state.word_count_japanese = 0 # 日本語単語数もリセット
         st.rerun()
