@@ -532,7 +532,7 @@ elif st.session_state.page == 6:
         pass
 
 elif st.session_state.page == 7:
-    col1, col2 = st.columns([1, 9]) # 幅を1:9に分割
+    col1, col2 = st.columns([1, 3]) # 幅を1:9に分割
 
     with col1:
         # 左カラムにStopボタンを配置
@@ -602,48 +602,59 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
             st.rerun()
     
 elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
-    st.title("日本語学習結果")
-    st.success("本日の日本語学習お疲れ様でした！")
-
+    st.success("もう一度文章を読んで答えの根拠を考えましょう")
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
+        st.error("コンテンツデータの読み込みに失敗しました。") # エラー表示はこちらでまとめて
         st.stop()
 
-    st.subheader("📖 読書データ")
-    if st.session_state.get("start_time") and st.session_state.get("stop_time_japanese"):
-        total_time_japanese = st.session_state.stop_time_japanese - st.session_state.start_time
-        st.write(f"読書時間: **{total_time_japanese:.2f} 秒**")
+    col1, col2 = st.columns([2, 8]) # 幅を1:9に分割
 
-        if st.session_state.word_count_japanese > 0:
-            wpm_japanese = (st.session_state.word_count_japanese / total_time_japanese) * 60
-            st.write(f"1分あたりの文字数: **{wpm_japanese:.1f} WPM**") # 文字数/分をWPMで表現
-        else:
-            st.info("日本語の文字数データがありませんでした。")
-    else:
-        st.info("日本語速読の計測データがありません。")
+    with col1:
+        st.subheader("📖 読書データ")
+        if st.session_state.get("start_time") and st.session_state.get("stop_time_japanese"):
+            total_time_japanese = st.session_state.stop_time_japanese - st.session_state.start_time
+            st.write(f"読書時間: **{total_time_japanese:.2f} 秒**")
 
-    st.subheader("📝 問題結果")
-    # 問1の結果表示
-    if "is_correct_q1_ja" in st.session_state:
-        if st.session_state.is_correct_q1_ja:
-            st.write("問１: ✅ **正解**")
+            if st.session_state.word_count_japanese > 0:
+                wpm_japanese = (st.session_state.word_count_japanese / total_time_japanese) * 60
+                st.write(f"1分あたりの文字数: **{wpm_japanese:.1f} WPM**") # 文字数/分をWPMで表現
+            else:
+                st.info("日本語の文字数データがありませんでした。")
         else:
-            st.write("問１: ❌ **不正解**")
-        st.write(f"あなたの回答: **{st.session_state.q1_ja}**")
-        st.write(f"正解: **{data['correct_answer_q1_ja']}**")
-    else:
-        st.info("問１の解答データがありません。")
+            st.info("日本語速読の計測データがありません。")
 
-    # 問2の結果表示
-    if "is_correct_q2_ja" in st.session_state:
-        if st.session_state.is_correct_q2_ja:
-            st.write("問２: ✅ **正解**")
+        st.subheader("📝 問題結果")
+        # 問1の結果表示
+        if "is_correct_q1_ja" in st.session_state:
+            if st.session_state.is_correct_q1_ja:
+                st.write("問１: ✅ **正解**")
+            else:
+                st.write("問１: ❌ **不正解**")
+            st.write(f"あなたの回答: **{st.session_state.q1_ja}**")
+            st.write(f"正解: **{data['correct_answer_q1_ja']}**")
         else:
-            st.write("問２: ❌ **不正解**")
-        st.write(f"あなたの回答: **{st.session_state.q2_ja}**")
-        st.write(f"正解: **{data['correct_answer_q2_ja']}**")
-    else:
-        st.info("問２の解答データがありません。")
+            st.info("問１の解答データがありません。")
+
+        # 問2の結果表示
+        if "is_correct_q2_ja" in st.session_state:
+            if st.session_state.is_correct_q2_ja:
+                st.write("問２: ✅ **正解**")
+            else:
+                st.write("問２: ❌ **不正解**")
+            st.write(f"あなたの回答: **{st.session_state.q2_ja}**")
+            st.write(f"正解: **{data['correct_answer_q2_ja']}**")
+        else:
+            st.info("問２の解答データがありません。")
+
+    with col2:
+        # 右カラムに日本語縦書き画像を配置
+        japanese_image_url = data.get('japanese_image_url')
+        if japanese_image_url:
+            st.image(japanese_image_url)
+            st.session_state.word_count_japanese = data.get('word_count_ja', 0)
+        else:
+            st.error("対応する画像のURLが見つかりませんでした。")
 
     st.markdown("---")
 
