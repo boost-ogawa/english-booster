@@ -565,6 +565,7 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
 
     st.info("問題を解いて「次へ」を押しましょう。")
     st.subheader("次の記述は文章から読み取れることとして正しいか")
+    st.markdown("---") 
     col1, col2 = st.columns([1, 1])
 
     with col1:
@@ -577,7 +578,7 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
         st.subheader("問２")
         st.write(data['q2_ja']) # q2_ja列のテキストを表示
         st.radio("問２の回答", ["正しい", "正しくない"], key="q2_ja")
-
+    st.markdown("---")
     if st.button("次へ"):
         if st.session_state.q1_ja is None or st.session_state.q2_ja is None:
             st.error("両方の問題に答えてから「次へ」を押してください。")
