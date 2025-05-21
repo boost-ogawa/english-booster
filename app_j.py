@@ -564,16 +564,19 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
         st.stop()
 
     st.info("問題を解いて「次へ」を押しましょう。")
-    st.subheader("日本語読解問題")
-    # 日本語問題 問1
-    st.subheader("問１")
-    st.write(data['q1_ja']) # q1_ja列のテキストを表示
-    st.radio("問１の回答", ["正しい", "正しくない"], key="q1_ja")
+    st.subheader("次の記述は文章から読み取れることとして正しいか")
+    col1, col2 = st.columns([1, 1])
 
-    # 日本語問題 問2
-    st.subheader("問２")
-    st.write(data['q2_ja']) # q2_ja列のテキストを表示
-    st.radio("問２の回答", ["正しい", "正しくない"], key="q2_ja")
+    with col1:
+        # 日本語問題 問1
+        st.subheader("問１")
+        st.write(data['q1_ja']) # q1_ja列のテキストを表示
+        st.radio("問１の回答", ["正しい", "正しくない"], key="q1_ja")
+    with col2:
+        # 日本語問題 問2
+        st.subheader("問２")
+        st.write(data['q2_ja']) # q2_ja列のテキストを表示
+        st.radio("問２の回答", ["正しい", "正しくない"], key="q2_ja")
 
     if st.button("次へ"):
         if st.session_state.q1_ja is None or st.session_state.q2_ja is None:
