@@ -532,7 +532,7 @@ elif st.session_state.page == 6:
         pass
 
 elif st.session_state.page == 7:
-    col1, col2 = st.columns([1, 3]) # 幅を1:9に分割
+    col1, col2 = st.columns([1, 8]) # 幅を1:9に分割
 
     with col1:
         # 左カラムにStopボタンを配置
@@ -608,7 +608,7 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
         st.error("コンテンツデータの読み込みに失敗しました。") # エラー表示はこちらでまとめて
         st.stop()
 
-    col1, col2 = st.columns([2, 8]) # 幅を1:9に分割
+    col1, col2 = st.columns([1, 3]) # 幅を1:9に分割
 
     with col1:
         st.subheader("📖 読書データ")
