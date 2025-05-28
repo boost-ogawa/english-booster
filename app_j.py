@@ -214,6 +214,8 @@ def start_japanese_reading():
 # --- メインの処理 ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
+    st.write(f"DEBUG: Loaded ADMIN_USERNAME from secrets: {st.secrets.get('ADMIN_USERNAME')}")
+    st.write(f"DEBUG: Loaded ADMIN_PASSWORD from secrets: {st.secrets.get('ADMIN_PASSWORD')}")
     col1, _ = st.columns(2)
     with col1:
         nickname = st.text_input("ニックネーム (半角英数字)", key="nickname_input", value=st.session_state.nickname)
