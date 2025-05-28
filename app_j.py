@@ -324,7 +324,7 @@ elif st.session_state.page == 4: # 結果表示ページ
     st.success("結果と意味を確認して「次へ」を押しましょう。") # メッセージを変更
 
     # ★ここを修正: 3カラムに分割、比率を 1:2:2 に設定
-    col1, col2, col3 = st.columns([2, 5, 4])
+    col1, col2, col3 = st.columns([1, 2, 2])
 
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
