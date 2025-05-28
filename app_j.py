@@ -322,11 +322,15 @@ elif st.session_state.page == 3:
 
 elif st.session_state.page == 4: # 結果表示ページ
     st.success("結果と意味を確認して「次へ」を押しましょう。") # メッセージを変更
-    col1, col2 = st.columns([1, 4]) # 2カラムに分割、比率を 1:4 に設定
-    with col1:
-        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-        if data is None:
-            st.stop()
+
+    # ★ここを修正: 3カラムに分割、比率を 1:2:2 に設定
+    col1, col2, col3 = st.columns([1, 2, 2])
+
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data is None:
+        st.stop()
+
+    with col1: # 左カラム: 結果表示
         st.subheader("Result")
         correct_answers_to_store = 0
         wpm = 0.0
@@ -348,19 +352,20 @@ elif st.session_state.page == 4: # 結果表示ページ
 
         elif st.session_state.start_time and st.session_state.stop_time:
             st.info("回答の読み込み中です...") # 回答がまだ読み込まれていない場合のメッセージ
+        
+        # 「次へ」ボタンはどのカラムに配置しても良いですが、ここではcol1に置いたままにします。
+        # もし中央や右に動かしたい場合は、そのwithブロック内に移動させてください。
         if st.button("次へ"):
             st.session_state.page = 45
             st.session_state.start_time = None
             st.session_state.stop_time = None
             st.session_state.submitted = False
             st.rerun()
-            
-    with col2:
-        # --- ★ここから修正点★ ---
-        st.subheader("原文と意味") # サブヘッダーを追加
-        english_text = data.get('main', '原文がありません') # 英文を取得
 
-        st.markdown( # 英文を表示
+    with col2: # 中央カラム: 英文
+        st.subheader("原文")
+        english_text = data.get('main', '原文がありません')
+        st.markdown(
             f"""
             <div class="custom-paragraph">
             {english_text}
@@ -368,7 +373,8 @@ elif st.session_state.page == 4: # 結果表示ページ
             """, unsafe_allow_html=True
         )
 
-        st.markdown("---") # 英文と日本語訳の間に区切り線
+    with col3: # 右カラム: 日本語訳
+        st.subheader("意味") # サブヘッダーを「意味」に変更
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
             f"""
@@ -386,7 +392,6 @@ elif st.session_state.page == 4: # 結果表示ページ
             """,
             unsafe_allow_html=True
         )
-
 elif st.session_state.page == 45: # 復習音声ページ (ページ4と5の間)
     st.title("復習：音声を聞いてみましょう")
     st.info("英文の音声を聞いて内容を確認しましょう。")
