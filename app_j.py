@@ -356,6 +356,19 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.rerun()
             
     with col2:
+        # --- ★ここから修正点★ ---
+        st.subheader("原文と意味") # サブヘッダーを追加
+        english_text = data.get('main', '原文がありません') # 英文を取得
+
+        st.markdown( # 英文を表示
+            f"""
+            <div class="custom-paragraph">
+            {english_text}
+            </div>
+            """, unsafe_allow_html=True
+        )
+
+        st.markdown("---") # 英文と日本語訳の間に区切り線
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
             f"""
