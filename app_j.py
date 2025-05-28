@@ -120,11 +120,31 @@ st.markdown(
         color: #ffffff;
     }
 
-    /* 英文表示用のカスタム段落スタイル */
+    /* 英文表示用のカスタム段落スタイル (font-family: Georgia は維持) */
     .custom-paragraph {
         font-family: Georgia, serif;
         line-height: 1.8;
         font-size: 1.5rem;
+    }
+
+    /* ★追加・変更: 翻訳テキストブロック用の共通スタイル (フォントサイズと行間を統一) */
+    .translation-text-block {
+        line-height: 1.8; /* custom-paragraphと同じ行間 */
+        font-size: 1.5rem; /* custom-paragraphと同じフォントサイズ */
+        padding: 10px;
+        border-radius: 5px;
+        white-space: pre-wrap; /* 改行を維持 */
+    }
+
+    /* 日本語訳の特定の背景色 (translation-text-blockに追加で適用) */
+    .japanese-translation {
+        color: white;
+        background-color: #333;
+    }
+
+    /* Streamlitのsubheader (h2) の下マージン調整 (必要であれば) */
+    h2 {
+        margin-bottom: 0.5em; /* または任意の調整したい値 */
     }
 
     /* スタートボタンのスタイル（高さ・フォントサイズ調整済み） */
@@ -133,8 +153,8 @@ st.markdown(
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        padding: 20px 40px;         /* 高さと横幅UP */
-        font-size: 1.8rem;           /* フォントサイズUP */
+        padding: 20px 40px;
+        font-size: 1.8rem;
     }
 
     div.stButton > button:first-child:hover {
@@ -159,7 +179,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 # --- セッション変数の初期化 ---
 config = load_config()
 if "row_to_load" not in st.session_state:
@@ -363,40 +382,25 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.rerun()
 
     with col2: # 中央カラム: 英文
+        st.subheader("原文")
         english_text = data.get('main', '原文がありません')
         st.markdown(
             f"""
-            <style>
-                .japanese-translation {{
-                    color: white;
-                    background-color: #333;
-                    font-size: 0.8em;
-                    padding: 10px;
-                    border-radius: 5px;
-                    white-space: pre-wrap;
-                }}
-            </style>
-            <div class="custom-paragraph">
+            <div class="custom-paragraph"> {/* ★既存のcustom-paragraphを使用★ */}
             {english_text}
             </div>
             """, unsafe_allow_html=True
         )
 
     with col3: # 右カラム: 日本語訳
+        st.subheader("意味")
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
             f"""
-            <style>
-                .japanese-translation {{
-                    color: white;
-                    background-color: #333;
-                    font-size: 1.1em;
-                    padding: 10px;
-                    border-radius: 5px;
-                    white-space: pre-wrap;
-                }}
-            </style>
-            <div class="japanese-translation">{japanese_text}</div>
+            {/* ★新規作成したtranslation-text-blockと既存のjapanese-translationを適用★ */}
+            <div class="translation-text-block japanese-translation">
+            {japanese_text}
+            </div>
             """,
             unsafe_allow_html=True
         )
