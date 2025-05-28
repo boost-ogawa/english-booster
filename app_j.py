@@ -12,11 +12,8 @@ import os
 
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data_j.csv"
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results_j.csv"
-GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user_j.csv"
 DATA_PATH = "data_j.csv"
 GOOGLE_CLASSROOM_URL = "YOUR_GOOGLE_CLASSROOM_URL_HERE" # Google ClassroomのURLを設定してください
-ADMIN_USERNAME = "admin" # 例：管理者ユーザー名
-ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD") # Streamlit Secrets から取得
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -28,17 +25,6 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
         firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-
-# --- GitHubからニックネームとIDでユーザー情報をロードする関数 ---
-@st.cache_data
-def get_user_data(github_raw_url, nickname, user_id):
-    try:
-        df = pd.read_csv(github_raw_url)
-        user = df[(df['nickname'] == nickname) & (df['user_id'] == user_id)].iloc[0].to_dict()
-        return user
-    except (IndexError, FileNotFoundError, KeyError) as e:
-        print(f"ユーザーデータ取得エラー: {e}")
-        return None
 
 # --- データ読み込み関数 ---
 def load_material(github_url, row_index):
@@ -242,20 +228,36 @@ if st.session_state.page == 0:
             elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
                 st.error("IDは半角英数字で入力してください。")
             else:
-                user_data = get_user_data(GITHUB_USER_CSV_URL, nickname.strip(), user_id.strip())
-                if user_data:
+                # Streamlit Secretsから管理者情報を取得
+                admin_nickname = st.secrets.get("ADMIN_USERNAME")
+                admin_password = st.secrets.get("ADMIN_PASSWORD")
+
+                # Streamlit Secretsから一般ユーザー情報を取得
+                users_from_secrets = st.secrets.get("users", [])
+
+                # 管理者認証
+                if nickname.strip() == admin_nickname and user_id.strip() == admin_password:
                     st.session_state.nickname = nickname.strip()
-                    st.session_state.user_id = user_id.strip()
-                    # 管理者としてログインしたかを判定
-                    if nickname.strip() == ADMIN_USERNAME and user_id.strip() == ADMIN_PASSWORD:
-                        st.session_state.is_admin = True
-                    else:
-                        st.session_state.is_admin = False
+                    st.session_state.user_id = user_id.strip() # 管理者もuser_idをセッションに保存
+                    st.session_state.is_admin = True
                     st.session_state.page = 1
                     st.rerun()
+                # 一般ユーザー認証
                 else:
-                    st.error("ニックネームまたはIDが正しくありません。")
+                    authenticated = False
+                    for user_info in users_from_secrets:
+                        if nickname.strip() == user_info.get("nickname") and user_id.strip() == user_info.get("user_id"):
+                            st.session_state.nickname = nickname.strip()
+                            st.session_state.user_id = user_id.strip()
+                            st.session_state.is_admin = False # 一般ユーザーは管理者ではない
+                            authenticated = True
+                            break
 
+                    if authenticated:
+                        st.session_state.page = 1
+                        st.rerun()
+                    else:
+                        st.error("ニックネームまたはIDが正しくありません。")
 elif st.session_state.page == 1:
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
