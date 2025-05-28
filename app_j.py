@@ -367,7 +367,6 @@ elif st.session_state.page == 4: # 結果表示ページ
         st.markdown(
             f"""
             <style>
-                /* custom-paragraph スタイル調整 */
                 .custom-paragraph {{
                     font-size: 1.3em; /* ★フォントサイズ★ */
                     line-height: 1.6; /* ★行間★ */
