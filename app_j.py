@@ -367,6 +367,16 @@ elif st.session_state.page == 4: # 結果表示ページ
         english_text = data.get('main', '原文がありません')
         st.markdown(
             f"""
+            <style>
+                /* custom-paragraph スタイル調整 */
+                .custom-paragraph {{
+                    font-size: 1.1em; /* ★フォントサイズ★ */
+                    line-height: 1.6; /* ★行間★ */
+                    padding: 10px;
+                    border-radius: 5px;
+                    white-space: pre-wrap; /* 改行を維持 */
+                }}
+            </style>
             <div class="custom-paragraph">
             {english_text}
             </div>
