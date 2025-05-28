@@ -367,13 +367,13 @@ elif st.session_state.page == 4: # 結果表示ページ
         st.markdown(
             f"""
             <style>
-                .japanese-translation {{
-                    color: white;
-                    background-color: #333;
-                    font-size: 1.1em;
+                /* custom-paragraph スタイル調整 */
+                .custom-paragraph {{
+                    font-size: 1.3em; /* ★フォントサイズ★ */
+                    line-height: 1.6; /* ★行間★ */
                     padding: 10px;
                     border-radius: 5px;
-                    white-space: pre-wrap;
+                    white-space: pre-wrap; /* 改行を維持 */
                 }}
             </style>
             <div class="custom-paragraph">
