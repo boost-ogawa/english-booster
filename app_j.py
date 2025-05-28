@@ -370,7 +370,7 @@ elif st.session_state.page == 4: # 結果表示ページ
             <style>
                 /* custom-paragraph スタイル調整 */
                 .custom-paragraph {{
-                    font-size: 1.1em; /* ★フォントサイズ★ */
+                    font-size: 1.4em; /* ★フォントサイズ★ */
                     line-height: 1.6; /* ★行間★ */
                     padding: 10px;
                     border-radius: 5px;
