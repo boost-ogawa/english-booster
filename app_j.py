@@ -370,7 +370,7 @@ elif st.session_state.page == 4: # 結果表示ページ
                 .japanese-translation {{
                     color: white;
                     background-color: #333;
-                    font-size: 0.9em;
+                    font-size: 0.8em;
                     padding: 10px;
                     border-radius: 5px;
                     white-space: pre-wrap;
