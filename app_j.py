@@ -134,7 +134,7 @@ st.markdown(
     .japanese-translation {
         color: white;
         background-color: #333;
-        font-size: 1.4rem !important;
+        font-size: 1.2rem !important;
     }
 
     /* サブヘッダー (h2) のマージン調整 - これが最重要！ */
@@ -382,11 +382,9 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.rerun()
 
     with col2: # 中央カラム: 英文
-        # st.subheader("英文") # ★この行を削除またはコメントアウト★
         english_text = data.get('main', '原文がありません')
         st.markdown(
             f"""
-            <h2 class="no-margin-subheader">原文</h2>
             <div class="custom-paragraph">
             {english_text}
             </div>
@@ -394,11 +392,9 @@ elif st.session_state.page == 4: # 結果表示ページ
         )
 
     with col3: # 右カラム: 日本語訳
-        # st.subheader("意味") # ★この行を削除またはコメントアウト★
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
             f"""
-            <h2 class="no-margin-subheader">意味</h2>
             <div class="custom-paragraph japanese-translation">
             {japanese_text}
             </div>
