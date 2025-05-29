@@ -120,22 +120,18 @@ st.markdown(
         color: #ffffff;
     }
 
-    /* 英文表示用のカスタム段落スタイル (font-family: Georgia は維持) */
+    /* 英文・日本語訳表示用の共通段落スタイル */
+    /* .custom-paragraph に font-family, line-height, font-size を統一 */
     .custom-paragraph {
-        font-family: Georgia, serif;
+        font-family: Georgia, serif; /* 英語と日本語の両方に適用される */
         line-height: 1.8;
-        font-size: 1.5rem;
+        font-size: 1.5rem; /* 英文と日本語訳のフォントサイズを統一 */
+        padding: 10px; /* パディングもcustom-paragraphに含める */
+        border-radius: 5px; /* 角丸もcustom-paragraphに含める */
+        white-space: pre-wrap; /* 改行維持もcustom-paragraphに含める */
     }
 
-    /* ★追加・変更: 翻訳テキストブロック用の共通スタイル (フォントサイズと行間を統一) */
-    .translation-text-block {
-        font-size: 1.2rem; /* custom-paragraphと同じフォントサイズ */
-        padding: 10px;
-        border-radius: 5px;
-        white-space: pre-wrap; /* 改行を維持 */
-    }
-
-    /* 日本語訳の特定の背景色 (translation-text-blockに追加で適用) */
+    /* 日本語訳の特定の背景色 (custom-paragraphに追加で適用) */
     .japanese-translation {
         color: white;
         background-color: #333;
@@ -396,7 +392,7 @@ elif st.session_state.page == 4: # 結果表示ページ
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
             f"""
-            <div class="translation-text-block japanese-translation">
+            <div class="custom-paragraph japanese-translation">
             {japanese_text}
             </div>
             """,
