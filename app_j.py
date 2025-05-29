@@ -687,6 +687,7 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
                 st.write("問１: ✅ **正解**")
             else:
                 st.write("問１: ❌ **不正解**")
+            st.write(data['q1_ja']) # q1_ja列のテキストを表示
             st.write(f"あなたの回答: **{st.session_state.q1_ja}**")
             st.write(f"正解: **{data['correct_answer_q1_ja']}**")
         else:
@@ -698,6 +699,7 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
                 st.write("問２: ✅ **正解**")
             else:
                 st.write("問２: ❌ **不正解**")
+            st.write(data['q2_ja']) # q2_ja列のテキストを表示
             st.write(f"あなたの回答: **{st.session_state.q2_ja}**")
             st.write(f"正解: **{data['correct_answer_q2_ja']}**")
         else:
