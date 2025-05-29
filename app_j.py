@@ -162,9 +162,9 @@ st.markdown(
     }
 
     .stRadio > div > label > div[data-testid="stMarkdownContainer"] p {
-        font-size: 1.1em; /* st.radioにmarkdownで渡している場合 */
+        font-size: 1.5em; /* st.radioにmarkdownで渡している場合 */
     }
-    
+
     /* Google Classroom風のボタン */
     .google-classroom-button {
         display: inline-block;
