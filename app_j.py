@@ -161,11 +161,10 @@ st.markdown(
         background-color: #218838;
     }
 
-    .stRadio > label {
-        font-size: 1.5rem; /* ★調整したいフォントサイズ★ */
-        /* line-height: 1.5; */ /* 必要であれば行間も調整 */
+    .stRadio > div > label > div[data-testid="stMarkdownContainer"] p {
+        font-size: 1.1em; /* st.radioにmarkdownで渡している場合 */
     }
-
+    
     /* Google Classroom風のボタン */
     .google-classroom-button {
         display: inline-block;
