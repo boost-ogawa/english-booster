@@ -134,7 +134,7 @@ st.markdown(
     .japanese-translation {
         color: white;
         background-color: #333;
-        font-size: 1.5rem !important;
+        font-size: 1.4rem !important;
     }
 
     /* サブヘッダー (h2) のマージン調整 - これが最重要！ */
