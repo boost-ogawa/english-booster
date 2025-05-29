@@ -125,8 +125,7 @@ st.markdown(
         font-family: Georgia, serif;
         line-height: 1.8;
         font-size: 1.5rem;
-        padding: 10px;
-        margin-top: 0rem;
+        padding-top: 0rem;
         border-radius: 5px;
         white-space: pre-wrap;
         /* ここでは margin-top を設定せず、h2 との連携で調整 */
