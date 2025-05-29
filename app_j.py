@@ -130,7 +130,7 @@ st.markdown(
     /* ★追加・変更: 翻訳テキストブロック用の共通スタイル (フォントサイズと行間を統一) */
     .translation-text-block {
         line-height: 1.8; /* custom-paragraphと同じ行間 */
-        font-size: 1.4rem; /* custom-paragraphと同じフォントサイズ */
+        font-size: 1.2rem; /* custom-paragraphと同じフォントサイズ */
         padding: 10px;
         border-radius: 5px;
         white-space: pre-wrap; /* 改行を維持 */
@@ -162,8 +162,7 @@ st.markdown(
     }
 
     div[data-testid="stRadio"] label p {
-        font-size: 1.5rem !important; /* ★変更したいフォントサイズ★ */
-        line-height: 1.6 !important;  /* 必要であれば行間も */
+        font-size: 1.2rem !important; /* ★変更したいフォントサイズ★ */
     }
 
     /* Google Classroom風のボタン */
@@ -406,6 +405,7 @@ elif st.session_state.page == 4: # 結果表示ページ
             """,
             unsafe_allow_html=True
         )
+
 elif st.session_state.page == 45: # 復習音声ページ (ページ4と5の間)
     st.title("復習：音声を聞いてみましょう")
     st.info("英文の音声を聞いて内容を確認しましょう。")
