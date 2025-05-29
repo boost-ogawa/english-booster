@@ -161,9 +161,9 @@ st.markdown(
         background-color: #218838;
     }
 
-    .stRadio .st-dk { /* st-dk はStreamlitのテーマによって変わる可能性あり */
-        font-size: 1.5em;
-    }
+    div[data-testid="stRadio"] label p {
+        font-size: 1.5rem !important; /* ★変更したいフォントサイズ★ */
+        line-height: 1.6 !important;  /* 必要であれば行間も */
     }
 
     /* Google Classroom風のボタン */
@@ -238,8 +238,6 @@ def start_japanese_reading():
 # --- メインの処理 ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
-    st.write(f"DEBUG: Loaded ADMIN_USERNAME from secrets: {st.secrets.get('ADMIN_USERNAME')}")
-    st.write(f"DEBUG: Loaded ADMIN_PASSWORD from secrets: {st.secrets.get('ADMIN_PASSWORD')}")
     col1, _ = st.columns(2)
     with col1:
         nickname = st.text_input("ニックネーム (半角英数字)", key="nickname_input", value=st.session_state.nickname)
