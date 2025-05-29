@@ -123,7 +123,6 @@ st.markdown(
     /* 英文・日本語訳表示用の共通段落スタイル */
     .custom-paragraph {
         font-family: Georgia, serif;
-        line-height: 1.8;
         font-size: 1.5rem;
         padding: 10px !important;
         border-radius: 5px;
@@ -382,7 +381,7 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.rerun()
 
     with col2: # 中央カラム: 英文
-        # st.subheader("原文") # ★この行を削除またはコメントアウト★
+        # st.subheader("英文") # ★この行を削除またはコメントアウト★
         english_text = data.get('main', '原文がありません')
         st.markdown(
             f"""
