@@ -161,11 +161,9 @@ st.markdown(
         background-color: #218838;
     }
 
-    /* ★追加: ラジオボタンの選択肢のフォントサイズ調整 */
-    div[data-testid="stRadio"] label {
-        font-size: 1.5rem; /* ★調整したいフォントサイズを指定してください★ */
-        /* 例: 1.0em (デフォルトに近い), 1.2em (少し大きく), 1.5em (かなり大きく) */
-        /* line-height: 1.5; */ /* 必要であれば行間も調整できます */
+    .stRadio > label {
+        font-size: 1.1em; /* ★調整したいフォントサイズ★ */
+        /* line-height: 1.5; */ /* 必要であれば行間も調整 */
     }
 
     /* Google Classroom風のボタン */
@@ -404,13 +402,26 @@ elif st.session_state.page == 4: # 結果表示ページ
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
             f"""
+            <style>
+                .translation-text-block.japanese-translation {{
+                    margin-top: 0px; /* または -5px などの負の値で調整 */
+                    /* 既存のスタイルもここに含めるか、グローバルCSSで定義済みであることを確認 */
+                    line-height: 1.8;
+                    font-size: 1.5rem;
+                    padding: 10px;
+                    border-radius: 5px;
+                    white-space: pre-wrap;
+                    color: white;
+                    background-color: #333;
+                }}
+            </style>
             <div class="translation-text-block japanese-translation">
             {japanese_text}
             </div>
             """,
             unsafe_allow_html=True
         )
-elif st.session_state.page == 45: # 復習音声ページ (ページ4と5の間)
+    elif st.session_state.page == 45: # 復習音声ページ (ページ4と5の間)
     st.title("復習：音声を聞いてみましょう")
     st.info("英文の音声を聞いて内容を確認しましょう。")
 
