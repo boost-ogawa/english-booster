@@ -135,7 +135,11 @@ st.markdown(
     .japanese-translation {
         color: white;
         background-color: #333;
-    }
+        position: relative; /* 位置調整のために必要 */
+        top: -10px; /* ★日本語訳全体を上にずらす量（調整してください）★ */
+                    /* この値を -5px, -15px などで微調整して最適な位置を探す */
+        padding-top: 0px !important; */ /* padding-topも試す価値あり */
+     }
 
     /* Streamlitのsubheader (h2) の下マージン調整 (必要であれば) */
     h2 {
