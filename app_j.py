@@ -129,7 +129,6 @@ st.markdown(
         padding-bottom: 10px !important; /* 下パディングは残すか調整 */
         padding-left: 10px !important;   /* 左パディングは残すか調整 */
         padding-right: 10px !important;  /* 右パディングは残すか調整 */
-        border-radius: 5px;
         white-space: pre-wrap;
         /* ここでは margin-top を設定せず、h2 との連携で調整 */
     }
