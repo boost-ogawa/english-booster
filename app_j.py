@@ -162,7 +162,7 @@ st.markdown(
     }
 
     .stRadio > label {
-        font-size: 1.1em; /* ★調整したいフォントサイズ★ */
+        font-size: 1.5em; /* ★調整したいフォントサイズ★ */
         /* line-height: 1.5; */ /* 必要であれば行間も調整 */
     }
 
