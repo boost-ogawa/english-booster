@@ -129,6 +129,7 @@ st.markdown(
         padding: 10px; /* パディングもcustom-paragraphに含める */
         border-radius: 5px; /* 角丸もcustom-paragraphに含める */
         white-space: pre-wrap; /* 改行維持もcustom-paragraphに含める */
+        margin-top: 0px !important; /* ★追加: custom-paragraph の上マージンも強制的に0にする */
     }
 
     /* 日本語訳の特定の背景色 (custom-paragraphに追加で適用) */
@@ -139,7 +140,7 @@ st.markdown(
 
     /* Streamlitのsubheader (h2) の下マージン調整 (必要であれば) */
     h2 {
-        margin-bottom: 0.5em; /* または任意の調整したい値 */
+        margin-bottom: 0px !important; /* ★変更: !important を追加して強制的に0にする */
     }
 
     /* スタートボタンのスタイル（高さ・フォントサイズ調整済み） */
