@@ -123,6 +123,7 @@ st.markdown(
     /* 英文・日本語訳表示用の共通段落スタイル */
     .custom-paragraph {
         font-family: Georgia, serif;
+        line-height: 1.5;
         font-size: 1.5rem;
         padding: 10px !important;
         border-radius: 5px;
@@ -133,6 +134,7 @@ st.markdown(
     .japanese-translation {
         color: white;
         background-color: #333;
+        font-size: 1.1rem !important;
     }
 
     /* サブヘッダー (h2) のマージン調整 - これが最重要！ */
