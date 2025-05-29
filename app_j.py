@@ -414,14 +414,14 @@ elif st.session_state.page == 45: # 復習音声ページ (ページ4と5の間)
     audio_url = data.get('audio_url') # CSVの'audio_url'列からURLを取得することを想定
     main_text = data.get('main') # 英文も表示できるように
 
-    # ★ここを修正します★
-    # まず audio_url が None ではないかを確認
-    # その後、文字列として空ではないかを確認
-    if audio_url is not None and audio_url.strip() != "":
+    # ★ここをさらに修正します★
+    # audio_urlが文字列型であり、かつ空でないことを確認
+    if isinstance(audio_url, str) and audio_url.strip() != "":
         st.subheader("💡 音声を聞く")
         try:
             st.audio(audio_url, format="audio/mp3") # 音声ファイルの形式に合わせて変更してください
         except Exception as e:
+            # 音声ファイルの読み込み自体でエラーが発生した場合のハンドリング
             st.warning(f"音声ファイルの再生に失敗しました。URL: {audio_url} エラー: {e}")
             st.subheader("原文")
             st.markdown(
@@ -435,8 +435,6 @@ elif st.session_state.page == 45: # 復習音声ページ (ページ4と5の間)
             if st.button("次の問題へ進む"):
                 st.session_state.page = 5
                 st.rerun()
-            # ここで st.stop() は入れず、以下のロジックで「次の問題へ進む」ボタンを表示するようにする
-            # st.stop()
 
         st.subheader("原文")
         st.markdown(
@@ -447,7 +445,7 @@ elif st.session_state.page == 45: # 復習音声ページ (ページ4と5の間)
             """, unsafe_allow_html=True
         )
     else:
-        # audio_urlが None または空文字列の場合
+        # audio_urlが文字列ではない（Noneを含む）または空文字列の場合
         st.warning("この英文には音声データがありません。")
         st.markdown(
             f"""
