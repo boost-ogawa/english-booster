@@ -393,7 +393,7 @@ elif st.session_state.page == 4: # 結果表示ページ
         english_text = data.get('main', '原文がありません')
         st.markdown(
             f"""
-            <div class="custom-paragraph"> {/* ★既存のcustom-paragraphを使用★ */}
+            <div class="custom-paragraph">
             {english_text}
             </div>
             """, unsafe_allow_html=True
@@ -404,7 +404,6 @@ elif st.session_state.page == 4: # 結果表示ページ
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
             f"""
-            {/* ★新規作成したtranslation-text-blockと既存のjapanese-translationを適用★ */}
             <div class="translation-text-block japanese-translation">
             {japanese_text}
             </div>
