@@ -131,7 +131,6 @@ st.markdown(
     .translation-text-block {
         line-height: 1.8; /* custom-paragraphと同じ行間 */
         font-size: 1.2rem; /* custom-paragraphと同じフォントサイズ */
-        padding: 10px;
         border-radius: 5px;
         white-space: pre-wrap; /* 改行を維持 */
     }
