@@ -119,6 +119,13 @@ st.markdown(
         background-color: #000D36;
         color: #ffffff;
     }
+    /* 全ての要素のマージンとパディングをリセット（強力なリセット） */
+    /* これが効きすぎる場合は、下の特定要素への設定で上書きする */
+    * {
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box; /* パディングやボーダーが要素のサイズに含まれるように */
+    }
 
     /* 英文・日本語訳表示用の共通段落スタイル */
     /* .custom-paragraph に font-family, line-height, font-size を統一 */
