@@ -119,34 +119,8 @@ st.markdown(
         background-color: #000D36;
         color: #ffffff;
     }
-    /* 全ての要素のマージンとパディングをリセット（強力なリセット） */
-    /* これが効きすぎる場合は、下の特定要素への設定で上書きする */
-    * {
-        margin: 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box; /* パディングやボーダーが要素のサイズに含まれるように */
-    }
-    /* Streamlitの内部的な余白を持つ可能性のある要素をターゲット */
-    /* st.columns が内部的に使用する div 要素のクラスを調査して追加 */
-    /* 開発者ツールで st.columns で囲まれた要素の親コンテナのクラスを特定 */
-    .st-emotion-cache-1jm6gmx, /* 以前の col2 クラスの例 */
-    .st-emotion-cache-10qtnjr, /* 以前の col3 クラスの例 */
-    .st-emotion-cache-xyzxyz, /* ここに col1 のクラス、または st.columns全体のクラスを追加 */
-    .st-emotion-cache-parent-of-columns { /* st.columns を囲むさらに上位の div があれば */
-        padding: 0 !important;
-        margin: 0 !important;
-    }
 
-
-    /* サブヘッダー (h2) の下マージンを調整 - 以前の !important を維持 */
-    h2 {
-        margin-bottom: 0px !important;
-        padding-bottom: 0px !important; /* h2 のパディングも消す */
-        margin-top: 0px !important; /* h2 の上マージンも消す */
-        padding-top: 0px !important; /* h2 の上パディングも消す */
-    }
-
-    /* custom-paragraph スタイル - 余白調整を維持 */
+    /* 英文・日本語訳表示用の共通段落スタイル */
     .custom-paragraph {
         font-family: Georgia, serif;
         line-height: 1.8;
@@ -154,39 +128,21 @@ st.markdown(
         padding: 10px;
         border-radius: 5px;
         white-space: pre-wrap;
-        margin-top: 0px !important;
-        padding-top: 0px !important; /* custom-paragraph の上パディングも消す */
+        /* ここでは margin-top を設定せず、h2 との連携で調整 */
     }
 
-    /* 日本語訳の特定の背景色と、最終的な位置調整 */
+    /* 日本語訳の特定の背景色 */
     .japanese-translation {
         color: white;
         background-color: #333;
-        /* ここで微調整が必要な場合のみ top を使用 */
-        /* position: relative; */
-        /* top: -10px; */ /* これでも余白が残る場合にのみ調整 */
     }
 
-    /* ラジオボタンの選択肢のフォントサイズ調整 */
-    div[data-testid="stRadio"] label p {
-        font-size: 1.5rem !important;
-        line-height: 1.6 !important;
-    }
-
-    /* col2 (英文側) の右ボーダー - 開発者ツールで特定したクラス名に置き換える */
-    .st-emotion-cache-xxxxxx { /* col2 のクラス名 */
-        border-right: 1px solid #777 !important;
-        padding-right: 15px !important;
-    }
-
-    /* col3 (日本語訳側) の左パディング - 開発者ツールで特定したクラス名に置き換える */
-    .st-emotion-cache-yyyyyy { /* col3 のクラス名 */
-        padding-left: 15px !important;
-    }
-
-    /* Streamlitのsubheader (h2) の下マージン調整 (必要であれば) */
+    /* サブヘッダー (h2) のマージン調整 - これが最重要！ */
+    /* h2要素全体の上と下のマージンを調整し、要素間の隙間を制御 */
     h2 {
-        margin-bottom: 0.5em; /* または任意の調整したい値 */
+        margin-top: 0.5rem;    /* 必要に応じてサブヘッダーの上に少し余白を持たせる */
+        margin-bottom: 0.2rem; /* ★ここがポイント！下にわずかな余白を残すか、0にする★ */
+                               /* 0rem で完全にくっつくはず。または負の値を少し試す */
     }
 
     /* スタートボタンのスタイル（高さ・フォントサイズ調整済み） */
