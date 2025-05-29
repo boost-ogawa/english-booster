@@ -160,6 +160,7 @@ st.markdown(
     div.stButton > button:first-child:hover {
         background-color: #218838;
     }
+
     /* ★追加: ラジオボタンの選択肢のフォントサイズ調整 */
     div[data-testid="stRadio"] label {
         font-size: 1.1em; /* ★調整したいフォントサイズを指定してください★ */
