@@ -379,6 +379,7 @@ elif st.session_state.page == 4: # 結果表示ページ
             st.rerun()
 
     with col2: # 中央カラム: 英文
+        st.subheader("英文")
         english_text = data.get('main', '原文がありません')
         st.markdown(
             f"""
@@ -389,6 +390,7 @@ elif st.session_state.page == 4: # 結果表示ページ
         )
 
     with col3: # 右カラム: 日本語訳
+        st.subheader("意味")
         japanese_text = data.get('japanese', 'データがありません')
         st.markdown(
             f"""
