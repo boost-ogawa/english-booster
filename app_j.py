@@ -161,8 +161,9 @@ st.markdown(
         background-color: #218838;
     }
 
-    .stRadio > div > label > div[data-testid="stMarkdownContainer"] p {
-        font-size: 1.5em; /* st.radioにmarkdownで渡している場合 */
+    .stRadio .st-dk { /* st-dk はStreamlitのテーマによって変わる可能性あり */
+        font-size: 1.5em;
+    }
     }
 
     /* Google Classroom風のボタン */
