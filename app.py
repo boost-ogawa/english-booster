@@ -13,7 +13,6 @@ import re
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data.csv"
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
 HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true"
-GITHUB_USER_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/user.csv"
 DATA_PATH = "data.csv"
 GOOGLE_CLASSROOM_URL = "YOUR_GOOGLE_CLASSROOM_URL_HERE" # Google ClassroomのURLを設定してください
 
@@ -159,14 +158,15 @@ def load_material(github_url, row_index):
         st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
         return None
         
-# --- GitHubからニックネームとIDでユーザー情報をロードする関数 ---
-@st.cache_data
-def get_user_data(github_raw_url, nickname, user_id):
+# --- Secrets からニックネームとIDでユーザー情報をロードする関数 ---
+def get_user_data(nickname, user_id):
     try:
-        df = pd.read_csv(github_raw_url)
-        user = df[(df['nickname'] == nickname) & (df['user_id'] == user_id)].iloc[0].to_dict()
-        return user
-    except (IndexError, FileNotFoundError, KeyError) as e:
+        users = st.secrets.get("users", [])
+        for user in users:
+            if user["nickname"] == nickname and user["user_id"] == user_id:
+                return user
+        return None
+    except Exception as e:
         print(f"ユーザーデータ取得エラー: {e}")
         return None
 
@@ -220,17 +220,20 @@ def sidebar_content():
     st.sidebar.write("Ver.1_01")
 
 # --- 管理者ユーザー名とパスワードの設定 ---
-ADMIN_USERNAME = "admin" # 例：管理者ユーザー名
-ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "7nBTVRXi1ars") # Streamlit Secrets から取得
+admin_nickname = st.secrets.get("ADMIN_USERNAME")
+admin_password = st.secrets.get("ADMIN_PASSWORD")
 
 # --- メインの処理 ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
+        # 入力フォーム
         nickname = st.text_input("ニックネーム (半角英数字)", key="nickname_input", value=st.session_state.nickname)
         user_id = st.text_input("ID (半角英数字)", key="user_id_input", value=st.session_state.user_id)
+        
         if st.button("次へ"):
+            # 入力チェック
             if not nickname:
                 st.warning("ニックネームを入力してください。")
             elif not user_id:
@@ -240,20 +243,35 @@ if st.session_state.page == 0:
             elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
                 st.error("IDは半角英数字で入力してください。")
             else:
-                user_data = get_user_data(GITHUB_USER_CSV_URL, nickname.strip(), user_id.strip())
-                if user_data:
+                # 管理者情報をSecretsから取得
+                admin_nickname = st.secrets.get("ADMIN_USERNAME")
+                admin_password = st.secrets.get("ADMIN_PASSWORD")
+
+                # 管理者認証
+                if nickname.strip() == admin_nickname and user_id.strip() == admin_password:
                     st.session_state.nickname = nickname.strip()
                     st.session_state.user_id = user_id.strip()
-                    # 管理者としてログインしたかを判定
-                    if nickname.strip() == ADMIN_USERNAME and user_id.strip() == ADMIN_PASSWORD:
-                        st.session_state.is_admin = True
-                        st.session_state.page = 5 # 管理者画面へ遷移
-                        st.rerun()
-                    else:
-                        st.session_state.page = 10 # 一般ユーザー用のページへ遷移 (新しいページ番号)
-                        st.rerun()
+                    st.session_state.is_admin = True  # 管理者フラグをTrueにセット
+                    st.session_state.page = 1
+                    st.experimental_rerun()
+
                 else:
-                    st.error("ニックネームまたはIDが正しくありません。")
+                    # 一般ユーザー認証（Secretsのusersリストから確認）
+                    users_from_secrets = st.secrets.get("users", [])
+                    authenticated = False
+                    for user_info in users_from_secrets:
+                        if nickname.strip() == user_info.get("nickname") and user_id.strip() == user_info.get("user_id"):
+                            st.session_state.nickname = nickname.strip()
+                            st.session_state.user_id = user_id.strip()
+                            st.session_state.is_admin = False
+                            authenticated = True
+                            break
+
+                    if authenticated:
+                        st.session_state.page = 1
+                        st.experimental_rerun()
+                    else:
+                        st.error("ニックネームまたはIDが正しくありません。")
 elif st.session_state.page == 10: # 一般ユーザー用のページ
     sidebar_content()
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
