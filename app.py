@@ -306,8 +306,9 @@ elif st.session_state.page == 1:
         pass
     
     st.markdown("---")
-    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-    current_user_id = st.session_state.get('user_id')
+    #st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+    #current_user_id = st.session_state.get('user_id')
+    st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージ
     display_wpm_history(current_user_id) # 関数を呼び出す
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
