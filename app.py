@@ -368,11 +368,11 @@ elif st.session_state.page == 1:
             pass
 
     # --- 2カラムレイアウトの終了 ---
-    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-    current_nickname = st.session_state.get('nickname') # nicknameを取得
-    display_wpm_history(current_nickname) # nicknameを渡す
-    # st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージは不要
-
+    # st.subheader(f"{st.session_state.nickname}さんのWPM推移") # この行も不要なら削除可
+    # current_nickname = st.session_state.get('nickname')
+    # display_wpm_history(current_nickname) # ← この行をコメントアウト
+    st.info("月次WPM推移グラフは後日表示されます。") # ← この行のコメントアウトを外す
+    
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
@@ -426,9 +426,9 @@ elif st.session_state.page == 4:
     st.success("結果を記録しました。")
     col1, col2 = st.columns([1, 2])
     with col2:
-        current_nickname = st.session_state.get('nickname') # nicknameを取得
-        display_wpm_history(current_nickname) # nicknameを渡す
-        # st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージは不要
+        # current_nickname = st.session_state.get('nickname')
+        # display_wpm_history(current_nickname) # ← この行をコメントアウト
+        st.info("月次WPM推移グラフは後日表示されます。") # ← この行のコメントアウトを外す    with col2:
 
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
