@@ -9,13 +9,13 @@ from firebase_admin import credentials, firestore
 import json
 import tempfile
 import re
-import os # osモジュールを追加
+import os
+import bcrypt # bcryptをインポート
 
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data.csv"
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
 HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true"
 DATA_PATH = "data.csv"
-GOOGLE_CLASSROOM_URL = "YOUR_GOOGLE_CLASSROOM_URL_HERE" # Google ClassroomのURLを設定してください
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -33,7 +33,7 @@ db = firestore.client()
 # --- Firestoreから設定を読み込む関数 ---
 def load_config():
     try:
-        doc_ref = db.collection("settings").document("app_config") # ドキュメントIDはあなたが設定したIDに
+        doc_ref = db.collection("settings").document("app_config")
         doc = doc_ref.get()
         if doc.exists:
             return doc.to_dict()
@@ -47,7 +47,7 @@ def load_config():
 # --- Firestoreに設定を保存する関数 ---
 def save_config(fixed_row_index):
     try:
-        doc_ref = db.collection("settings").document("app_config") # ドキュメントIDはあなたが設定したIDに
+        doc_ref = db.collection("settings").document("app_config")
         doc_ref.set({"fixed_row_index": fixed_row_index})
         print(f"設定を保存しました: fixed_row_index = {fixed_row_index}")
         st.success(f"表示行番号を {fixed_row_index} に保存しました。")
@@ -55,12 +55,13 @@ def save_config(fixed_row_index):
         st.error(f"設定の保存に失敗しました: {e}")
 
 # --- Firestoreに結果を保存する関数 ---
-def save_results(wpm, correct_answers, material_id, nickname, user_id):
+# user_idを引数と保存データから削除
+def save_results(wpm, correct_answers, material_id, nickname): 
     jst = timezone('Asia/Tokyo')
     timestamp = datetime.now(jst).isoformat()
 
     result_data = {
-        "user_id": user_id,
+        # "user_id": user_id, # user_idを削除
         "nickname": nickname,
         "timestamp": timestamp,
         "material_id": material_id,
@@ -75,11 +76,13 @@ def save_results(wpm, correct_answers, material_id, nickname, user_id):
         st.error(f"結果の保存に失敗しました: {e}")
 
 # --- WPM推移グラフ表示関数 ---
-def display_wpm_history(user_id):
-    if user_id:
+# user_idではなくnicknameでフィルタリングするように変更
+def display_wpm_history(nickname): # 引数をnicknameに変更
+    if nickname: # nicknameが存在するか確認
         try:
             # Firestoreから直接データを読み込む
-            results_ref = db.collection("results").where("user_id", "==", user_id).order_by("timestamp")
+            # nicknameでフィルタリング
+            results_ref = db.collection("results").where("nickname", "==", nickname).order_by("timestamp")
             docs = results_ref.stream()
             
             data_list = []
@@ -106,7 +109,7 @@ def display_wpm_history(user_id):
         except Exception as e:
             st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
     else:
-        st.info("ユーザーIDがありません。")
+        st.info("ニックネームがありません。") # メッセージを調整
 
 # --- ページ設定（最初に書く必要あり） ---
 st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sidebar_state="collapsed")
@@ -134,8 +137,8 @@ st.markdown(
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        padding: 20px 40px;          /* 高さと横幅UP */
-        font-size: 1.8rem;           /* フォントサイズUP */
+        padding: 20px 40px;
+        font-size: 1.8rem;
     }
 
     div.stButton > button:first-child:hover {
@@ -196,7 +199,7 @@ if "row_to_load" not in st.session_state:
     st.session_state.row_to_load = 0
 if "fixed_row_index" not in st.session_state:
     config = load_config()
-    st.session_state.fixed_row_index = config.get("fixed_row_index", 2) # Firestoreから読み込んだ値、なければデフォルトの2
+    st.session_state.fixed_row_index = config.get("fixed_row_index", 2)
 if "page" not in st.session_state:
     st.session_state.page = 0
 if "start_time" not in st.session_state:
@@ -212,13 +215,13 @@ if "submitted" not in st.session_state:
 if "nickname" not in st.session_state:
     st.session_state.nickname = ""
 if "user_id" not in st.session_state:
-    st.session_state.user_id = ""
+    st.session_state.user_id = "" # ここに平文のID（パスワード）が一時的に保存される
 if "show_full_graph" not in st.session_state:
     st.session_state.show_full_graph = False
 if "set_page_key" not in st.session_state:
-    st.session_state["set_page_key"] = "unique_key_speed" # 適当なユニークなキー
+    st.session_state["set_page_key"] = "unique_key_speed"
 if "is_admin" not in st.session_state:
-    st.session_state.is_admin = False # 管理者権限の状態を保持する変数
+    st.session_state.is_admin = False
     
 # --- ページ遷移関数 ---
 def set_page(page_number):
@@ -229,71 +232,89 @@ def start_reading(page_number):
     st.session_state.start_time = time.time()
     st.session_state.page = page_number
 
-# --- サイドバーのコンテンツ ---
+# --- サイドバーのコンテンツ（コメントアウトされていますが、残しておきます） ---
 #def sidebar_content():
-    #st.sidebar.header("メニュー")
-    #st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})")
-    #st.sidebar.markdown("[利用規約](#利用規約)")
-    #st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)")
-    #st.sidebar.markdown("---")
-    #st.sidebar.subheader("その他")
-    #st.sidebar.write("English Booster")
-    #st.sidebar.write("Ver.1_01")
+#    st.sidebar.header("メニュー")
+#    st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})")
+#    st.sidebar.markdown("[利用規約](#利用規約)")
+#    st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)")
+#    st.sidebar.markdown("---")
+#    st.sidebar.subheader("その他")
+#    st.sidebar.write("English Booster")
+#    st.sidebar.write("Ver.1_01")
 
-# --- メインの処理 ---
+# --- 認証ページ（page 0） ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
         # 入力フォーム
-        nickname = st.text_input("ニックネーム (半角英数字)", key="nickname_input", value=st.session_state.nickname)
-        user_id = st.text_input("ID (半角英数字)", key="user_id_input", value=st.session_state.user_id)
+        nickname = st.text_input("ニックネーム (半角英数字、_、-、半角スペース可)", key="nickname_input", value=st.session_state.get("nickname", ""))
+        # IDはパスワードとして機能するため、初期値は空にするべき
+        user_id_input = st.text_input("ID (パスワードとして機能します。半角英数字)", type="password", key="user_id_input", value="") 
         
         if st.button("次へ"):
             # 入力チェック
             if not nickname:
                 st.warning("ニックネームを入力してください。")
-            elif not user_id:
+            elif not user_id_input:
                 st.warning("IDを入力してください。")
             elif not re.fullmatch(r'[0-9a-zA-Z_\- ]+', nickname):
-                st.error("ニックネームは半角英数字で入力してください。")
-            elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
+                st.error("ニックネームは半角英数字、_、-、半角スペースで入力してください。")
+            elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id_input):
                 st.error("IDは半角英数字で入力してください。")
             else:
                 # 管理者情報をSecretsから取得
                 admin_nickname = st.secrets.get("ADMIN_USERNAME")
-                admin_password = st.secrets.get("ADMIN_PASSWORD")
+                admin_hashed_password = st.secrets.get("ADMIN_PASSWORD") # ハッシュ化されたパスワードを取得
+
+                # ユーザーが入力したID（パスワード）をバイト文字列に変換
+                user_entered_password_bytes = user_id_input.strip().encode('utf-8')
+
+                authenticated = False
+                is_admin_user = False
 
                 # 管理者認証
-                if nickname.strip() == admin_nickname and user_id.strip() == admin_password:
-                    st.session_state.nickname = nickname.strip()
-                    st.session_state.user_id = user_id.strip()
-                    st.session_state.is_admin = True  # 管理者フラグをTrueにセット
-                    st.session_state.page = 1 # 認証後、メインメニューページへ
-                    st.rerun() # st.experimental_rerun() は st.rerun() に変更されています
-
-                else:
+                if nickname.strip() == admin_nickname:
+                    # secretsにハッシュ化パスワードがあるか確認
+                    if admin_hashed_password:
+                        try:
+                            # 入力されたパスワードとsecretsから取得したハッシュ値を比較
+                            if bcrypt.checkpw(user_entered_password_bytes, admin_hashed_password.encode('utf-8')):
+                                authenticated = True
+                                is_admin_user = True
+                        except ValueError: # ハッシュ値の形式が不正な場合など
+                            pass # 認証失敗として扱う
+                    
+                # 管理者として認証されなかった場合のみ、一般ユーザー認証を試みる
+                if not authenticated: 
                     # 一般ユーザー認証（Secretsのusersリストから確認）
                     users_from_secrets = st.secrets.get("users", [])
-                    authenticated = False
                     for user_info in users_from_secrets:
-                        if nickname.strip() == user_info.get("nickname") and user_id.strip() == user_info.get("user_id"):
-                            st.session_state.nickname = nickname.strip()
-                            st.session_state.user_id = user_id.strip()
-                            st.session_state.is_admin = False
-                            authenticated = True
-                            break
+                        if nickname.strip() == user_info.get("nickname"):
+                            stored_hashed_id = user_info.get("user_id") # ハッシュ化されたIDを取得
+                            if stored_hashed_id: # 存在する場合のみ比較
+                                try:
+                                    if bcrypt.checkpw(user_entered_password_bytes, stored_hashed_id.encode('utf-8')):
+                                        authenticated = True
+                                        is_admin_user = False
+                                        break
+                                except ValueError: # ハッシュ値の形式が不正な場合など
+                                    pass # 認証失敗として扱う
+                            break # ニックネームが一致するユーザーが見つかったらループを抜ける
 
-                    if authenticated:
-                        st.session_state.page = 1 # 認証後、メインメニューページへ
-                        st.rerun() # st.experimental_rerun() は st.rerun() に変更されています
-                    else:
-                        st.error("ニックネームまたはIDが正しくありません。")
+                if authenticated:
+                    st.session_state.nickname = nickname.strip()
+                    st.session_state.user_id = user_id_input.strip() # セッションには入力されたパスワード（平文）を保存
+                    st.session_state.is_admin = is_admin_user
+                    st.session_state.page = 1 # 認証後、メインメニューページへ
+                    st.rerun() # ページ遷移を即時実行
+                else:
+                    st.error("ニックネームまたはIDが正しくありません。")
 
-
-# 認証後のメインメニューページ（app_j.py の page 1 に相当）
+# --- 認証後のメインメニューページ（page 1） ---
 elif st.session_state.page == 1:
-    #sidebar_content()
+    # sidebar_content() # コメントアウトされたサイドバー関数
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
     # 管理者設定は一旦ここに残します
@@ -302,44 +323,32 @@ elif st.session_state.page == 1:
         manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0))
         if st.button("表示行番号を保存"):
             st.session_state.fixed_row_index = manual_index
-            # save_config(manual_index) # Firestore に保存する関数を呼び出す (必要であればコメントアウトを外す)
+            save_config(manual_index) # Firestore に保存する関数を呼び出す (コメントアウトを外しました)
 
     # --- ここから2カラムレイアウトの開始 ---
     col1, col2 = st.columns([0.6, 0.4]) # 左を広め（6割）、右を狭め（4割）に調整
 
     with col1:
         st.header("授業動画")
-    
+        st.markdown("毎日更新！新しい動画をチェックしましょう！")
+
         try:
-            # videos.csv ファイルを読み込む
             video_data = pd.read_csv("videos.csv")
-            # 日付で降順にソート (新しい動画が上に来るように)
             video_data["date"] = pd.to_datetime(video_data["date"])
             video_data = video_data.sort_values(by="date", ascending=False).reset_index(drop=True)
 
             if not video_data.empty:
                 for index, row in video_data.iterrows():
-                    # st.expander のヘッダーにタイトルと配信日を組み合わせる
-                    # タイトルと配信日を別々に表示したい場合は、expanderの外に表示するか、
-                    # expanderのヘッダー内でHTMLを使って調整することも可能
                     expander_header = f"{row['title']} （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
                     
                     with st.expander(expander_header):
-                        # 展開された時に表示されるコンテンツ
                         st.write(row["description"])
-
-                        # 動画埋め込み or リンク
-                        # type列がない場合は常に埋め込みを試みる
-                        if "type" in row and row["type"] == "embed": # type列がある場合
+                        if "type" in row and row["type"] == "embed":
                             st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-                        elif "type" in row and row["type"] == "link": # type列がある場合
-                            st.markdown(f"[動画を見る]({row['url']})") # リンクとして表示
-                        else: # type列がない、または想定外の値の場合は埋め込みを試みる
+                        elif "type" in row and row["type"] == "link":
+                            st.markdown(f"[動画を見る]({row['url']})")
+                        else:
                             st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-                    
-                    # 各expanderの間に区切り線は不要になることが多いですが、必要であれば追加
-                    # st.markdown("---") 
-
             else:
                 st.info("現在、表示できる動画はありません。")
 
@@ -355,20 +364,21 @@ elif st.session_state.page == 1:
         st.write("　※　文章は毎月更新されます")
         st.write("　※　測定は何回でもできます")
         st.write("　※　各月初回の結果が保存されます")
-        if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)): # ページ2へ遷移
+        if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
             pass
-
 
     # --- 2カラムレイアウトの終了 ---
     st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-    # current_user_id = st.session_state.get('user_id')
-    # display_wpm_history(current_user_id) # 関数を呼び出す (コメントアウトを外す)
-    st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージ
+    current_nickname = st.session_state.get('nickname') # nicknameを取得
+    display_wpm_history(current_nickname) # nicknameを渡す
+    # st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージは不要
 
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
-# 英文表示ページ（旧 page 1）
+
+# --- 英文表示ページ（旧 page 1、現在は page 2 に相当） ---
 elif st.session_state.page == 2:
+    # sidebar_content() # コメントアウトされたサイドバー関数
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -382,13 +392,14 @@ elif st.session_state.page == 2:
             </div>
             """, unsafe_allow_html=True
         )
-        if st.button("Stop"):
-            st.session_state.stop_time = time.time()
-            st.session_state.page = 3 # 問題ページへ遷移
-            st.rerun()
+    if st.button("Stop"):
+        st.session_state.stop_time = time.time()
+        st.session_state.page = 3
+        st.rerun()
 
 # 問題ページ（旧 page 2）
 elif st.session_state.page == 3:
+    # sidebar_content() # コメントアウトされたサイドバー関数
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -404,20 +415,20 @@ elif st.session_state.page == 3:
 
     if st.button("Submit"):
         if st.session_state.q1 is not None and st.session_state.q2 is not None:
-            st.session_state.page = 4 # 結果表示ページへ遷移
+            st.session_state.page = 4
             st.rerun()
         else:
             st.error("両方の質問に答えてください。")
 
 # 結果表示ページ（旧 page 3）
 elif st.session_state.page == 4:
-    sidebar_content()
+    # sidebar_content() # コメントアウトされたサイドバー関数
     st.success("結果を記録しました。")
     col1, col2 = st.columns([1, 2])
     with col2:
-        #current_user_id = st.session_state.get('user_id')
-        #display_wpm_history(current_user_id) # 関数を呼び出す
-        st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージ
+        current_nickname = st.session_state.get('nickname') # nicknameを取得
+        display_wpm_history(current_nickname) # nicknameを渡す
+        # st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージは不要
 
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
@@ -450,16 +461,18 @@ elif st.session_state.page == 4:
             correct_answers_to_store = int(correct1) + int(correct2)
 
             if not st.session_state.submitted:
+                # user_idを削除してsave_resultsを呼び出し
                 save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
-                                 st.session_state.nickname, st.session_state.user_id)
+                                st.session_state.nickname)
                 st.session_state.submitted = True
 
         if st.button("意味を確認"):
-            st.session_state.page = 5 # 意味確認ページへ遷移
+            st.session_state.page = 5
             st.rerun()
 
-# 意味確認ページ（旧 page 4）
+# --- 意味確認ページ（旧 page 4） ---
 elif st.session_state.page == 5:
+    # sidebar_content() # コメントアウトされたサイドバー関数
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -477,7 +490,6 @@ elif st.session_state.page == 5:
     with col_ja:
         st.subheader("日本語訳")
         if 'japanese' in data:
-            # 英文と同じスタイルを適用
             st.markdown(
                 f"""
                 <div style="font-family: Georgia, serif; line-height: 1.8; font-size: 1.5rem;">
@@ -491,10 +503,10 @@ elif st.session_state.page == 5:
             st.stop()
 
     if st.button("終了"):
-        st.session_state.page = 1 # トップページに戻るように変更
+        st.session_state.page = 1
         st.session_state.start_time = None
         st.session_state.stop_time = None
         st.session_state.submitted = False
-        st.session_state.q1 = None # 質問の選択肢もリセット
-        st.session_state.q2 = None # 質問の選択肢もリセット
+        st.session_state.q1 = None
+        st.session_state.q2 = None
         st.rerun()
