@@ -308,12 +308,10 @@ elif st.session_state.page == 1:
     col1, col2 = st.columns([0.6, 0.4]) # 左を広め（6割）、右を狭め（4割）に調整
 
     with col1:
-        st.header("新着動画リスト")
-        st.markdown("毎日更新！新しい動画をチェックしましょう！")
-
+        st.header("授業動画")
+    
         try:
             # videos.csv ファイルを読み込む
-            # プロジェクトのルートに videos.csv を配置してください
             video_data = pd.read_csv("videos.csv")
             # 日付で降順にソート (新しい動画が上に来るように)
             video_data["date"] = pd.to_datetime(video_data["date"])
@@ -321,16 +319,27 @@ elif st.session_state.page == 1:
 
             if not video_data.empty:
                 for index, row in video_data.iterrows():
-                    st.subheader(row["title"])
-                    st.write(f"公開日: {row['date'].strftime('%Y年%m月%d日')}") # 表示形式を調整
-                    st.write(row["description"])
+                    # st.expander のヘッダーにタイトルと配信日を組み合わせる
+                    # タイトルと配信日を別々に表示したい場合は、expanderの外に表示するか、
+                    # expanderのヘッダー内でHTMLを使って調整することも可能
+                    expander_header = f"{row['title']} （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
+                    
+                    with st.expander(expander_header):
+                        # 展開された時に表示されるコンテンツ
+                        st.write(row["description"])
 
-                    # 動画埋め込み or リンク
-                    if row["type"] == "embed":
-                        st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"[動画を見る]({row['url']})") # リンクとして表示
-                    st.markdown("---") # 各動画の間に区切り線
+                        # 動画埋め込み or リンク
+                        # type列がない場合は常に埋め込みを試みる
+                        if "type" in row and row["type"] == "embed": # type列がある場合
+                            st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+                        elif "type" in row and row["type"] == "link": # type列がある場合
+                            st.markdown(f"[動画を見る]({row['url']})") # リンクとして表示
+                        else: # type列がない、または想定外の値の場合は埋め込みを試みる
+                            st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+                    
+                    # 各expanderの間に区切り線は不要になることが多いですが、必要であれば追加
+                    # st.markdown("---") 
+
             else:
                 st.info("現在、表示できる動画はありません。")
 
