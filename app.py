@@ -306,10 +306,10 @@ elif st.session_state.page == 1:
         pass
     
     st.markdown("---")
-    #st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
     #current_user_id = st.session_state.get('user_id')
+    #display_wpm_history(current_user_id) # 関数を呼び出す
     st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージ
-    display_wpm_history(current_user_id) # 関数を呼び出す
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
@@ -361,7 +361,7 @@ elif st.session_state.page == 4:
     st.success("結果を記録しました。")
     col1, col2 = st.columns([1, 2])
     with col2:
-        current_user_id = st.session_state.get('user_id')
+        #current_user_id = st.session_state.get('user_id')
         #display_wpm_history(current_user_id) # 関数を呼び出す
         st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージ
 
