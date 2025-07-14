@@ -9,6 +9,7 @@ from firebase_admin import credentials, firestore
 import json
 import tempfile
 import re
+import os # osモジュールを追加
 
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data.csv"
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
@@ -24,6 +25,8 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
     cred = credentials.Certificate(f.name)
     if not firebase_admin._apps:
         firebase_admin.initialize_app(cred)
+    # tempfileを削除
+    os.unlink(f.name)
 
 db = firestore.client()
 
@@ -75,10 +78,27 @@ def save_results(wpm, correct_answers, material_id, nickname, user_id):
 def display_wpm_history(user_id):
     if user_id:
         try:
-            df_results = pd.read_csv(GITHUB_CSV_URL)
-            user_results = df_results[df_results['user_id'] == user_id].copy()
-            if not user_results.empty:
-                fig = px.line(user_results, x='測定年月', y='WPM', title='WPM推移')
+            # Firestoreから直接データを読み込む
+            results_ref = db.collection("results").where("user_id", "==", user_id).order_by("timestamp")
+            docs = results_ref.stream()
+            
+            data_list = []
+            for doc in docs:
+                data = doc.to_dict()
+                # 'timestamp'をdatetimeオブジェクトに変換し、JSTに変換
+                dt_object = datetime.fromisoformat(data['timestamp'])
+                jst = timezone('Asia/Tokyo')
+                dt_object_jst = dt_object.astimezone(jst)
+                data['測定年月'] = dt_object_jst.strftime('%Y-%m-%d %H:%M') # グラフ表示用にフォーマット
+                data_list.append(data)
+
+            if data_list:
+                df_results = pd.DataFrame(data_list)
+                # WPMが数値であることを確認
+                df_results['wpm'] = pd.to_numeric(df_results['wpm'], errors='coerce')
+                df_results.dropna(subset=['wpm'], inplace=True) # NaNを削除
+
+                fig = px.line(df_results, x='測定年月', y='wpm', title='WPM推移')
                 fig.update_xaxes(tickangle=-45)
                 st.plotly_chart(fig, use_container_width=True)
             else:
@@ -114,8 +134,8 @@ st.markdown(
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        padding: 20px 40px;           /* 高さと横幅UP */
-        font-size: 1.8rem;            /* フォントサイズUP */
+        padding: 20px 40px;          /* 高さと横幅UP */
+        font-size: 1.8rem;           /* フォントサイズUP */
     }
 
     div.stButton > button:first-child:hover {
@@ -145,6 +165,7 @@ st.markdown(
 st.image(HEADER_IMAGE_URL, use_container_width=True)
 
 # --- データ読み込み関数 ---
+@st.cache_data(ttl=3600) # 1時間キャッシュ
 def load_material(github_url, row_index):
     """GitHubのCSVファイルから指定された行のデータを読み込む関数"""
     try:
@@ -158,7 +179,7 @@ def load_material(github_url, row_index):
         st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
         return None
         
-# --- Secrets からニックネームとIDでユーザー情報をロードする関数 ---
+# --- Secrets からニックネームとIDでユーザー情報をロードする関数 (未使用だが残す) ---
 def get_user_data(nickname, user_id):
     try:
         users = st.secrets.get("users", [])
@@ -219,10 +240,6 @@ def sidebar_content():
     st.sidebar.write("English Booster")
     st.sidebar.write("Ver.1_01")
 
-# --- 管理者ユーザー名とパスワードの設定 ---
-admin_nickname = st.secrets.get("ADMIN_USERNAME")
-admin_password = st.secrets.get("ADMIN_PASSWORD")
-
 # --- メインの処理 ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
@@ -252,8 +269,8 @@ if st.session_state.page == 0:
                     st.session_state.nickname = nickname.strip()
                     st.session_state.user_id = user_id.strip()
                     st.session_state.is_admin = True  # 管理者フラグをTrueにセット
-                    st.session_state.page = 1
-                    st.experimental_rerun()
+                    st.session_state.page = 1 # 認証後、メインメニューページへ
+                    st.rerun() # st.experimental_rerun() は st.rerun() に変更されています
 
                 else:
                     # 一般ユーザー認証（Secretsのusersリストから確認）
@@ -268,22 +285,13 @@ if st.session_state.page == 0:
                             break
 
                     if authenticated:
-                        st.session_state.page = 1
-                        st.experimental_rerun()
+                        st.session_state.page = 1 # 認証後、メインメニューページへ
+                        st.rerun() # st.experimental_rerun() は st.rerun() に変更されています
                     else:
                         st.error("ニックネームまたはIDが正しくありません。")
-elif st.session_state.page == 10: # 一般ユーザー用のページ
-    sidebar_content()
-    st.title(f"こんにちは、{st.session_state.nickname}さん！")
-    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
-        pass
-    st.markdown("---")
-    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-    current_user_id = st.session_state.get('user_id')
-    display_wpm_history(current_user_id) # 関数を呼び出す
-    st.markdown("---")
-    st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
-elif st.session_state.page == 5:
+
+# 認証後のメインメニューページ（app_j.py の page 1 に相当）
+elif st.session_state.page == 1:
     sidebar_content()
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
@@ -294,26 +302,18 @@ elif st.session_state.page == 5:
             st.session_state.fixed_row_index = manual_index
             save_config(manual_index) # Firestore に保存する関数を呼び出す
 
-    if st.session_state.is_admin: # 管理者も測定できるように
-        if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="admin_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
-            pass
-        st.markdown("---")
-        st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-        current_user_id = st.session_state.get('user_id')
-        display_wpm_history(current_user_id) # 関数を呼び出す
-        st.markdown("---")
-        st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
-    else: # 一般ユーザーの場合は測定開始ボタンのみ
-        if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="main_start_button", use_container_width=True, on_click=start_reading, args=(1,)):
-            pass
-        st.markdown("---")
-        st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-        current_user_id = st.session_state.get('user_id')
-        display_wpm_history(current_user_id) # 関数を呼び出す
-        st.markdown("---")
-        st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
+    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)): # ページ2へ遷移
+        pass
+    
+    st.markdown("---")
+    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+    current_user_id = st.session_state.get('user_id')
+    display_wpm_history(current_user_id) # 関数を呼び出す
+    st.markdown("---")
+    st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
-elif st.session_state.page == 1:
+# 英文表示ページ（旧 page 1）
+elif st.session_state.page == 2:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -329,9 +329,11 @@ elif st.session_state.page == 1:
         )
         if st.button("Stop"):
             st.session_state.stop_time = time.time()
-            st.session_state.page = 2
+            st.session_state.page = 3 # 問題ページへ遷移
             st.rerun()
-elif st.session_state.page == 2:
+
+# 問題ページ（旧 page 2）
+elif st.session_state.page == 3:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -345,16 +347,17 @@ elif st.session_state.page == 2:
         q1_choice = st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1")
         q2_choice = st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
 
-    if st.button("Submit"): # ← col1 の外に移動
+    if st.button("Submit"):
         if st.session_state.q1 is not None and st.session_state.q2 is not None:
-            st.session_state.page = 3
+            st.session_state.page = 4 # 結果表示ページへ遷移
             st.rerun()
         else:
             st.error("両方の質問に答えてください。")
 
-elif st.session_state.page == 3:
+# 結果表示ページ（旧 page 3）
+elif st.session_state.page == 4:
     sidebar_content()
-    st.success("結果を記録しました。") # メッセージを変更
+    st.success("結果を記録しました。")
     col1, col2 = st.columns([1, 2])
     with col2:
         current_user_id = st.session_state.get('user_id')
@@ -392,15 +395,15 @@ elif st.session_state.page == 3:
 
             if not st.session_state.submitted:
                 save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
-                             st.session_state.nickname, st.session_state.user_id)
+                                 st.session_state.nickname, st.session_state.user_id)
                 st.session_state.submitted = True
 
-        # 「Restart」ボタンを削除し、「意味を確認」ボタンを追加
         if st.button("意味を確認"):
-            st.session_state.page = 4
+            st.session_state.page = 5 # 意味確認ページへ遷移
             st.rerun()
 
-elif st.session_state.page == 4:
+# 意味確認ページ（旧 page 4）
+elif st.session_state.page == 5:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -432,8 +435,10 @@ elif st.session_state.page == 4:
             st.stop()
 
     if st.button("終了"):
-        st.session_state.page = 5 # トップページに戻るように変更
+        st.session_state.page = 1 # トップページに戻るように変更
         st.session_state.start_time = None
         st.session_state.stop_time = None
         st.session_state.submitted = False
+        st.session_state.q1 = None # 質問の選択肢もリセット
+        st.session_state.q2 = None # 質問の選択肢もリセット
         st.rerun()
