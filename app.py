@@ -357,13 +357,12 @@ elif st.session_state.page == 1:
         if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)): # ページ2へ遷移
             pass
 
-        st.markdown("---")
-        st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-        # current_user_id = st.session_state.get('user_id')
-        # display_wpm_history(current_user_id) # 関数を呼び出す (コメントアウトを外す)
-        st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージ
 
     # --- 2カラムレイアウトの終了 ---
+    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+    # current_user_id = st.session_state.get('user_id')
+    # display_wpm_history(current_user_id) # 関数を呼び出す (コメントアウトを外す)
+    st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージ
 
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
