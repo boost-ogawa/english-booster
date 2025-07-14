@@ -230,15 +230,15 @@ def start_reading(page_number):
     st.session_state.page = page_number
 
 # --- サイドバーのコンテンツ ---
-def sidebar_content():
-    st.sidebar.header("メニュー")
-    st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})")
-    st.sidebar.markdown("[利用規約](#利用規約)")
-    st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)")
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("その他")
-    st.sidebar.write("English Booster")
-    st.sidebar.write("Ver.1_01")
+#def sidebar_content():
+    #st.sidebar.header("メニュー")
+    #st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})")
+    #st.sidebar.markdown("[利用規約](#利用規約)")
+    #st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)")
+    #st.sidebar.markdown("---")
+    #st.sidebar.subheader("その他")
+    #st.sidebar.write("English Booster")
+    #st.sidebar.write("Ver.1_01")
 
 # --- メインの処理 ---
 if st.session_state.page == 0:
@@ -352,9 +352,11 @@ elif st.session_state.page == 1:
     with col2:
         st.header("スピード測定")
         st.write("英文読解のスピードを測定しましょう！")
-
-        # 既存のスピード測定開始ボタン
-        if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)): # ページ2へ遷移
+        st.write("文章は毎月更新されます")
+        st.write("測定は何回でもできます")
+        st.write("各月初回の結果が保存されます")
+        st.write("このボタンをクリックすると英文が表示されます")
+        if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)): # ページ2へ遷移
             pass
 
 
