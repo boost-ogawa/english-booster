@@ -293,7 +293,7 @@ if st.session_state.page == 0:
 
 # 認証後のメインメニューページ（app_j.py の page 1 に相当）
 elif st.session_state.page == 1:
-    sidebar_content()
+    #sidebar_content()
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
     # 管理者設定は一旦ここに残します
