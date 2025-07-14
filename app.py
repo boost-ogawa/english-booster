@@ -290,29 +290,74 @@ if st.session_state.page == 0:
                     else:
                         st.error("ニックネームまたはIDが正しくありません。")
 
+
 # 認証後のメインメニューページ（app_j.py の page 1 に相当）
 elif st.session_state.page == 1:
     sidebar_content()
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
+    # 管理者設定は一旦ここに残します
     if st.session_state.is_admin:
         st.subheader("管理者設定")
         manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0))
         if st.button("表示行番号を保存"):
             st.session_state.fixed_row_index = manual_index
-            save_config(manual_index) # Firestore に保存する関数を呼び出す
+            # save_config(manual_index) # Firestore に保存する関数を呼び出す (必要であればコメントアウトを外す)
 
-    if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)): # ページ2へ遷移
-        pass
-    
-    st.markdown("---")
-    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-    #current_user_id = st.session_state.get('user_id')
-    #display_wpm_history(current_user_id) # 関数を呼び出す
-    st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージ
+    # --- ここから2カラムレイアウトの開始 ---
+    col1, col2 = st.columns([0.6, 0.4]) # 左を広め（6割）、右を狭め（4割）に調整
+
+    with col1:
+        st.header("新着動画リスト")
+        st.markdown("毎日更新！新しい動画をチェックしましょう！")
+
+        try:
+            # videos.csv ファイルを読み込む
+            # プロジェクトのルートに videos.csv を配置してください
+            video_data = pd.read_csv("videos.csv")
+            # 日付で降順にソート (新しい動画が上に来るように)
+            video_data["date"] = pd.to_datetime(video_data["date"])
+            video_data = video_data.sort_values(by="date", ascending=False).reset_index(drop=True)
+
+            if not video_data.empty:
+                for index, row in video_data.iterrows():
+                    st.subheader(row["title"])
+                    st.write(f"公開日: {row['date'].strftime('%Y年%m月%d日')}") # 表示形式を調整
+                    st.write(row["description"])
+
+                    # 動画埋め込み or リンク
+                    if row["type"] == "embed":
+                        st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"[動画を見る]({row['url']})") # リンクとして表示
+                    st.markdown("---") # 各動画の間に区切り線
+            else:
+                st.info("現在、表示できる動画はありません。")
+
+        except FileNotFoundError:
+            st.error("動画情報ファイル (videos.csv) が見つかりません。")
+            st.info("videos.csvを作成してアップロードしてください。")
+        except Exception as e:
+            st.error(f"動画情報の読み込み中にエラーが発生しました: {e}")
+
+    with col2:
+        st.header("スピード測定")
+        st.write("英文読解のスピードを測定しましょう！")
+
+        # 既存のスピード測定開始ボタン
+        if st.button("スピード測定開始（このボタンをクリックすると英文が表示されます）", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)): # ページ2へ遷移
+            pass
+
+        st.markdown("---")
+        st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+        # current_user_id = st.session_state.get('user_id')
+        # display_wpm_history(current_user_id) # 関数を呼び出す (コメントアウトを外す)
+        st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージ
+
+    # --- 2カラムレイアウトの終了 ---
+
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
-
 # 英文表示ページ（旧 page 1）
 elif st.session_state.page == 2:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
