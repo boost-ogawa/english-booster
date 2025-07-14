@@ -362,7 +362,8 @@ elif st.session_state.page == 4:
     col1, col2 = st.columns([1, 2])
     with col2:
         current_user_id = st.session_state.get('user_id')
-        display_wpm_history(current_user_id) # 関数を呼び出す
+        #display_wpm_history(current_user_id) # 関数を呼び出す
+        st.info("月次WPM推移グラフは後日表示されます。") # 代替メッセージ
 
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
