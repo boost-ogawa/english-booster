@@ -356,11 +356,10 @@ elif st.session_state.page == 1:
                 # videos.csvを読み込む
                 video_data = pd.read_csv("videos.csv")
                 video_data["date"] = pd.to_datetime(video_data["date"])
-                # release_dayでソートして表示
-                video_data = video_data.sort_values(by="release_day", ascending=True).reset_index(drop=True)
+                # ★変更点1: release_dayで降順にソート（新しい解放日が上に来るように）
+                video_data = video_data.sort_values(by="release_day", ascending=False).reset_index(drop=True)
 
                 # ユーザーの視聴済み動画リストをFirestoreから取得
-                # ここでuser_profile_docがNoneになる可能性があるのでチェックを追加
                 watched_videos = user_profile_data.get("watched_videos", []) if user_profile_doc.exists else []
 
                 if not video_data.empty:
@@ -372,32 +371,29 @@ elif st.session_state.page == 1:
                             st.warning(f"動画データに 'video_id' または 'release_day' がありません: {row.get('title', '不明な動画')}")
                             continue
 
-                        # 動画が解放されているかチェック
+                        # ★変更点2: 動画が解放されているかチェックし、解放されていない場合は何も表示しない
                         if release_day <= days_since_enrollment:
-                            # 解放されている動画の表示
                             expander_header = f"{row['title']} （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
                             if video_id in watched_videos:
                                 expander_header = f"✅ {expander_header} （視聴済み）"
                             
                             with st.expander(expander_header):
                                 st.write(row["description"])
-                                # 動画の埋め込み、リンク表示ロジック
                                 if "type" in row and row["type"] == "embed":
-                                    # MP4ファイルを埋め込む場合はHTMLの<video>タグを使用
                                     if ".mp4" in row["url"].lower():
                                         st.markdown(f'<video width="100%" height="315" controls><source src="{row["url"]}" type="video/mp4"></video>', unsafe_allow_html=True)
-                                    else: # YouTubeなど他の埋め込みURLの場合
+                                    else:
                                         st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
                                 elif "type" in row and row["type"] == "link":
                                     st.markdown(f"[動画を見る]({row['url']})", unsafe_allow_html=True)
-                                else: # typeが指定されていない場合、MP4かどうかで判断
+                                else:
                                      if ".mp4" in row["url"].lower():
                                         st.markdown(f'<video width="100%" height="315" controls><source src="{row["url"]}" type="video/mp4"></video>', unsafe_allow_html=True)
-                                     else: # それ以外はiframeとして扱う
+                                     else:
                                         st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-                        else:
-                            # まだ解放されていない動画の表示
-                            st.markdown(f"🔒 {row['title']} （あと{release_day - days_since_enrollment}日で解放）")
+                        # ★変更点3: elseブロックを削除 (解放されていない動画は表示しない)
+                        # else:
+                        #    st.markdown(f"🔒 {row['title']} （あと{release_day - days_since_enrollment}日で解放）")
 
                 else:
                     st.info("現在、表示できる動画はありません。")
