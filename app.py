@@ -12,10 +12,11 @@ import re
 import os
 import bcrypt # bcryptをインポート
 
+# --- 定数設定 ---
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data.csv"
-GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results.csv"
+# GITHUB_CSV_URL は未使用のようですので、ここでは記載しません
 HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true"
-DATA_PATH = "data.csv"
+# DATA_PATH も未使用のようですので、ここでは記載しません
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -25,8 +26,7 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
     cred = credentials.Certificate(f.name)
     if not firebase_admin._apps:
         firebase_admin.initialize_app(cred)
-    # tempfileを削除
-    os.unlink(f.name)
+    os.unlink(f.name) # tempfileを削除
 
 db = firestore.client()
 
@@ -56,12 +56,11 @@ def save_config(fixed_row_index):
 
 # --- Firestoreに結果を保存する関数 ---
 # user_idを引数と保存データから削除
-def save_results(wpm, correct_answers, material_id, nickname): 
+def save_results(wpm, correct_answers, material_id, nickname):
     jst = timezone('Asia/Tokyo')
     timestamp = datetime.now(jst).isoformat()
 
     result_data = {
-        # "user_id": user_id, # user_idを削除
         "nickname": nickname,
         "timestamp": timestamp,
         "material_id": material_id,
@@ -72,34 +71,41 @@ def save_results(wpm, correct_answers, material_id, nickname):
     try:
         db.collection("results").add(result_data)
         print("結果が保存されました")
+
+        # 視聴履歴の更新（video_idではなく、material_idをそのまま記録）
+        # material_idはdata.csvの行番号なので、動画視聴とは直接紐付かない点に注意
+        # ここはあくまで「スピード測定を完了した教材ID」を記録する場所として残します
+        user_profile_ref = db.collection("user_profiles").document(nickname)
+        # FirestoreのArrayUnionを使って、重複なく追加
+        user_profile_ref.update({
+            "watched_materials": firestore.ArrayUnion([material_id])
+        })
+        print(f"ユーザー {nickname} の教材完了履歴が更新されました: {material_id}")
+
     except Exception as e:
         st.error(f"結果の保存に失敗しました: {e}")
 
 # --- WPM推移グラフ表示関数 ---
 # user_idではなくnicknameでフィルタリングするように変更
-def display_wpm_history(nickname): # 引数をnicknameに変更
-    if nickname: # nicknameが存在するか確認
+def display_wpm_history(nickname):
+    if nickname:
         try:
-            # Firestoreから直接データを読み込む
-            # nicknameでフィルタリング
             results_ref = db.collection("results").where("nickname", "==", nickname).order_by("timestamp")
             docs = results_ref.stream()
-            
+
             data_list = []
             for doc in docs:
                 data = doc.to_dict()
-                # 'timestamp'をdatetimeオブジェクトに変換し、JSTに変換
                 dt_object = datetime.fromisoformat(data['timestamp'])
                 jst = timezone('Asia/Tokyo')
                 dt_object_jst = dt_object.astimezone(jst)
-                data['測定年月'] = dt_object_jst.strftime('%Y-%m-%d %H:%M') # グラフ表示用にフォーマット
+                data['測定年月'] = dt_object_jst.strftime('%Y-%m-%d %H:%M')
                 data_list.append(data)
 
             if data_list:
                 df_results = pd.DataFrame(data_list)
-                # WPMが数値であることを確認
                 df_results['wpm'] = pd.to_numeric(df_results['wpm'], errors='coerce')
-                df_results.dropna(subset=['wpm'], inplace=True) # NaNを削除
+                df_results.dropna(subset=['wpm'], inplace=True)
 
                 fig = px.line(df_results, x='測定年月', y='wpm', title='WPM推移')
                 fig.update_xaxes(tickangle=-45)
@@ -109,7 +115,7 @@ def display_wpm_history(nickname): # 引数をnicknameに変更
         except Exception as e:
             st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
     else:
-        st.info("ニックネームがありません。") # メッセージを調整
+        st.info("ニックネームがありません。")
 
 # --- ページ設定（最初に書く必要あり） ---
 st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sidebar_state="collapsed")
@@ -118,20 +124,15 @@ st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sideba
 st.markdown(
     """
     <style>
-    /* アプリ全体の背景と文字色設定 */
     .stApp {
         background-color: #000D36;
         color: #ffffff;
     }
-
-    /* 英文表示用のカスタム段落スタイル */
     .custom-paragraph {
         font-family: Georgia, serif;
         line-height: 1.8;
         font-size: 1.5rem;
     }
-
-    /* スタートボタンのスタイル（高さ・フォントサイズ調整済み） */
     div.stButton > button:first-child {
         background-color: #28a745;
         color: white;
@@ -140,12 +141,9 @@ st.markdown(
         padding: 20px 40px;
         font-size: 1.8rem;
     }
-
     div.stButton > button:first-child:hover {
         background-color: #218838;
     }
-
-    /* Google Classroom風のボタン */
     .google-classroom-button {
         display: inline-block;
         padding: 10px 20px;
@@ -155,7 +153,6 @@ st.markdown(
         text-decoration: none;
         border-radius: 5px;
     }
-
     .google-classroom-button:hover {
         background-color: #357AE8;
     }
@@ -174,24 +171,15 @@ def load_material(github_url, row_index):
     try:
         df = pd.read_csv(github_url)
         if 0 <= row_index < len(df):
-            return df.iloc[row_index].to_dict()
+            material_data = df.iloc[row_index].to_dict()
+            # material_id_for_save は data.csvの行番号をそのまま使用
+            material_data['material_id_for_save'] = str(row_index)
+            return material_data
         else:
             st.error(f"指定された行番号 ({row_index + 1}) はファイルに存在しません。")
             return None
     except Exception as e:
         st.error(f"GitHubからのデータ読み込みに失敗しました: {e}")
-        return None
-        
-# --- Secrets からニックネームとIDでユーザー情報をロードする関数 (未使用だが残す) ---
-def get_user_data(nickname, user_id):
-    try:
-        users = st.secrets.get("users", [])
-        for user in users:
-            if user["nickname"] == nickname and user["user_id"] == user_id:
-                return user
-        return None
-    except Exception as e:
-        print(f"ユーザーデータ取得エラー: {e}")
         return None
 
 # --- セッション変数の初期化 ---
@@ -215,14 +203,16 @@ if "submitted" not in st.session_state:
 if "nickname" not in st.session_state:
     st.session_state.nickname = ""
 if "user_id" not in st.session_state:
-    st.session_state.user_id = "" # ここに平文のID（パスワード）が一時的に保存される
+    st.session_state.user_id = ""
 if "show_full_graph" not in st.session_state:
     st.session_state.show_full_graph = False
 if "set_page_key" not in st.session_state:
     st.session_state["set_page_key"] = "unique_key_speed"
 if "is_admin" not in st.session_state:
     st.session_state.is_admin = False
-    
+if "enrollment_date" not in st.session_state: # enrollment_date をセッションに追加
+    st.session_state.enrollment_date = None
+
 # --- ページ遷移関数 ---
 def set_page(page_number):
     st.session_state.page = page_number
@@ -232,29 +222,15 @@ def start_reading(page_number):
     st.session_state.start_time = time.time()
     st.session_state.page = page_number
 
-# --- サイドバーのコンテンツ（コメントアウトされていますが、残しておきます） ---
-#def sidebar_content():
-#    st.sidebar.header("メニュー")
-#    st.sidebar.markdown(f"[Google Classroom]({GOOGLE_CLASSROOM_URL})")
-#    st.sidebar.markdown("[利用規約](#利用規約)")
-#    st.sidebar.markdown("[プライバシーポリシー](#プライバシーポリシー)")
-#    st.sidebar.markdown("---")
-#    st.sidebar.subheader("その他")
-#    st.sidebar.write("English Booster")
-#    st.sidebar.write("Ver.1_01")
-
 # --- 認証ページ（page 0） ---
 if st.session_state.page == 0:
     st.title("ニックネームとIDを入力してください")
     col1, _ = st.columns(2)
     with col1:
-        # 入力フォーム
         nickname = st.text_input("ニックネーム (半角英数字、_、-、半角スペース可)", key="nickname_input", value=st.session_state.get("nickname", ""))
-        # IDはパスワードとして機能するため、初期値は空にするべき
-        user_id_input = st.text_input("ID (パスワードとして機能します。半角英数字)", type="password", key="user_id_input", value="") 
-        
+        user_id_input = st.text_input("ID (パスワードとして機能します。半角英数字)", type="password", key="user_id_input", value="")
+
         if st.button("次へ"):
-            # 入力チェック
             if not nickname:
                 st.warning("ニックネームを入力してください。")
             elif not user_id_input:
@@ -264,99 +240,173 @@ if st.session_state.page == 0:
             elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id_input):
                 st.error("IDは半角英数字で入力してください。")
             else:
-                # 管理者情報をSecretsから取得
                 admin_nickname = st.secrets.get("ADMIN_USERNAME")
-                admin_hashed_password = st.secrets.get("ADMIN_PASSWORD") # ハッシュ化されたパスワードを取得
+                admin_hashed_password = st.secrets.get("ADMIN_PASSWORD")
 
-                # ユーザーが入力したID（パスワード）をバイト文字列に変換
                 user_entered_password_bytes = user_id_input.strip().encode('utf-8')
 
                 authenticated = False
                 is_admin_user = False
 
-                # 管理者認証
                 if nickname.strip() == admin_nickname:
-                    # secretsにハッシュ化パスワードがあるか確認
                     if admin_hashed_password:
                         try:
-                            # 入力されたパスワードとsecretsから取得したハッシュ値を比較
                             if bcrypt.checkpw(user_entered_password_bytes, admin_hashed_password.encode('utf-8')):
                                 authenticated = True
                                 is_admin_user = True
-                        except ValueError: # ハッシュ値の形式が不正な場合など
-                            pass # 認証失敗として扱う
-                    
-                # 管理者として認証されなかった場合のみ、一般ユーザー認証を試みる
-                if not authenticated: 
-                    # 一般ユーザー認証（Secretsのusersリストから確認）
+                        except ValueError:
+                            pass
+
+                if not authenticated:
                     users_from_secrets = st.secrets.get("users", [])
                     for user_info in users_from_secrets:
                         if nickname.strip() == user_info.get("nickname"):
-                            stored_hashed_id = user_info.get("user_id") # ハッシュ化されたIDを取得
-                            if stored_hashed_id: # 存在する場合のみ比較
+                            stored_hashed_id = user_info.get("user_id")
+                            if stored_hashed_id:
                                 try:
                                     if bcrypt.checkpw(user_entered_password_bytes, stored_hashed_id.encode('utf-8')):
                                         authenticated = True
                                         is_admin_user = False
                                         break
-                                except ValueError: # ハッシュ値の形式が不正な場合など
-                                    pass # 認証失敗として扱う
-                            break # ニックネームが一致するユーザーが見つかったらループを抜ける
+                                except ValueError:
+                                    pass
+                            break
 
                 if authenticated:
                     st.session_state.nickname = nickname.strip()
-                    st.session_state.user_id = user_id_input.strip() # セッションには入力されたパスワード（平文）を保存
+                    st.session_state.user_id = user_id_input.strip()
                     st.session_state.is_admin = is_admin_user
-                    st.session_state.page = 1 # 認証後、メインメニューページへ
-                    st.rerun() # ページ遷移を即時実行
+                    st.session_state.page = 1
+                    st.rerun()
                 else:
                     st.error("ニックネームまたはIDが正しくありません。")
 
 # --- 認証後のメインメニューページ（page 1） ---
 elif st.session_state.page == 1:
-    # sidebar_content() # コメントアウトされたサイドバー関数
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
-    # 管理者設定は一旦ここに残します
+    # ユーザーのenrollment_dateをFirestoreから取得し、セッションに保存
+    current_nickname = st.session_state.nickname
+    user_profile_ref = db.collection("user_profiles").document(current_nickname)
+    user_profile_doc = user_profile_ref.get()
+
+    if user_profile_doc.exists:
+        user_profile_data = user_profile_doc.to_dict()
+        st.session_state.enrollment_date = user_profile_data.get("enrollment_date")
+    else:
+        # ドキュメントがない場合は、enrollment_dateはNoneのままにする
+        # 管理者が設定するのを待つ
+        st.session_state.enrollment_date = None
+
+
+    # 管理者設定
     if st.session_state.is_admin:
         st.subheader("管理者設定")
-        manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0))
-        if st.button("表示行番号を保存"):
+        
+        # 固定行インデックス設定
+        manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0), key="admin_fixed_row_index")
+        if st.button("表示行番号を保存", key="save_fixed_row_index"):
             st.session_state.fixed_row_index = manual_index
-            save_config(manual_index) # Firestore に保存する関数を呼び出す (コメントアウトを外しました)
+            save_config(manual_index)
+
+        st.markdown("---")
+        st.subheader("ユーザー登録日設定 (管理者のみ)")
+
+        target_nickname = st.text_input("登録日を設定するユーザーのニックネーム", key="target_nickname_input")
+        today_jst_date = datetime.now(timezone('Asia/Tokyo')).date() # default value for date_input
+        selected_enrollment_date = st.date_input("登録日を選択", value=today_jst_date, key="enrollment_date_picker")
+
+        if st.button("登録日を設定", key="set_enrollment_date_button"):
+            if target_nickname:
+                target_user_profile_ref = db.collection("user_profiles").document(target_nickname)
+                enrollment_date_str = selected_enrollment_date.strftime('%Y-%m-%d')
+                
+                # Firestoreに保存 (watched_videosが未設定なら空配列で初期化も兼ねる)
+                target_user_profile_ref.set(
+                    {"enrollment_date": enrollment_date_str, "watched_videos": []},
+                    merge=True # 既存のフィールド（例: 既に存在するwatched_videos）を上書きしない
+                )
+                st.success(f"ユーザー **{target_nickname}** の登録日を **{enrollment_date_str}** に設定しました。")
+                # もし設定したユーザーが自分自身の場合、セッション変数も更新
+                if target_nickname == st.session_state.nickname:
+                    st.session_state.enrollment_date = enrollment_date_str
+            else:
+                st.warning("登録日を設定するユーザーのニックネームを入力してください。")
 
     # --- ここから2カラムレイアウトの開始 ---
-    col1, col2 = st.columns([0.6, 0.4]) # 左を広め（6割）、右を狭め（4割）に調整
+    col1, col2 = st.columns([0.6, 0.4])
 
     with col1:
         st.header("授業動画")
         st.markdown("毎日更新！新しい動画をチェックしましょう！")
 
-        try:
-            video_data = pd.read_csv("videos.csv")
-            video_data["date"] = pd.to_datetime(video_data["date"])
-            video_data = video_data.sort_values(by="date", ascending=False).reset_index(drop=True)
+        # enrollment_dateが設定されていない場合は動画を表示しない
+        if st.session_state.enrollment_date is None:
+            st.info("あなたの動画視聴開始日はまだ設定されていません。管理者に連絡してください。")
+        else:
+            # 現在の日付を取得 (日本時間)
+            today_jst = datetime.now(timezone('Asia/Tokyo')).date()
+            # ユーザーの登録日をdatetimeオブジェクトに変換
+            enrollment_dt = datetime.strptime(st.session_state.enrollment_date, '%Y-%m-%d').date()
 
-            if not video_data.empty:
-                for index, row in video_data.iterrows():
-                    expander_header = f"{row['title']} （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
-                    
-                    with st.expander(expander_header):
-                        st.write(row["description"])
-                        if "type" in row and row["type"] == "embed":
-                            st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-                        elif "type" in row and row["type"] == "link":
-                            st.markdown(f"[動画を見る]({row['url']})")
+            # 登録日からの経過日数を計算 (+1は登録日を1日目とするため)
+            days_since_enrollment = (today_jst - enrollment_dt).days + 1
+
+            try:
+                # videos.csvを読み込む
+                video_data = pd.read_csv("videos.csv")
+                video_data["date"] = pd.to_datetime(video_data["date"])
+                # release_dayでソートして表示
+                video_data = video_data.sort_values(by="release_day", ascending=True).reset_index(drop=True)
+
+                # ユーザーの視聴済み動画リストをFirestoreから取得
+                # ここでuser_profile_docがNoneになる可能性があるのでチェックを追加
+                watched_videos = user_profile_data.get("watched_videos", []) if user_profile_doc.exists else []
+
+                if not video_data.empty:
+                    for index, row in video_data.iterrows():
+                        video_id = row.get('video_id')
+                        release_day = row.get('release_day')
+
+                        if video_id is None or release_day is None:
+                            st.warning(f"動画データに 'video_id' または 'release_day' がありません: {row.get('title', '不明な動画')}")
+                            continue
+
+                        # 動画が解放されているかチェック
+                        if release_day <= days_since_enrollment:
+                            # 解放されている動画の表示
+                            expander_header = f"{row['title']} （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
+                            if video_id in watched_videos:
+                                expander_header = f"✅ {expander_header} （視聴済み）"
+                            
+                            with st.expander(expander_header):
+                                st.write(row["description"])
+                                # 動画の埋め込み、リンク表示ロジック
+                                if "type" in row and row["type"] == "embed":
+                                    # MP4ファイルを埋め込む場合はHTMLの<video>タグを使用
+                                    if ".mp4" in row["url"].lower():
+                                        st.markdown(f'<video width="100%" height="315" controls><source src="{row["url"]}" type="video/mp4"></video>', unsafe_allow_html=True)
+                                    else: # YouTubeなど他の埋め込みURLの場合
+                                        st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+                                elif "type" in row and row["type"] == "link":
+                                    st.markdown(f"[動画を見る]({row['url']})", unsafe_allow_html=True)
+                                else: # typeが指定されていない場合、MP4かどうかで判断
+                                     if ".mp4" in row["url"].lower():
+                                        st.markdown(f'<video width="100%" height="315" controls><source src="{row["url"]}" type="video/mp4"></video>', unsafe_allow_html=True)
+                                     else: # それ以外はiframeとして扱う
+                                        st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
                         else:
-                            st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-            else:
-                st.info("現在、表示できる動画はありません。")
+                            # まだ解放されていない動画の表示
+                            st.markdown(f"🔒 {row['title']} （あと{release_day - days_since_enrollment}日で解放）")
 
-        except FileNotFoundError:
-            st.error("動画情報ファイル (videos.csv) が見つかりません。")
-            st.info("videos.csvを作成してアップロードしてください。")
-        except Exception as e:
-            st.error(f"動画情報の読み込み中にエラーが発生しました: {e}")
+                else:
+                    st.info("現在、表示できる動画はありません。")
+
+            except FileNotFoundError:
+                st.error("動画情報ファイル (videos.csv) が見つかりません。")
+                st.info("`videos.csv`を作成してアプリのルートディレクトリにアップロードしてください。")
+            except Exception as e:
+                st.error(f"動画情報の読み込み中にエラーが発生しました: {e}")
 
     with col2:
         st.header("スピード測定")
@@ -367,18 +417,16 @@ elif st.session_state.page == 1:
         if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
             pass
 
-    # --- 2カラムレイアウトの終了 ---
-    # st.subheader(f"{st.session_state.nickname}さんのWPM推移") # この行も不要なら削除可
-    # current_nickname = st.session_state.get('nickname')
-    # display_wpm_history(current_nickname) # ← この行をコメントアウト
-    st.info("月次WPM推移グラフは後日表示されます。") # ← この行のコメントアウトを外す
-    
+    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+    current_nickname = st.session_state.get('nickname')
+    # display_wpm_history(current_nickname) # ← この行はコメントアウトを維持
+    st.info("月次WPM推移グラフは後日表示されます。") # ← この行はコメントアウトを維持
+
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
 # --- 英文表示ページ（旧 page 1、現在は page 2 に相当） ---
 elif st.session_state.page == 2:
-    # sidebar_content() # コメントアウトされたサイドバー関数
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -399,7 +447,6 @@ elif st.session_state.page == 2:
 
 # 問題ページ（旧 page 2）
 elif st.session_state.page == 3:
-    # sidebar_content() # コメントアウトされたサイドバー関数
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
@@ -422,13 +469,12 @@ elif st.session_state.page == 3:
 
 # 結果表示ページ（旧 page 3）
 elif st.session_state.page == 4:
-    # sidebar_content() # コメントアウトされたサイドバー関数
     st.success("結果を記録しました。")
     col1, col2 = st.columns([1, 2])
     with col2:
-        # current_nickname = st.session_state.get('nickname')
-        # display_wpm_history(current_nickname) # ← この行をコメントアウト
-        st.info("月次WPM推移グラフは後日表示されます。") # ← この行のコメントアウトを外す    with col2:
+        current_nickname = st.session_state.get('nickname')
+        # display_wpm_history(current_nickname) # ← この行はコメントアウトを維持
+        st.info("月次WPM推移グラフは後日表示されます。") # ← この行はコメントアウトを維持
 
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
@@ -446,13 +492,11 @@ elif st.session_state.page == 4:
             st.write(f"所要時間: {total_time:.2f} 秒")
             st.write(f"単語数/分: **{wpm:.1f}** WPM")
 
-            # Q1 の結果表示
             correct1 = st.session_state.q1 == data['A1']
             st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
             st.write(f"あなたの解答 {st.session_state.q1}")
             st.write(f"正しい答え: {data['A1']}")
 
-            # Q2 の結果表示
             correct2 = st.session_state.q2 == data['A2']
             st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
             st.write(f"あなたの解答: {st.session_state.q2}")
@@ -461,8 +505,9 @@ elif st.session_state.page == 4:
             correct_answers_to_store = int(correct1) + int(correct2)
 
             if not st.session_state.submitted:
-                # user_idを削除してsave_resultsを呼び出し
-                save_results(wpm, correct_answers_to_store, str(data.get("id", f"row_{st.session_state.row_to_load}")),
+                # material_id_for_save を取得してsave_resultsに渡す
+                material_id_to_save = data.get('material_id_for_save', str(st.session_state.fixed_row_index))
+                save_results(wpm, correct_answers_to_store, material_id_to_save,
                                 st.session_state.nickname)
                 st.session_state.submitted = True
 
@@ -472,7 +517,6 @@ elif st.session_state.page == 4:
 
 # --- 意味確認ページ（旧 page 4） ---
 elif st.session_state.page == 5:
-    # sidebar_content() # コメントアウトされたサイドバー関数
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
