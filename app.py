@@ -155,7 +155,7 @@ st.markdown(
     }
     /* 質問文のテキスト */
     .custom-question-text {
-        font-size: 1.5rem; /* 現在 1.3rem -> 1.5rem に変更 (例: 2段階アップ) */
+        font-size: 1.8rem; /* 現在 1.3rem -> 1.5rem に変更 (例: 2段階アップ) */
         font-weight: bold;
         margin-bottom: 0.5rem;
         color: #ADD8E6;
@@ -163,7 +163,7 @@ st.markdown(
 
     /* ラジオボタンの選択肢のフォントサイズ */
     div[data-testid="stRadio"] label p {
-        font-size: 1.3rem !important; /* 現在 1.1rem -> 1.3rem に変更 (例: 2段階アップ) */
+        font-size: 1.5rem !important; /* 現在 1.1rem -> 1.3rem に変更 (例: 2段階アップ) */
         line-height: 1.4;
         color: #E0E0E0;
     }
