@@ -153,6 +153,21 @@ st.markdown(
         text-decoration: none;
         border-radius: 5px;
     }
+    /* 新しいスタイル: 質問文のテキスト */
+    .custom-question-text {
+        font-size: 1.3rem; /* 質問文のフォントサイズを少し大きく */
+        font-weight: bold; /* 必要であれば太字に */
+        margin-bottom: 0.5rem; /* 下に少し余白 */
+        color: #ADD8E6; /* 明るい青系など、質問を目立たせる色 */
+    }
+
+    /* ラジオボタンの選択肢のフォントサイズ */
+    div[data-testid="stRadio"] label p {
+        font-size: 1.1rem !important; /* 現在1.2remですが、さらに微調整が必要なら */
+        line-height: 1.4; /* 行間も調整して読みやすく */
+        color: #E0E0E0; /* 選択肢の色。必要に応じて変更 */
+    }
+    
     .google-classroom-button:hover {
         background-color: #357AE8;
     }
@@ -228,7 +243,7 @@ if st.session_state.page == 0:
     col1, _ = st.columns(2)
     with col1:
         nickname = st.text_input("ニックネーム (半角英数字、_、-、半角スペース可)", key="nickname_input", value=st.session_state.get("nickname", ""))
-        user_id_input = st.text_input("ID (パスワードとして機能します。半角英数字)", type="password", key="user_id_input", value="")
+        user_id_input = st.text_input("パスワード（お伝えしているパスワードを入力してください。半角英数字)", type="password", key="user_id_input", value="")
 
         if st.button("次へ"):
             if not nickname:
@@ -338,7 +353,7 @@ elif st.session_state.page == 1:
 
     with col1:
         st.header("授業動画")
-        st.markdown("毎日更新！新しい動画をチェックしましょう！")
+        st.markdown("新しい動画をチェックしましょう！")
 
         # enrollment_dateが設定されていない場合は動画を表示しない
         if st.session_state.enrollment_date is None:
@@ -441,27 +456,45 @@ elif st.session_state.page == 2:
         st.session_state.page = 3
         st.rerun()
 
-# 問題ページ（旧 page 2）
+## ... 既存のコード ...
+
+# 問題ページ（旧 page 2, 現在の app.py の page 3 に相当）
 elif st.session_state.page == 3:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
-    st.info("問題を解いてSubmitボタンを押しましょう")
+    st.info("問題を解いて次へボタンを押しましょう") # "Submit"を"次へ"に変更
     col1, col2 = st.columns([2, 1])
     with col1:
         st.markdown(f'<div class="custom-paragraph">{data["main"]}</div>', unsafe_allow_html=True)
 
     with col2:
         st.subheader("Questions")
-        q1_choice = st.radio(data['Q1'], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1")
-        q2_choice = st.radio(data['Q2'], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2")
+        
+        # Q1の質問文を独立させて表示し、新しいCSSクラスを適用
+        st.markdown(f'<p class="custom-question-text">{data["Q1"]}</p>', unsafe_allow_html=True)
+        # ラジオボタン自身のラベルは非表示にし、keyはq1_englishを使用
+        q1_choice = st.radio(" ", [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1_english",
+                             index=([data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']].index(st.session_state.q1_english)
+                                    if st.session_state.get('q1_english') in [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']] else None),
+                             label_visibility="hidden")
+        
+        # Q2の質問文を独立させて表示し、新しいCSSクラスを適用
+        st.markdown(f'<p class="custom-question-text">{data["Q2"]}</p>', unsafe_allow_html=True)
+        # ラジオボタン自身のラベルは非表示にし、keyはq2_englishを使用
+        q2_choice = st.radio(" ", [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2_english",
+                             index=([data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']].index(st.session_state.q2_english)
+                                    if st.session_state.get('q2_english') in [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']] else None),
+                             label_visibility="hidden")
 
-    if st.button("Submit"):
-        if st.session_state.q1 is not None and st.session_state.q2 is not None:
+    # ボタンのテキストを"Submit"から"次へ"に変更し、対応するsession_stateキーも更新
+    if st.button("次へ"):
+        if st.session_state.get('q1_english') is not None and st.session_state.get('q2_english') is not None:
             st.session_state.page = 4
             st.rerun()
         else:
             st.error("両方の質問に答えてください。")
+
 
 # 結果表示ページ（旧 page 3）
 elif st.session_state.page == 4:
