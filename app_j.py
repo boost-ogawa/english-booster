@@ -9,7 +9,7 @@ import json
 import tempfile
 import re
 import os
-import bcrypt # ★追加: bcryptをインポート
+import bcrypt # bcryptをインポート
 
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data_j.csv"
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results_j.csv"
@@ -235,48 +235,66 @@ def start_japanese_reading():
 
 # --- メインの処理 ---
 if st.session_state.page == 0:
-    st.title("ニックネームとパスワードを入力してください") # ★変更: IDをパスワードに
+    st.title("ニックネームとパスワードを入力してください")
     col1, _ = st.columns(2)
     with col1:
         nickname = st.text_input("ニックネーム (半角英数字)", key="nickname_input", value=st.session_state.nickname)
-        password = st.text_input("パスワード", type="password", key="password_input", value=st.session_state.user_id) # ★変更: user_idをpasswordに
+        password = st.text_input("パスワード", type="password", key="password_input", value=st.session_state.user_id)
         if st.button("次へ"):
             if not nickname:
                 st.warning("ニックネームを入力してください。")
-            elif not password: # ★変更: user_idをpasswordに
-                st.warning("パスワードを入力してください。") # ★変更: IDをパスワードに
+            elif not password:
+                st.warning("パスワードを入力してください。")
             elif not re.fullmatch(r'[0-9a-zA-Z_\- ]+', nickname):
                 st.error("ニックネームは半角英数字で入力してください。")
             else:
                 # Streamlit Secretsから管理者情報を取得
                 admin_nickname = st.secrets.get("ADMIN_USERNAME")
-                admin_password_hash = st.secrets.get("ADMIN_PASSWORD_HASH") # ★変更: パスワードハッシュを取得
+                # ★修正点1: ADMIN_PASSWORD_HASH -> ADMIN_PASSWORD (app.pyに合わせる)
+                admin_hashed_password = st.secrets.get("ADMIN_PASSWORD") 
 
                 # Streamlit Secretsから一般ユーザー情報を取得
                 users_from_secrets = st.secrets.get("users", [])
 
+                user_entered_password_bytes = password.strip().encode('utf-8') # 入力パスワードをバイト列に変換
+
                 authenticated = False
+                is_admin_user = False
+
                 # 管理者認証
-                if nickname.strip() == admin_nickname and admin_password_hash and bcrypt.checkpw(password.encode('utf-8'), admin_password_hash.encode('utf-8')): # ★変更: bcryptでパスワードを検証
+                if nickname.strip() == admin_nickname:
+                    if admin_hashed_password: # Noneチェック
+                        try:
+                            if bcrypt.checkpw(user_entered_password_bytes, admin_hashed_password.encode('utf-8')):
+                                authenticated = True
+                                is_admin_user = True
+                        except ValueError:
+                            pass # ハッシュ形式が不正な場合など
+                
+                # 一般ユーザー認証（管理者に認証されていない場合のみ）
+                if not authenticated:
+                    for user_info in users_from_secrets:
+                        if nickname.strip() == user_info.get("nickname"):
+                            # ★修正点2: hashed_password -> user_id (app.pyに合わせる)
+                            stored_hashed_id = user_info.get("user_id") 
+                            if stored_hashed_id: # Noneチェック
+                                try:
+                                    if bcrypt.checkpw(user_entered_password_bytes, stored_hashed_id.encode('utf-8')):
+                                        authenticated = True
+                                        is_admin_user = False
+                                        break # 認証成功したらループを抜ける
+                                except ValueError:
+                                    pass
+                            break # ニックネームが見つかったらループを抜ける
+                
+                if authenticated:
                     st.session_state.nickname = nickname.strip()
                     st.session_state.user_id = nickname.strip() # ニックネームをuser_idとして保存（または適切なIDを設定）
-                    st.session_state.is_admin = True
-                    authenticated = True
-                else:
-                    # 一般ユーザー認証
-                    for user_info in users_from_secrets:
-                        if nickname.strip() == user_info.get("nickname") and user_info.get("hashed_password") and bcrypt.checkpw(password.encode('utf-8'), user_info.get("hashed_password").encode('utf-8')): # ★変更: bcryptでパスワードを検証
-                            st.session_state.nickname = nickname.strip()
-                            st.session_state.user_id = nickname.strip() # ニックネームをuser_idとして保存（または適切なIDを設定）
-                            st.session_state.is_admin = False # 一般ユーザーは管理者ではない
-                            authenticated = True
-                            break
-
-                if authenticated:
+                    st.session_state.is_admin = is_admin_user
                     st.session_state.page = 1
                     st.rerun()
                 else:
-                    st.error("ニックネームまたはパスワードが正しくありません。") # ★変更: IDをパスワードに
+                    st.error("ニックネームまたはパスワードが正しくありません。")
 elif st.session_state.page == 1:
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
@@ -287,7 +305,7 @@ elif st.session_state.page == 1:
             st.session_state.fixed_row_index = manual_index
             save_config(manual_index) # Firestore に保存する関数を呼び出す
 
-    if st.button("英語の学習開始（表示される英文を読んでStopをおしましょう）", key="english_start_button", use_container_width=True, on_click=start_reading, args=(2,)):
+    if st.button("英語の学習開始（表示される英文を読んでStopをおきましょう）", key="english_start_button", use_container_width=True, on_click=start_reading, args=(2,)):
         pass
     if st.button("国語の学習開始（表示される文章を読んでStopをおしましょう）", key="japanese_start_button", use_container_width=True, on_click=start_japanese_reading):
         pass
@@ -412,7 +430,6 @@ elif st.session_state.page == 45: # 復習音声ページ (ページ4と5の間)
     audio_url = data.get('audio_url') # CSVの'audio_url'列からURLを取得することを想定
     main_text = data.get('main') # 英文も表示できるように
 
-    # ★ここをさらに修正します★
     # audio_urlが文字列型であり、かつ空でないことを確認
     if isinstance(audio_url, str) and audio_url.strip() != "":
         st.subheader("💡 音声を聞く")
@@ -515,7 +532,7 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
 
                 material_id = str(data.get("id", f"row_{st.session_state.fixed_row_index}")) if data is not None else "unknown"
 
-               # ★ここを修正: save_results の関数名と引数を変更
+               # save_results の関数名と引数を変更
                 save_english_results(wpm, correct_answers_comprehension, material_id,
                                      st.session_state.nickname, # user_idを削除
                                      is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
@@ -598,11 +615,9 @@ elif st.session_state.page == 7:
             japanese_image_url = data.get('japanese_image_url')
             if japanese_image_url:
                 st.image(japanese_image_url)
-                # ★ここから追加★
                 # 日本語の単語数をセッションステートに保存
                 # 'word_count_ja' 列がCSVに存在することを前提としています
                 st.session_state.word_count_japanese = data.get('word_count_ja', 0)
-                # ★ここまで追加★
             else:
                 st.error("対応する画像のURLが見つかりませんでした。")
         else:
@@ -637,7 +652,6 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
             st.session_state.is_correct_q1_ja = (st.session_state.q1_ja == data['correct_answer_q1_ja'])
             st.session_state.is_correct_q2_ja = (st.session_state.q2_ja == data['correct_answer_q2_ja'])
 
-            # ★ここから追加★
             # 日本語WPMを計算
             wpm_japanese_calculated = 0.0
             if st.session_state.get("start_time") and st.session_state.get("stop_time_japanese") and st.session_state.word_count_japanese > 0:
@@ -650,7 +664,6 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
                                   st.session_state.nickname,
                                   is_correct_q1_ja=st.session_state.is_correct_q1_ja,
                                   is_correct_q2_ja=st.session_state.is_correct_q2_ja)
-            # ★ここまで追加★
 
             st.session_state.page = 9 # ページ9へ遷移
             st.rerun()
