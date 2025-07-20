@@ -9,6 +9,7 @@ import json
 import tempfile
 import re
 import os
+import bcrypt # ★追加: bcryptをインポート
 
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data_j.csv"
 GITHUB_CSV_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/results_j.csv"
@@ -234,51 +235,48 @@ def start_japanese_reading():
 
 # --- メインの処理 ---
 if st.session_state.page == 0:
-    st.title("ニックネームとIDを入力してください")
+    st.title("ニックネームとパスワードを入力してください") # ★変更: IDをパスワードに
     col1, _ = st.columns(2)
     with col1:
         nickname = st.text_input("ニックネーム (半角英数字)", key="nickname_input", value=st.session_state.nickname)
-        user_id = st.text_input("ID (半角英数字)", key="user_id_input", value=st.session_state.user_id)
+        password = st.text_input("パスワード", type="password", key="password_input", value=st.session_state.user_id) # ★変更: user_idをpasswordに
         if st.button("次へ"):
             if not nickname:
                 st.warning("ニックネームを入力してください。")
-            elif not user_id:
-                st.warning("IDを入力してください。")
+            elif not password: # ★変更: user_idをpasswordに
+                st.warning("パスワードを入力してください。") # ★変更: IDをパスワードに
             elif not re.fullmatch(r'[0-9a-zA-Z_\- ]+', nickname):
                 st.error("ニックネームは半角英数字で入力してください。")
-            elif not re.fullmatch(r'[0-9a-zA-Z]+', user_id):
-                st.error("IDは半角英数字で入力してください。")
             else:
                 # Streamlit Secretsから管理者情報を取得
                 admin_nickname = st.secrets.get("ADMIN_USERNAME")
-                admin_password = st.secrets.get("ADMIN_PASSWORD")
+                admin_password_hash = st.secrets.get("ADMIN_PASSWORD_HASH") # ★変更: パスワードハッシュを取得
 
                 # Streamlit Secretsから一般ユーザー情報を取得
                 users_from_secrets = st.secrets.get("users", [])
 
+                authenticated = False
                 # 管理者認証
-                if nickname.strip() == admin_nickname and user_id.strip() == admin_password:
+                if nickname.strip() == admin_nickname and admin_password_hash and bcrypt.checkpw(password.encode('utf-8'), admin_password_hash.encode('utf-8')): # ★変更: bcryptでパスワードを検証
                     st.session_state.nickname = nickname.strip()
-                    st.session_state.user_id = user_id.strip() # 管理者もuser_idをセッションに保存
+                    st.session_state.user_id = nickname.strip() # ニックネームをuser_idとして保存（または適切なIDを設定）
                     st.session_state.is_admin = True
-                    st.session_state.page = 1
-                    st.rerun()
-                # 一般ユーザー認証
+                    authenticated = True
                 else:
-                    authenticated = False
+                    # 一般ユーザー認証
                     for user_info in users_from_secrets:
-                        if nickname.strip() == user_info.get("nickname") and user_id.strip() == user_info.get("user_id"):
+                        if nickname.strip() == user_info.get("nickname") and user_info.get("hashed_password") and bcrypt.checkpw(password.encode('utf-8'), user_info.get("hashed_password").encode('utf-8')): # ★変更: bcryptでパスワードを検証
                             st.session_state.nickname = nickname.strip()
-                            st.session_state.user_id = user_id.strip()
+                            st.session_state.user_id = nickname.strip() # ニックネームをuser_idとして保存（または適切なIDを設定）
                             st.session_state.is_admin = False # 一般ユーザーは管理者ではない
                             authenticated = True
                             break
 
-                    if authenticated:
-                        st.session_state.page = 1
-                        st.rerun()
-                    else:
-                        st.error("ニックネームまたはIDが正しくありません。")
+                if authenticated:
+                    st.session_state.page = 1
+                    st.rerun()
+                else:
+                    st.error("ニックネームまたはパスワードが正しくありません。") # ★変更: IDをパスワードに
 elif st.session_state.page == 1:
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
@@ -519,8 +517,8 @@ elif st.session_state.page == 5: # 並べ替え・複数選択問題ページ
 
                # ★ここを修正: save_results の関数名と引数を変更
                 save_english_results(wpm, correct_answers_comprehension, material_id,
-                             st.session_state.nickname, # user_idを削除
-                             is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
+                                     st.session_state.nickname, # user_idを削除
+                                     is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
 
                 st.session_state.page = 6 # 解答確認ページへ遷移
                 st.rerun()
