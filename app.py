@@ -153,19 +153,19 @@ st.markdown(
         text-decoration: none;
         border-radius: 5px;
     }
-    /* 新しいスタイル: 質問文のテキスト */
+    /* 質問文のテキスト */
     .custom-question-text {
-        font-size: 1.3rem; /* 質問文のフォントサイズを少し大きく */
-        font-weight: bold; /* 必要であれば太字に */
-        margin-bottom: 0.5rem; /* 下に少し余白 */
-        color: #ADD8E6; /* 明るい青系など、質問を目立たせる色 */
+        font-size: 1.5rem; /* 現在 1.3rem -> 1.5rem に変更 (例: 2段階アップ) */
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #ADD8E6;
     }
 
     /* ラジオボタンの選択肢のフォントサイズ */
     div[data-testid="stRadio"] label p {
-        font-size: 1.1rem !important; /* 現在1.2remですが、さらに微調整が必要なら */
-        line-height: 1.4; /* 行間も調整して読みやすく */
-        color: #E0E0E0; /* 選択肢の色。必要に応じて変更 */
+        font-size: 1.3rem !important; /* 現在 1.1rem -> 1.3rem に変更 (例: 2段階アップ) */
+        line-height: 1.4;
+        color: #E0E0E0;
     }
     
     .google-classroom-button:hover {
