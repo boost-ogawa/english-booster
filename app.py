@@ -464,15 +464,15 @@ elif st.session_state.page == 3:
         
         # Q1の質問文をst.radioのラベルとして直接渡す
         # label_visibility="hidden" を削除し、質問文をラベルにする
-        q1_choice = st.radio(data["Q1"], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1_english",
-                             index=([data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']].index(st.session_state.q1_english)
-                                    if st.session_state.get('q1_english') in [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']] else None))
+        q1_choice = st.radio(data["Q1"], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1",
+                             index=([data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']].index(st.session_state.q1)
+                                    if st.session_state.get('q1') in [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']] else None))
         
         # Q2の質問文をst.radioのラベルとして直接渡す
         # label_visibility="hidden" を削除し、質問文をラベルにする
-        q2_choice = st.radio(data["Q2"], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2_english",
-                             index=([data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']].index(st.session_state.q2_english)
-                                    if st.session_state.get('q2_english') in [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']] else None))
+        q2_choice = st.radio(data["Q2"], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2",
+                             index=([data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']].index(st.session_state.q2)
+                                    if st.session_state.get('q2') in [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']] else None))
 
 
     if st.button("Submit"):
