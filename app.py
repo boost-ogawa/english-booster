@@ -155,7 +155,7 @@ st.markdown(
     }
 
     div[data-testid="stRadio"] label p {
-        font-size: 1.5rem !important; /* 質問文も選択肢も同じフォントサイズに設定 */
+        font-size: 1.2rem !important; /* 質問文も選択肢も同じフォントサイズに設定 */
         line-height: 1.4 !important; /* 行間も確実に適用 */
         color: #FFFFFF !important;
         margin-bottom: 0.3rem !important; /* 各ラベル（質問文、選択肢）の下に適切な余白を確保 */
