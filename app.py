@@ -454,7 +454,8 @@ elif st.session_state.page == 3:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
-    st.info("問題を解いてSubmitボタンを押しましょう")    col1, col2 = st.columns([2, 1])
+    st.info("問題を解いてSubmitボタンを押しましょう")
+    col1, col2 = st.columns([2, 1])
     with col1:
         st.markdown(f'<div class="custom-paragraph">{data["main"]}</div>', unsafe_allow_html=True)
 
