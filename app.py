@@ -153,18 +153,13 @@ st.markdown(
         text-decoration: none;
         border-radius: 5px;
     }
-    /* 質問文のテキスト */
-    .custom-question-text {
-        font-size: 1.5rem !important; /* ここに !important を追加 */
-        font-weight: bold;
-        color: #FFFFFF;
-    }
 
     /* ラジオボタンの選択肢のフォントサイズ (こちらは既に!importantがついているので変更なし) */
-    div[data-testid="stRadio"] label p {
-        font-size: 1.3rem !important;
-        line-height: 1.4;
-        color: #FFFFFF;
+    div[data-testid="stRadio"] > label:first-child > div {
+        font-size: 1.5rem !important; /* 質問文のフォントサイズ */
+        font-weight: bold !important;
+        color: #FFFFFF !important;
+        margin-bottom: 0.2rem !important; /* 質問文と選択肢の間の余白を調整 */
     }
     
     .google-classroom-button:hover {
@@ -470,21 +465,18 @@ elif st.session_state.page == 3:
     with col2:
         st.subheader("Questions")
         
-        # Q1の質問文を独立させて表示し、新しいCSSクラスを適用
-        st.markdown(f'<p class="custom-question-text">{data["Q1"]}</p>', unsafe_allow_html=True)
-        # ラジオボタン自身のラベルは非表示にし、keyはq1_englishを使用
-        q1_choice = st.radio(" ", [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1_english",
+        # Q1の質問文をst.radioのラベルとして直接渡す
+        # label_visibility="hidden" を削除し、質問文をラベルにする
+        q1_choice = st.radio(data["Q1"], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1_english",
                              index=([data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']].index(st.session_state.q1_english)
-                                    if st.session_state.get('q1_english') in [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']] else None),
-                             label_visibility="hidden")
+                                    if st.session_state.get('q1_english') in [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']] else None))
         
-        # Q2の質問文を独立させて表示し、新しいCSSクラスを適用
-        st.markdown(f'<p class="custom-question-text">{data["Q2"]}</p>', unsafe_allow_html=True)
-        # ラジオボタン自身のラベルは非表示にし、keyはq2_englishを使用
-        q2_choice = st.radio(" ", [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2_english",
+        # Q2の質問文をst.radioのラベルとして直接渡す
+        # label_visibility="hidden" を削除し、質問文をラベルにする
+        q2_choice = st.radio(data["Q2"], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2_english",
                              index=([data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']].index(st.session_state.q2_english)
-                                    if st.session_state.get('q2_english') in [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']] else None),
-                             label_visibility="hidden")
+                                    if st.session_state.get('q2_english') in [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']] else None))
+
 
     # ボタンのテキストを"Submit"から"次へ"に変更し、対応するsession_stateキーも更新
     if st.button("次へ"):
