@@ -154,25 +154,12 @@ st.markdown(
         border-radius: 5px;
     }
 
-    /* ラジオボタンの質問文（メインラベル）のフォントサイズとスタイル */
-    /* Streamlitのst.radioのラベルは通常、div[data-testid="stRadio"] > label > div でターゲットできます */
-    div[data-testid="stRadio"] > label:first-child > div {
-        font-size: 1.5rem !important; /* 質問文のフォントサイズ */
-        font-weight: bold !important;
+    div[data-testid="stRadio"] label p {
+        font-size: 1.5rem !important; /* 質問文も選択肢も同じフォントサイズに設定 */
+        line-height: 1.4 !important; /* 行間も確実に適用 */
         color: #FFFFFF !important;
-        margin-bottom: 0.2rem !important; /* 質問文と選択肢の間の余白を調整 */
+        margin-bottom: 0.3rem !important; /* 各ラベル（質問文、選択肢）の下に適切な余白を確保 */
     }
-
-    /* ラジオボタンの選択肢のフォントサイズとスタイル */
-    /* 選択肢のテキストは通常、label > div > p の形で格納されることが多い */
-    /* または、直接 label p でいける場合もありますが、より確実にターゲットします */
-    div[data-testid="stRadio"] label > div > p { /* ← ここを変更！ */
-        font-size: 1.5rem !important; /* 選択肢のフォントサイズを確実に適用 */
-        line-height: 1.4 !important;
-        color: #FFFFFF !important;
-        margin-bottom: 0.3rem !important; /* 各選択肢の下にも少しマージンを設ける（必要に応じて） */
-    }
-
     .google-classroom-button:hover {
         background-color: #357AE8;
     }
