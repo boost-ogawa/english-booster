@@ -167,18 +167,12 @@ st.markdown(
     /* 選択肢のテキストは通常、label > div > p の形で格納されることが多い */
     /* または、直接 label p でいける場合もありますが、より確実にターゲットします */
     div[data-testid="stRadio"] label > div > p { /* ← ここを変更！ */
-        font-size: 1.3rem !important; /* 選択肢のフォントサイズを確実に適用 */
+        font-size: 1.5rem !important; /* 選択肢のフォントサイズを確実に適用 */
         line-height: 1.4 !important;
         color: #FFFFFF !important;
         margin-bottom: 0.3rem !important; /* 各選択肢の下にも少しマージンを設ける（必要に応じて） */
     }
 
-    /* ラジオボタン全体のコンテナのマージン調整（必要に応じて） */
-    /* ラジオボタンの質問文と最初の選択肢の間、またはラジオボタンと次の要素の間の余白を調整 */
-    div[data-testid="stRadio"] div[role="radiogroup"] {
-        margin-top: 0.3rem !important; /* ラジオボタンのグループ全体の上部マージン */
-        margin-bottom: 1rem !important; /* ラジオボタンのグループ全体の下部マージン */
-    }    
     .google-classroom-button:hover {
         background-color: #357AE8;
     }
