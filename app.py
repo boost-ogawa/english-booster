@@ -449,14 +449,12 @@ elif st.session_state.page == 2:
         st.rerun()
 
 ## ... 既存のコード ...
-
 # 問題ページ（旧 page 2, 現在の app.py の page 3 に相当）
 elif st.session_state.page == 3:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
-    st.info("問題を解いて次へボタンを押しましょう") # "Submit"を"次へ"に変更
-    col1, col2 = st.columns([2, 1])
+    st.info("問題を解いてSubmitボタンを押しましょう")    col1, col2 = st.columns([2, 1])
     with col1:
         st.markdown(f'<div class="custom-paragraph">{data["main"]}</div>', unsafe_allow_html=True)
 
@@ -476,9 +474,8 @@ elif st.session_state.page == 3:
                                     if st.session_state.get('q2_english') in [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']] else None))
 
 
-    # ボタンのテキストを"Submit"から"次へ"に変更し、対応するsession_stateキーも更新
-    if st.button("次へ"):
-        if st.session_state.get('q1_english') is not None and st.session_state.get('q2_english') is not None:
+    if st.button("Submit"):
+        if st.session_state.q1 is not None and st.session_state.q2 is not None:
             st.session_state.page = 4
             st.rerun()
         else:
