@@ -157,15 +157,14 @@ st.markdown(
     .custom-question-text {
         font-size: 1.5rem !important; /* ここに !important を追加 */
         font-weight: bold;
-        margin-bottom: 0.5rem;
-        color: #ADD8E6;
+        color: #FFFFFF;
     }
 
     /* ラジオボタンの選択肢のフォントサイズ (こちらは既に!importantがついているので変更なし) */
     div[data-testid="stRadio"] label p {
         font-size: 1.3rem !important;
         line-height: 1.4;
-        color: #E0E0E0;
+        color: #FFFFFF;
     }
     
     .google-classroom-button:hover {
