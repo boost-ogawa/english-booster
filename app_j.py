@@ -855,8 +855,6 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
 
     st.markdown("---")
 
-# （中略：st.session_state.page == 8 の日本語読解問題ページ）
-
 elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
         st.success("もう一度文章を読んで答えの根拠を考えましょう")
         # ここも load_material 関数の引数を st.session_state.row_to_load に変更
@@ -905,11 +903,13 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
                         st.write("問２: ✅ **正解**")
                     else:
                         st.write("問２: ❌ **不正解**")
+                    st.write("問２の解答データがありません。") # この行は元々重複していたため修正
                     st.write(data['q2_ja'])
                     st.write(f"あなたの回答: **{st.session_state.q2_ja}**")
                     st.write(f"正解: **{data['correct_answer_q2_ja']}**")
                 else:
                     st.info("問２の解答データがありません。")
+
 
             elif question_type_ja == 'multiple_single':
                 if "is_correct_q3_ja" in st.session_state and st.session_state.is_correct_q3_ja is not None:
@@ -933,17 +933,44 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
 
         st.markdown("---")
 
-        # ★ここが大きく変わります: 動画リンクを直接ボタンとして表示
+        # ★ここが変更点: 「次へ」ボタンを押すと、動画URLを新しいウィンドウで開くJavaScriptを仕込む
         video_url = data.get('japanese_explanation_video_url')
 
         if video_url:
-            st.link_button("解説動画を見る（新しいウィンドウで開きます）", video_url, type="secondary", use_container_width=True)
-            st.markdown("---") # リンクボタンとホームボタンの間に区切り
+            # JavaScriptを使って新しいウィンドウで開く
+            # st.markdownを使ってボタンのように見せるHTMLを作成
+            st.markdown(
+                f"""
+                <button 
+                    onclick="window.open('{video_url}', '_blank'); return false;" 
+                    style="
+                        background-color: #28a745;
+                        color: white;
+                        font-weight: bold;
+                        border-radius: 8px;
+                        padding: 20px 40px;
+                        font-size: 1.8rem;
+                        border: none;
+                        cursor: pointer;
+                        width: 100%;
+                    "
+                >
+                    次へ（解説動画を別ウィンドウで開く）
+                </button>
+                """,
+                unsafe_allow_html=True
+            )
+            st.markdown("---") # ボタンとホームボタンの間に区切り
         else:
             st.info("この教材には関連する解説動画がありません。")
+            # 動画がない場合は通常の「次へ」ボタンにフォールバック、またはホームへ戻るボタンのみ
+            if st.button("次へ（動画なし）", key="next_no_video"):
+                 st.session_state.page = 1 # 動画がない場合はホームに戻るなど、次の動作を定義
+                 st.rerun()
+            st.markdown("---")
 
 
-        if st.button("ホームへ戻る"):
+        if st.button("ホームへ戻る", key="back_to_home_page9_final"): # keyを明確に
             st.session_state.page = 1
             st.session_state.start_time = None
             st.session_state.stop_time = None
@@ -965,3 +992,4 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
             st.session_state.word_count_japanese = 0
             st.rerun()
 
+# elif st.session_state.page == 10: のブロックは完全に削除してください。
