@@ -683,7 +683,7 @@ elif st.session_state.page == 7:
         if data is not None:
             japanese_image_url = data.get('japanese_image_url')
             if japanese_image_url:
-                st.image(japanese_image_url)
+                st.image(japanese_image_url, use_column_width=True)
                 st.session_state.word_count_japanese = data.get('word_count_ja', 0)
             else:
                 st.error("対応する画像のURLが見つかりませんでした。")
