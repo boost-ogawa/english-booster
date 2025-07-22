@@ -820,8 +820,6 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
             st.session_state.word_count_japanese = data.get('word_count_ja', 0)
         else:
             st.error("対応する画像のURLが見つかりませんでした。")
-    
-    # --- ここから追加するコード ---
     # 国語の解説映像を表示
     st.markdown("---") # セクションの区切り
     japanese_explanation_video_url = data.get('japanese_explanation_video_url')
@@ -829,14 +827,20 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
     if japanese_explanation_video_url:
         st.subheader("📚 解説映像")
         try:
-            st.video(japanese_explanation_video_url)
+            # ここを修正します！
+            # URLがMP4ファイルへの直接リンクなら <video> タグ
+            if ".mp4" in japanese_explanation_video_url.lower():
+                st.markdown(f'<video width="100%" controls><source src="{japanese_explanation_video_url}" type="video/mp4"></video>', unsafe_allow_html=True)
+            # それ以外（iframeのsrcなど）なら <iframe> タグ
+            else:
+                st.markdown(f'<iframe width="100%" height="315" src="{japanese_explanation_video_url}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
         except Exception as e:
             st.warning(f"解説映像の再生に失敗しました。URL: {japanese_explanation_video_url} エラー: {e}")
     else:
         st.info("この教材には解説映像がありません。")
 
     st.markdown("---") # セクションの区切り
-
+    
     # ホームへ戻るボタン
     if st.button("ホームへ戻る", key="back_to_home_japanese_finish"):
         # セッションステートをリセット
