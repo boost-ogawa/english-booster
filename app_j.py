@@ -778,6 +778,7 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
                                       is_correct_q3_ja=st.session_state.is_correct_q3_ja)
                 st.session_state.page = 9
                 st.rerun()
+
 elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
     st.success("もう一度文章を読んで答えの根拠を考えましょう")
     # ここも load_material 関数の引数を st.session_state.row_to_load に変更
@@ -796,71 +797,123 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
         if st.session_state.get("start_time") and st.session_state.get("stop_time_japanese"):
             total_time_japanese = st.session_state.stop_time_japanese - st.session_state.start_time
             st.write(f"読書時間: **{total_time_japanese:.2f} 秒**")
+
+            if st.session_state.word_count_japanese > 0:
+                wpm_japanese = (st.session_state.word_count_japanese / total_time_japanese) * 60
+                st.write(f"1分あたりの文字数: **{wpm_japanese:.1f} WPM**") 
+            else:
+                st.info("日本語の文字数データがありませんでした。")
+        else:
+            st.info("日本語速読の計測データがありません。")
+
+        st.subheader("📝 問題結果")
         
-        # --- ここから追加するコード ---
-        st.markdown("---")
-        st.subheader("📊 理解度")
         question_type_ja = data.get('question_type_ja', 'binary_double')
 
         if question_type_ja == 'binary_double':
-            st.write(f"問1: {'✅ 正解' if st.session_state.get('is_correct_q1_ja') else '❌ 不正解'}")
-            st.write(f"問2: {'✅ 正解' if st.session_state.get('is_correct_q2_ja') else '❌ 不正解'}")
+            if "is_correct_q1_ja" in st.session_state and st.session_state.is_correct_q1_ja is not None:
+                if st.session_state.is_correct_q1_ja:
+                    st.write("問１: ✅ **正解**")
+                else:
+                    st.write("問１: ❌ **不正解**")
+                st.write(data['q1_ja']) 
+                st.write(f"あなたの回答: **{st.session_state.q1_ja}**")
+                st.write(f"正解: **{data['correct_answer_q1_ja']}**")
+            else:
+                st.info("問１の解答データがありません。")
+
+            if "is_correct_q2_ja" in st.session_state and st.session_state.is_correct_q2_ja is not None:
+                if st.session_state.is_correct_q2_ja:
+                    st.write("問２: ✅ **正解**")
+                else:
+                    st.write("問２: ❌ **不正解**")
+                st.write(data['q2_ja']) 
+                st.write(f"あなたの回答: **{st.session_state.q2_ja}**")
+                st.write(f"正解: **{data['correct_answer_q2_ja']}**")
+            else:
+                st.info("問２の解答データがありません。")
+
         elif question_type_ja == 'multiple_single':
-            st.write(f"問3: {'✅ 正解' if st.session_state.get('is_correct_q3_ja') else '❌ 不正解'}")
-        
-        # Google Classroom へのリンク
-        if GOOGLE_CLASSROOM_URL and GOOGLE_CLASSROOM_URL != "YOUR_GOOGLE_CLASSROOM_URL_HERE":
-            st.markdown(f'<a href="{GOOGLE_CLASSROOM_URL}" target="_blank" class="google-classroom-button">Google Classroomでさらに学習</a>', unsafe_allow_html=True)
-        # --- 追加するコードここまで ---
+            if "is_correct_q3_ja" in st.session_state and st.session_state.is_correct_q3_ja is not None:
+                if st.session_state.is_correct_q3_ja:
+                    st.write("問３: ✅ **正解**")
+                else:
+                    st.write("問３: ❌ **不正解**")
+                st.write(data['q3_ja']) 
+                st.write(f"あなたの回答: **{st.session_state.q3_ja}**")
+                st.write(f"正解: **{data['correct_answer_q3_ja']}**")
+            else:
+                st.info("問３の解答データがありません。")
 
     with col2:
         japanese_image_url = data.get('japanese_image_url')
         if japanese_image_url:
-            st.image(japanese_image_url, caption="読んだ文章")
+            st.image(japanese_image_url)
             st.session_state.word_count_japanese = data.get('word_count_ja', 0)
         else:
             st.error("対応する画像のURLが見つかりませんでした。")
 
-    # 国語の解説映像を表示
-    st.markdown("---") # セクションの区切り
-    japanese_explanation_video_url = data.get('japanese_explanation_video_url')
-    # ★追加: 新しい列 'video_display_type_ja' を読み込む
-    video_display_type_ja = data.get('video_display_type_ja') 
+    st.markdown("---")
 
-    if japanese_explanation_video_url:
-        st.subheader("📚 解説映像")
-        try:
-            # ★ここを修正します！ 'video_display_type_ja' の値に応じて処理を分ける
-            if video_display_type_ja == "video_tag":
-                st.markdown(f'<video width="100%" controls><source src="{japanese_explanation_video_url}" type="video/mp4"></video>', unsafe_allow_html=True)
-            elif video_display_type_ja == "iframe_tag":
-                st.markdown(f'<iframe width="100%" height="315" src="{japanese_explanation_video_url}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-            elif video_display_type_ja == "external_link":
-                st.markdown(f'[解説動画を新しいタブで開く]({japanese_explanation_video_url})', unsafe_allow_html=True)
-            else:
-                st.warning("動画の表示タイプが指定されていないか、不明なタイプです。URLを直接試みます。")
-                # デフォルトの動作として st.video() を試すか、iframeを試すか
-                # 今回はiframeを試す
-                st.markdown(f'<iframe width="100%" height="315" src="{japanese_explanation_video_url}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+    # ★変更点1: 「ホームへ戻る」ボタンを「次へ」ボタンに変更し、ページ10へ遷移
+    if st.button("次へ（動画へ進む）"):
+        st.session_state.page = 10
+        st.rerun()
 
-        except Exception as e:
-            st.warning(f"解説映像の再生に失敗しました。URL: {japanese_explanation_video_url} エラー: {e}")
-    else:
-        st.info("この教材には解説映像がありません。")
 
-    st.markdown("---") # セクションの区切り
+elif st.session_state.page == 10: # 新しい動画表示ページ
+    st.header("解説動画")
+    st.markdown("選択した教材に関連する解説動画です。")
+
+    # 現在の教材データを再読み込み
+    data = load_material(GITHUB_DATA_URL, st.session_state.row_to_load)
+
+    if data is None:
+        st.error("動画情報の読み込みに失敗しました。")
+        if st.button("ホームへ戻る", key="back_to_home_page10_error"):
+            st.session_state.page = 1
+            st.rerun()
+        st.stop()
+
+    video_url = data.get('japanese_explanation_video_url')
     
-    # ホームへ戻るボタン
-    if st.button("ホームへ戻る", key="back_to_home_japanese_finish"):
-        # セッションステートをリセット
+    if video_url:
+        st.subheader("📖 解説動画") # 固定のタイトルにする
+        if ".mp4" in video_url.lower():
+            # .mp4 ファイルの場合、<video> タグで埋め込み
+            st.markdown(f'<video width="100%" height="315" controls><source src="{video_url}" type="video/mp4"></video>', unsafe_allow_html=True)
+        else:
+            # それ以外の場合（YouTubeなど）、<iframe> タグで埋め込み
+            st.markdown(f'<iframe width="100%" height="315" src="{video_url}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+        
+        # オプション: 動画のタイトルや簡単な説明を表示
+        st.write("上記は教材の解説動画です。")
+
+    else:
+        st.info("この教材には関連する解説動画がありません。")
+
+    st.markdown("---")
+    
+    # ページ10からホームへ戻るボタン
+    if st.button("ホームへ戻る", key="back_to_home_page10"):
+        st.session_state.page = 1
+        # セッションステートをリセットして次の学習に備える
         st.session_state.start_time = None
+        st.session_state.stop_time = None
         st.session_state.stop_time_japanese = None
+        st.session_state.q1 = None
+        st.session_state.q2 = None
         st.session_state.q1_ja = None
         st.session_state.q2_ja = None
         st.session_state.q3_ja = None
+        st.session_state.submitted = False
+        st.session_state.wpm = 0.0
+        st.session_state.correct_answers_to_store = 0
+        st.session_state.is_correct_q1 = None
+        st.session_state.is_correct_q2 = None
+        st.session_state.user_answer_q1 = None
+        st.session_state.user_answer_q2 = None
+        st.session_state.correct_answer_q1 = None
+        st.session_state.correct_answer_q2 = None
         st.session_state.word_count_japanese = 0
-        st.session_state.is_correct_q1_ja = None
-        st.session_state.is_correct_q2_ja = None
-        st.session_state.is_correct_q3_ja = None
-        st.session_state.page = 1
         st.rerun()
