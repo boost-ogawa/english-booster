@@ -820,20 +820,29 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
             st.session_state.word_count_japanese = data.get('word_count_ja', 0)
         else:
             st.error("対応する画像のURLが見つかりませんでした。")
+
     # 国語の解説映像を表示
     st.markdown("---") # セクションの区切り
     japanese_explanation_video_url = data.get('japanese_explanation_video_url')
+    # ★追加: 新しい列 'video_display_type_ja' を読み込む
+    video_display_type_ja = data.get('video_display_type_ja') 
 
     if japanese_explanation_video_url:
         st.subheader("📚 解説映像")
         try:
-            # ここを修正します！
-            # URLがMP4ファイルへの直接リンクなら <video> タグ
-            if ".mp4" in japanese_explanation_video_url.lower():
+            # ★ここを修正します！ 'video_display_type_ja' の値に応じて処理を分ける
+            if video_display_type_ja == "video_tag":
                 st.markdown(f'<video width="100%" controls><source src="{japanese_explanation_video_url}" type="video/mp4"></video>', unsafe_allow_html=True)
-            # それ以外（iframeのsrcなど）なら <iframe> タグ
-            else:
+            elif video_display_type_ja == "iframe_tag":
                 st.markdown(f'<iframe width="100%" height="315" src="{japanese_explanation_video_url}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+            elif video_display_type_ja == "external_link":
+                st.markdown(f'[解説動画を新しいタブで開く]({japanese_explanation_video_url})', unsafe_allow_html=True)
+            else:
+                st.warning("動画の表示タイプが指定されていないか、不明なタイプです。URLを直接試みます。")
+                # デフォルトの動作として st.video() を試すか、iframeを試すか
+                # 今回はiframeを試す
+                st.markdown(f'<iframe width="100%" height="315" src="{japanese_explanation_video_url}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+
         except Exception as e:
             st.warning(f"解説映像の再生に失敗しました。URL: {japanese_explanation_video_url} エラー: {e}")
     else:
