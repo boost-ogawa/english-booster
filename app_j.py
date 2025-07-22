@@ -862,6 +862,17 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
             st.error("対応する画像のURLが見つかりませんでした。")
 
     st.markdown("---")
+    video_url = data.get('japanese_explanation_video_url')
+
+    if video_url:
+        st.subheader("解説動画へのリンク")
+        # st.markdown で直接リンクを貼るだけ
+        st.markdown(f"[クリックして解説動画を見る]({video_url})")
+        st.info("上記のリンクをクリックすると、動画が新しいタブで開きます。")
+        st.markdown("---")
+    else:
+            st.info("この教材には関連する解説動画がありません。")
+            st.markdown("---") # 区切り線は残す
 
     if st.button("ホームへ戻る"):
         st.session_state.page = 1
