@@ -860,7 +860,6 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
         st.session_state.page = 10
         st.rerun()
 
-
 elif st.session_state.page == 10: # 新しい動画表示ページ
     st.header("解説動画")
     st.markdown("選択した教材に関連する解説動画です。")
@@ -874,23 +873,43 @@ elif st.session_state.page == 10: # 新しい動画表示ページ
             st.session_state.page = 1
             st.rerun()
         st.stop()
-
-    video_url = data.get('japanese_explanation_video_url')
     
-    if video_url:
-        st.subheader("📖 解説動画") # 固定のタイトルにする
-        if ".mp4" in video_url.lower():
-            # .mp4 ファイルの場合、<video> タグで埋め込み
-            st.markdown(f'<video width="100%" height="315" controls><source src="{video_url}" type="video/mp4"></video>', unsafe_allow_html=True)
-        else:
-            # それ以外の場合（YouTubeなど）、<iframe> タグで埋め込み
-            st.markdown(f'<iframe width="100%" height="315" src="{video_url}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-        
-        # オプション: 動画のタイトルや簡単な説明を表示
-        st.write("上記は教材の解説動画です。")
+    # ★変更点2: app.py の動画ロジックに近づけるために、dataから必要な情報を取得
+    # video_id は data.get('id') を利用
+    # title は data.get('japanese') または固定値
+    # description は data.get('japanese') または固定値
+    # url は data.get('japanese_explanation_video_url')
+    # type は data.get('video_type')
+    
+    video_id = data.get('id') # id列をvideo_idとして利用
+    video_title = data.get('japanese', f"解説動画 (ID: {video_id})") # 日本語本文をタイトル代わりに
+    video_description = data.get('japanese', 'この動画は教材の解説です。') # 日本語本文を説明代わりに
+    video_url = data.get('japanese_explanation_video_url')
+    video_type = data.get('video_type') # 新しく追加するvideo_type列
 
+    # エラーハンドリング
+    if video_url is None or video_type is None:
+        st.warning(f"動画データに 'japanese_explanation_video_url' または 'video_type' がありません。教材ID: {video_id}")
+        st.info("データファイル (data_j.csv) に動画URLとタイプが正しく設定されているか確認してください。")
     else:
-        st.info("この教材には関連する解説動画がありません。")
+        # ★変更点3: app.py と同じ動画表示ロジックを流用
+        expander_header = f"{video_title}"
+        
+        with st.expander(expander_header):
+            st.write(video_description)
+
+            if video_type == "embed_iframe": # iframe埋め込みの場合 (YouTubeなど)
+                st.markdown(f'<iframe width="100%" height="315" src="{video_url}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+            elif video_type == "embed_mp4": # MP4直接埋め込みの場合 (pCloudなど)
+                st.markdown(f'<video width="100%" height="315" controls><source src="{video_url}" type="video/mp4"></video>', unsafe_allow_html=True)
+            elif video_type == "link": # 単なるリンクの場合
+                st.markdown(f"[動画を見る]({video_url})", unsafe_allow_html=True)
+            else: # 未定義のタイプまたは不正なタイプの場合、URLから推測を試みる
+                st.warning(f"不明な動画タイプ '{video_type}' です。URLから推測して表示します。")
+                if ".mp4" in video_url.lower():
+                    st.markdown(f'<video width="100%" height="315" controls><source src="{video_url}" type="video/mp4"></video>', unsafe_allow_html=True)
+                else:
+                    st.markdown(f'<iframe width="100%" height="315" src="{video_url}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
 
     st.markdown("---")
     
