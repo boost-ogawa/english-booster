@@ -179,6 +179,14 @@ st.markdown(
     .google-classroom-button:hover {
         background-color: #357AE8;
     }
+        /* Streamlitの画像を対象 */
+    img {
+        max-height: 80vh; /* 画面の高さの80%を最大高さとする */
+        object-fit: contain; /* アスペクト比を維持しつつ、要素内に収まるように調整 */
+        display: block; /* 中央寄せのためにブロック要素に */
+        margin-left: auto; /* 中央寄せ */
+        margin-right: auto; /* 中央寄せ */
+    }
     </style>
     """,
     unsafe_allow_html=True
