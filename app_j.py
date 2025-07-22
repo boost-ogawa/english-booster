@@ -857,7 +857,7 @@ elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
 
 # （中略：st.session_state.page == 8 の日本語読解問題ページ）
 
-    elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
+elif st.session_state.page == 9: # 日本語学習の最終結果表示ページ
         st.success("もう一度文章を読んで答えの根拠を考えましょう")
         # ここも load_material 関数の引数を st.session_state.row_to_load に変更
         data = load_material(GITHUB_DATA_URL, st.session_state.row_to_load)
