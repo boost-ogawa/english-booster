@@ -63,6 +63,31 @@ def save_english_results(wpm, correct_answers_comprehension, material_id, nickna
     except Exception as e:
         st.error(f"英語結果の保存に失敗しました: {e}")
 
+# --- Firestoreに英語のテキスト理解問題の結果を保存する関数 ---
+def save_english_text_comprehension_results(material_id, nickname,
+                                            is_correct_q1_text, is_correct_q2_text,
+                                            user_answer_q1, user_answer_q2,
+                                            correct_answer_q1, correct_answer_q2):
+    jst = timezone('Asia/Tokyo')
+    timestamp = datetime.now(jst).isoformat()
+
+    result_data = {
+        "nickname": nickname,
+        "timestamp": timestamp,
+        "material_id": material_id,
+        "is_correct_q1_text": is_correct_q1_text,
+        "is_correct_q2_text": is_correct_q2_text,
+        "user_answer_q1": user_answer_q1,
+        "user_answer_q2": user_answer_q2,
+    }
+
+    try:
+        # 新しいコレクション "english_text_results" に保存
+        db.collection("english_text_results").add(result_data)
+        print("英語のテキスト理解問題の結果が english_text_results に保存されました")
+    except Exception as e:
+        st.error(f"英語のテキスト理解問題結果の保存に失敗しました: {e}")
+
 # --- Firestoreに日本語の結果を保存する関数 ---
 def save_japanese_results(wpm_japanese, material_id, nickname,
                           is_correct_q1_ja=None, is_correct_q2_ja=None, is_correct_q3_ja=None):
@@ -584,6 +609,7 @@ elif st.session_state.page == 5:
 
         if st.button("提出"):
             if is_q1_answered and is_q2_answered:
+                # --- ここからが「正誤判定とセッションステートへの保存」の具体的な内容です ---
                 correct_order_q1_str = data.get('correct_order_q1', '')
                 correct_order_q1 = [item.strip() for item in correct_order_q1_str.split(',')]
                 is_correct_q1 = selected_order_q1 == correct_order_q1
@@ -598,20 +624,23 @@ elif st.session_state.page == 5:
                 st.session_state["user_answer_q2"] = selected_options_q2
                 st.session_state["correct_answer_q1"] = correct_order_q1
                 st.session_state["correct_answer_q2"] = correct_answers_q2
+                # --- 「正誤判定とセッションステートへの保存」ここまで ---
 
+                material_id = str(data.get("id", f"row_{st.session_state.row_to_load}")) if data is not None else "unknown"
 
-                wpm = st.session_state.get("wpm", 0.0)
-                correct_answers_comprehension = st.session_state.get("correct_answers_to_store", 0)
-                is_correct_q1_text = st.session_state.get("is_correct_q1")
-                is_correct_q2_text = st.session_state.get("is_correct_q2")
+                # ここで新しく定義した save_english_text_comprehension_results 関数を呼び出す
+                save_english_text_comprehension_results(
+                    material_id=material_id,
+                    nickname=st.session_state.nickname,
+                    is_correct_q1_text=st.session_state.is_correct_q1,
+                    is_correct_q2_text=st.session_state.is_correct_q2,
+                    user_answer_q1=st.session_state.user_answer_q1,
+                    user_answer_q2=st.session_state.user_answer_q2,
+                    correct_answer_q1=st.session_state.correct_answer_q1,
+                    correct_answer_q2=st.session_state.correct_answer_q2
+                )
 
-                material_id = str(data.get("id", f"row_{st.session_state.row_to_load}")) if data is not None else "unknown" # material_idも変更
-
-                save_english_results(wpm, correct_answers_comprehension, material_id,
-                                     st.session_state.nickname, 
-                                     is_correct_q1_text=is_correct_q1_text, is_correct_q2_text=is_correct_q2_text)
-
-                st.session_state.page = 6 
+                st.session_state.page = 6
                 st.rerun()
             else:
                 st.error("両方の問題に答えてから「解答」を押してください。")
