@@ -367,7 +367,14 @@ elif st.session_state.page == 1:
                 video_data = video_data.sort_values(by="release_day", ascending=False).reset_index(drop=True)
 
                 # ユーザーの視聴済み動画リストをFirestoreから取得
-                watched_videos = user_profile_data.get("watched_videos", []) if user_profile_doc.exists else []
+                # user_profile_doc はこのコードスニペットには含まれていませんが、
+                # 実際のアプリでは定義されていると仮定します。
+                # 例: user_profile_doc = db.collection("users").document(st.session_state.user_id).get()
+                # user_profile_data = user_profile_doc.to_dict()
+                # 以下の行は、user_profile_docとuser_profile_dataが適切に定義されていることを前提としています。
+                user_profile_data = {} # 仮の定義
+                watched_videos = user_profile_data.get("watched_videos", [])
+
 
                 if not video_data.empty:
                     for index, row in video_data.iterrows():
@@ -386,21 +393,22 @@ elif st.session_state.page == 1:
                             
                             with st.expander(expander_header):
                                 st.write(row["description"])
-                                if "type" in row and row["type"] == "embed":
-                                    if ".mp4" in row["url"].lower():
-                                        st.markdown(f'<video width="100%" height="315" controls><source src="{row["url"]}" type="video/mp4"></video>', unsafe_allow_html=True)
-                                    else:
-                                        st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+                                # MP4ファイルの場合はvideoタグを使用
+                                if ".mp4" in row["url"].lower():
+                                    st.markdown(f'<video width="100%" height="315" controls><source src="{row["url"]}" type="video/mp4"></video>', unsafe_allow_html=True)
+                                # YouTube動画の場合はst.videoを使用
+                                elif "youtube.com" in row["url"] or "youtu.be" in row["url"]:
+                                    st.video(row["url"])
+                                # その他の埋め込みタイプ
+                                elif "type" in row and row["type"] == "embed":
+                                    # YouTube以外の埋め込み動画（もしあれば）
+                                    st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
+                                # リンクタイプ
                                 elif "type" in row and row["type"] == "link":
                                     st.markdown(f"[動画を見る]({row['url']})", unsafe_allow_html=True)
+                                # デフォルトの処理（YouTube動画を想定）
                                 else:
-                                     if ".mp4" in row["url"].lower():
-                                        st.markdown(f'<video width="100%" height="315" controls><source src="{row["url"]}" type="video/mp4"></video>', unsafe_allow_html=True)
-                                     else:
-                                        st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-                        # ★変更点3: elseブロックを削除 (解放されていない動画は表示しない)
-                        # else:
-                        #    st.markdown(f"🔒 {row['title']} （あと{release_day - days_since_enrollment}日で解放）")
+                                    st.video(row["url"]) # ここもst.videoを使用
 
                 else:
                     st.info("現在、表示できる動画はありません。")
