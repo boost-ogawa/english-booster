@@ -763,11 +763,11 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
         with col1:
             st.subheader("問１")
             st.write(data['q1_ja']) 
-            st.radio("問１の回答", ["正しい", "正しくない"], key="q1_ja")
+            st.radio("問１の解答", ["正しい", "正しくない"], key="q1_ja")
         with col2:
             st.subheader("問２")
             st.write(data['q2_ja']) 
-            st.radio("問２の回答", ["正しい", "正しくない"], key="q2_ja")
+            st.radio("問２の解答", ["正しい", "正しくない"], key="q2_ja")
         
         if st.button("次へ"):
             if st.session_state.q1_ja is None or st.session_state.q2_ja is None:
@@ -791,9 +791,9 @@ elif st.session_state.page == 8: # 日本語読解問題ページ
                 st.rerun()
 
     elif question_type_ja == 'multiple_single':
-        st.subheader("問３") 
+        st.subheader("問題") 
         st.write(data['q3_ja']) 
-        st.radio("問３の回答", [data['q3a_ja'], data['q3b_ja'], data['q3c_ja'], data['q3d_ja']], key="q3_ja")
+        st.radio("解答", [data['q3a_ja'], data['q3b_ja'], data['q3c_ja'], data['q3d_ja']], key="q3_ja")
 
         if st.button("次へ"):
             if st.session_state.q3_ja is None:
