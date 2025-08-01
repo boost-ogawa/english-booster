@@ -6,17 +6,16 @@ from datetime import datetime
 from pytz import timezone
 import firebase_admin
 from firebase_admin import credentials, firestore
+from firebase_admin.firestore import FieldValue # 追加
 import json
 import tempfile
 import re
 import os
-import bcrypt # bcryptをインポート
+import bcrypt
 
 # --- 定数設定 ---
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data.csv"
-# GITHUB_CSV_URL は未使用のようですので、ここでは記載しません
 HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true"
-# DATA_PATH も未使用のようですので、ここでは記載しません
 
 # --- Firebaseの初期化 ---
 firebase_creds_dict = dict(st.secrets["firebase"])
@@ -26,7 +25,7 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
     cred = credentials.Certificate(f.name)
     if not firebase_admin._apps:
         firebase_admin.initialize_app(cred)
-    os.unlink(f.name) # tempfileを削除
+    os.unlink(f.name)
 
 db = firestore.client()
 
@@ -55,7 +54,6 @@ def save_config(fixed_row_index):
         st.error(f"設定の保存に失敗しました: {e}")
 
 # --- Firestoreに結果を保存する関数 ---
-# user_idを引数と保存データから削除
 def save_results(wpm, correct_answers, material_id, nickname):
     jst = timezone('Asia/Tokyo')
     timestamp = datetime.now(jst).isoformat()
@@ -71,12 +69,9 @@ def save_results(wpm, correct_answers, material_id, nickname):
     try:
         db.collection("results").add(result_data)
         print("結果が保存されました")
-
-        # 視聴履歴の更新（video_idではなく、material_idをそのまま記録）
-        # material_idはdata.csvの行番号なので、動画視聴とは直接紐付かない点に注意
-        # ここはあくまで「スピード測定を完了した教材ID」を記録する場所として残します
+        
+        # ユーザープロファイルに完了した教材IDを保存
         user_profile_ref = db.collection("user_profiles").document(nickname)
-        # FirestoreのArrayUnionを使って、重複なく追加
         user_profile_ref.update({
             "watched_materials": firestore.ArrayUnion([material_id])
         })
@@ -85,8 +80,34 @@ def save_results(wpm, correct_answers, material_id, nickname):
     except Exception as e:
         st.error(f"結果の保存に失敗しました: {e}")
 
+# --- 視聴完了ボタンが押された時の処理（新規追加） ---
+def save_watched_video(video_id):
+    """
+    ユーザーが視聴完了した動画IDをFirestoreに保存する。
+    """
+    if 'nickname' not in st.session_state:
+        st.error("ユーザー情報が取得できません。ログインしてください。")
+        return
+
+    try:
+        user_profile_ref = db.collection("user_profiles").document(st.session_state.nickname)
+        
+        # 配列に動画IDを追加（既に存在する場合は何もしない）
+        user_profile_ref.update({
+            "watched_videos": FieldValue.array_union([video_id])
+        })
+        
+        # セッション状態も更新して即時反映させる
+        if "watched_videos" in st.session_state and video_id not in st.session_state.watched_videos:
+            st.session_state.watched_videos.append(video_id)
+        
+        st.success("視聴完了を記録しました！")
+        st.rerun()
+
+    except Exception as e:
+        st.error(f"視聴完了の記録中にエラーが発生しました: {e}")
+
 # --- WPM推移グラフ表示関数 ---
-# user_idではなくnicknameでフィルタリングするように変更
 def display_wpm_history(nickname):
     if nickname:
         try:
@@ -155,10 +176,10 @@ st.markdown(
     }
 
     div[data-testid="stRadio"] label p {
-        font-size: 1.2rem !important; /* 質問文も選択肢も同じフォントサイズに設定 */
-        line-height: 1.4 !important; /* 行間も確実に適用 */
+        font-size: 1.2rem !important;
+        line-height: 1.4 !important;
         color: #FFFFFF !important;
-        margin-bottom: 0.3rem !important; /* 各ラベル（質問文、選択肢）の下に適切な余白を確保 */
+        margin-bottom: 0.3rem !important;
     }
     .google-classroom-button:hover {
         background-color: #357AE8;
@@ -172,14 +193,13 @@ st.markdown(
 st.image(HEADER_IMAGE_URL, use_container_width=True)
 
 # --- データ読み込み関数 ---
-@st.cache_data(ttl=3600) # 1時間キャッシュ
+@st.cache_data(ttl=3600)
 def load_material(github_url, row_index):
     """GitHubのCSVファイルから指定された行のデータを読み込む関数"""
     try:
         df = pd.read_csv(github_url)
         if 0 <= row_index < len(df):
             material_data = df.iloc[row_index].to_dict()
-            # material_id_for_save は data.csvの行番号をそのまま使用
             material_data['material_id_for_save'] = str(row_index)
             return material_data
         else:
@@ -217,8 +237,10 @@ if "set_page_key" not in st.session_state:
     st.session_state["set_page_key"] = "unique_key_speed"
 if "is_admin" not in st.session_state:
     st.session_state.is_admin = False
-if "enrollment_date" not in st.session_state: # enrollment_date をセッションに追加
+if "enrollment_date" not in st.session_state:
     st.session_state.enrollment_date = None
+if "watched_videos" not in st.session_state: # watched_videos セッション変数を追加
+    st.session_state.watched_videos = []
 
 # --- ページ遷移関数 ---
 def set_page(page_number):
@@ -292,7 +314,7 @@ if st.session_state.page == 0:
 elif st.session_state.page == 1:
     st.title(f"こんにちは、{st.session_state.nickname}さん！")
 
-    # ユーザーのenrollment_dateをFirestoreから取得し、セッションに保存
+    # ユーザープロファイルドキュメントから情報を取得
     current_nickname = st.session_state.nickname
     user_profile_ref = db.collection("user_profiles").document(current_nickname)
     user_profile_doc = user_profile_ref.get()
@@ -300,17 +322,15 @@ elif st.session_state.page == 1:
     if user_profile_doc.exists:
         user_profile_data = user_profile_doc.to_dict()
         st.session_state.enrollment_date = user_profile_data.get("enrollment_date")
+        st.session_state.watched_videos = user_profile_data.get("watched_videos", []) # 修正点: watched_videosを取得
     else:
-        # ドキュメントがない場合は、enrollment_dateはNoneのままにする
-        # 管理者が設定するのを待つ
         st.session_state.enrollment_date = None
-
+        st.session_state.watched_videos = [] # 修正点: ドキュメントが存在しない場合は空リストで初期化
 
     # 管理者設定
     if st.session_state.is_admin:
         st.subheader("管理者設定")
         
-        # 固定行インデックス設定
         manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0), key="admin_fixed_row_index")
         if st.button("表示行番号を保存", key="save_fixed_row_index"):
             st.session_state.fixed_row_index = manual_index
@@ -320,7 +340,7 @@ elif st.session_state.page == 1:
         st.subheader("ユーザー登録日設定 (管理者のみ)")
 
         target_nickname = st.text_input("登録日を設定するユーザーのニックネーム", key="target_nickname_input")
-        today_jst_date = datetime.now(timezone('Asia/Tokyo')).date() # default value for date_input
+        today_jst_date = datetime.now(timezone('Asia/Tokyo')).date()
         selected_enrollment_date = st.date_input("登録日を選択", value=today_jst_date, key="enrollment_date_picker")
 
         if st.button("登録日を設定", key="set_enrollment_date_button"):
@@ -328,54 +348,37 @@ elif st.session_state.page == 1:
                 target_user_profile_ref = db.collection("user_profiles").document(target_nickname)
                 enrollment_date_str = selected_enrollment_date.strftime('%Y-%m-%d')
                 
-                # Firestoreに保存 (watched_videosが未設定なら空配列で初期化も兼ねる)
                 target_user_profile_ref.set(
                     {"enrollment_date": enrollment_date_str, "watched_videos": []},
-                    merge=True # 既存のフィールド（例: 既に存在するwatched_videos）を上書きしない
+                    merge=True
                 )
                 st.success(f"ユーザー **{target_nickname}** の登録日を **{enrollment_date_str}** に設定しました。")
-                # もし設定したユーザーが自分自身の場合、セッション変数も更新
                 if target_nickname == st.session_state.nickname:
                     st.session_state.enrollment_date = enrollment_date_str
             else:
                 st.warning("登録日を設定するユーザーのニックネームを入力してください。")
 
-    # --- ここから2カラムレイアウトの開始 ---
     col1, col2 = st.columns([0.6, 0.4])
 
     with col1:
         st.header("授業動画")
         st.markdown("新しい動画をチェックしましょう！")
 
-        # enrollment_dateが設定されていない場合は動画を表示しない
         if st.session_state.enrollment_date is None:
             st.info("あなたの動画視聴開始日はまだ設定されていません。管理者に連絡してください。")
         else:
-            # 現在の日付を取得 (日本時間)
             today_jst = datetime.now(timezone('Asia/Tokyo')).date()
-            # ユーザーの登録日をdatetimeオブジェクトに変換
             enrollment_dt = datetime.strptime(st.session_state.enrollment_date, '%Y-%m-%d').date()
-
-            # 登録日からの経過日数を計算 (+1は登録日を1日目とするため)
             days_since_enrollment = (today_jst - enrollment_dt).days + 1
 
             try:
-                # videos.csvを読み込む
                 video_data = pd.read_csv("videos.csv")
                 video_data["date"] = pd.to_datetime(video_data["date"])
-                # ★変更点1: release_dayで降順にソート（新しい解放日が上に来るように）
                 video_data = video_data.sort_values(by="release_day", ascending=False).reset_index(drop=True)
 
-                # ユーザーの視聴済み動画リストをFirestoreから取得
-                # user_profile_doc はこのコードスニペットには含まれていませんが、
-                # 実際のアプリでは定義されていると仮定します。
-                # 例: user_profile_doc = db.collection("users").document(st.session_state.user_id).get()
-                # user_profile_data = user_profile_doc.to_dict()
-                # 以下の行は、user_profile_docとuser_profile_dataが適切に定義されていることを前提としています。
-                user_profile_data = {} # 仮の定義
-                watched_videos = user_profile_data.get("watched_videos", [])
-
-
+                # 修正点: セッションから視聴済み動画リストを取得
+                watched_videos = st.session_state.get("watched_videos", [])
+                
                 if not video_data.empty:
                     for index, row in video_data.iterrows():
                         video_id = row.get('video_id')
@@ -385,7 +388,6 @@ elif st.session_state.page == 1:
                             st.warning(f"動画データに 'video_id' または 'release_day' がありません: {row.get('title', '不明な動画')}")
                             continue
 
-                        # ★変更点2: 動画が解放されているかチェックし、解放されていない場合は何も表示しない
                         if release_day <= days_since_enrollment:
                             expander_header = f"{row['title']} （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
                             if video_id in watched_videos:
@@ -393,22 +395,23 @@ elif st.session_state.page == 1:
                             
                             with st.expander(expander_header):
                                 st.write(row["description"])
-                                # MP4ファイルの場合はvideoタグを使用
+                                
                                 if ".mp4" in row["url"].lower():
                                     st.markdown(f'<video width="100%" height="315" controls><source src="{row["url"]}" type="video/mp4"></video>', unsafe_allow_html=True)
-                                # YouTube動画の場合はst.videoを使用
                                 elif "youtube.com" in row["url"] or "youtu.be" in row["url"]:
                                     st.video(row["url"])
-                                # その他の埋め込みタイプ
                                 elif "type" in row and row["type"] == "embed":
-                                    # YouTube以外の埋め込み動画（もしあれば）
                                     st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-                                # リンクタイプ
                                 elif "type" in row and row["type"] == "link":
                                     st.markdown(f"[動画を見る]({row['url']})", unsafe_allow_html=True)
-                                # デフォルトの処理（YouTube動画を想定）
                                 else:
-                                    st.video(row["url"]) # ここもst.videoを使用
+                                    st.video(row["url"])
+                                
+                                # 修正点: 視聴完了ボタンを追加
+                                if video_id not in watched_videos:
+                                    st.button("視聴完了", key=f"complete_video_{video_id}", on_click=save_watched_video, args=(video_id,))
+                                else:
+                                    st.success("この動画は視聴済みです。")
 
                 else:
                     st.info("現在、表示できる動画はありません。")
@@ -430,12 +433,30 @@ elif st.session_state.page == 1:
 
     st.subheader(f"{st.session_state.nickname}さんのWPM推移")
     current_nickname = st.session_state.get('nickname')
-    # display_wpm_history(current_nickname) # ← この行はコメントアウトを維持
-    st.info("月次WPM推移グラフは後日表示されます。") # ← この行はコメントアウトを維持
+    st.info("月次WPM推移グラフは後日表示されます。")
 
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
+# --- 英文表示ページ（旧 page 1、現在は page 2 に相当） ---
+elif st.session_state.page == 2:
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data is None:
+        st.stop()
+    st.info("読み終わったらStopボタンを押しましょう")
+    col1, _ = st.columns([2, 1])
+    with col1:
+        st.markdown(
+            f"""
+            <div class="custom-paragraph">
+            {data['main']}
+            </div>
+            """, unsafe_allow_html=True
+        )
+    if st.button("Stop"):
+        st.session_state.stop_time = time.time()
+        st.session_state.page = 3
+        st.rerun()
 # --- 英文表示ページ（旧 page 1、現在は page 2 に相当） ---
 elif st.session_state.page == 2:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
