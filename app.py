@@ -290,7 +290,14 @@ if st.session_state.page == 0:
 
 # --- 認証後のメインメニューページ（page 1） ---
 elif st.session_state.page == 1:
-    st.title(f"こんにちは、{st.session_state.nickname}さん！")
+    col1, col2 = st.columns([0.4, 0.1])
+
+    with col1:
+        st.title(f"こんにちは、{st.session_state.nickname}さん！")
+        st.markdown("---")
+    with col2:
+        stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
+        st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
 
     # ユーザーのenrollment_dateをFirestoreから取得し、セッションに保存
     current_nickname = st.session_state.nickname
@@ -420,12 +427,6 @@ elif st.session_state.page == 1:
                 st.error(f"動画情報の読み込み中にエラーが発生しました: {e}")
 
     with col2:
-        st.markdown("---")
-
-        stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
-        st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
-
-
         st.header("スピード測定")
         st.write("ボタンを押して英文を読みましょう！")
         st.write("　※　文章は毎月更新されます")
