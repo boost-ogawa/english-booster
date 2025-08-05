@@ -298,6 +298,7 @@ elif st.session_state.page == 1:
     with col2:
         stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
         st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
+        st.markdown("<small>（別ウィンドウで開きます）</small>", unsafe_allow_html=True)
 
     # ユーザーのenrollment_dateをFirestoreから取得し、セッションに保存
     current_nickname = st.session_state.nickname
