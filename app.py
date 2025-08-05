@@ -420,6 +420,12 @@ elif st.session_state.page == 1:
                 st.error(f"動画情報の読み込み中にエラーが発生しました: {e}")
 
     with col2:
+        st.markdown("---")
+
+        if st.button("⏱️ ストップウォッチを開く", use_container_width=True):
+            js = "window.open('https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/')"
+            st.components.v1.html(f"<script>{js}</script>", height=0)
+
         st.header("スピード測定")
         st.write("ボタンを押して英文を読みましょう！")
         st.write("　※　文章は毎月更新されます")
@@ -428,13 +434,13 @@ elif st.session_state.page == 1:
         if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
             pass
 
-    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-    current_nickname = st.session_state.get('nickname')
-    # display_wpm_history(current_nickname) # ← この行はコメントアウトを維持
-    st.info("月次WPM推移グラフは後日表示されます。") # ← この行はコメントアウトを維持
+        st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+        current_nickname = st.session_state.get('nickname')
+        # display_wpm_history(current_nickname) # ← この行はコメントアウトを維持
+        st.info("月次WPM推移グラフは後日表示されます。") # ← この行はコメントアウトを維持
 
-    st.markdown("---")
-    st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
 # --- 英文表示ページ（旧 page 1、現在は page 2 に相当） ---
 elif st.session_state.page == 2:
