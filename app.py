@@ -434,13 +434,13 @@ elif st.session_state.page == 1:
         if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
             pass
 
-        st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-        current_nickname = st.session_state.get('nickname')
-        # display_wpm_history(current_nickname) # ← この行はコメントアウトを維持
-        st.info("月次WPM推移グラフは後日表示されます。") # ← この行はコメントアウトを維持
+    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+    current_nickname = st.session_state.get('nickname')
+    # display_wpm_history(current_nickname) # ← この行はコメントアウトを維持
+    st.info("月次WPM推移グラフは後日表示されます。") # ← この行はコメントアウトを維持
 
-        st.markdown("---")
-        st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
 
 # --- 英文表示ページ（旧 page 1、現在は page 2 に相当） ---
 elif st.session_state.page == 2:
