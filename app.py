@@ -422,9 +422,9 @@ elif st.session_state.page == 1:
     with col2:
         st.markdown("---")
 
-        if st.button("⏱️ ストップウォッチを開く", use_container_width=True):
-            js = "window.open('https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/')"
-            st.components.v1.html(f"<script>{js}</script>", height=0)
+        stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
+        st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
+
 
         st.header("スピード測定")
         st.write("ボタンを押して英文を読みましょう！")
