@@ -676,7 +676,7 @@ elif st.session_state.page == 6:
         formatted_correct_answer_q2 = ', '.join(st.session_state.correct_answer_q2)
         is_correct_q2 = st.session_state.is_correct_q2
         if is_correct_q2:
-            st.success("問１：正解！")
+            st.success("問２：正解！")
             st.write(f"あなたの解答: {formatted_user_answer_q2}")
             st.write(f"正しい選択肢: {formatted_correct_answer_q2}")
         else:
