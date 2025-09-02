@@ -237,8 +237,7 @@ if st.session_state.is_authenticated:
     with col2:
         if st.button("ログアウト", key="logout_btn"):
             st.session_state.clear()
-            st.session_state.page = 0
-            st.experimental_rerun()
+            st.rerun()
             
     # Firestoreからユーザーのプロフィール情報を取得
     current_nickname = st.session_state.nickname
@@ -376,7 +375,7 @@ if st.session_state.is_authenticated:
         if st.button("Stop"):
             st.session_state.stop_time = time.time()
             st.session_state.page = 3
-            st.stop()
+            st.rerun()
 
     # 問題ページ (page 3)
     elif st.session_state.page == 3:
@@ -400,7 +399,7 @@ if st.session_state.is_authenticated:
         if st.button("Submit"):
             if st.session_state.q1 is not None and st.session_state.q2 is not None:
                 st.session_state.page = 4
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("両方の質問に答えてください。")
 
@@ -447,7 +446,7 @@ if st.session_state.is_authenticated:
 
             if st.button("意味を確認"):
                 st.session_state.page = 5
-                st.experimental_rerun()
+                st.rerun()
 
     # 意味確認ページ (page 5)
     elif st.session_state.page == 5:
@@ -487,7 +486,7 @@ if st.session_state.is_authenticated:
             st.session_state.submitted = False
             st.session_state.q1 = None
             st.session_state.q2 = None
-            st.experimental_rerun()
+            st.rerun()
 
 else:
     # 未ログイン時のコンテンツ（ログインフォーム）
@@ -543,7 +542,7 @@ else:
                     st.session_state.user_id = user_id_input.strip()
                     st.session_state.is_admin = is_admin_user
                     st.session_state.page = 1
-                    st.stop()
+                    st.rerun()
                 else:
                     st.error("ニックネームまたはIDが正しくありません。")
 
