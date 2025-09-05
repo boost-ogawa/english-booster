@@ -274,12 +274,12 @@ elif st.session_state.page == 1:
         st.title(f"こんにちは、{st.session_state.nickname}さん！")
         st.markdown("---")
     with col2:
-        stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
-        st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
-        st.markdown("<small>（別ウィンドウで開きます）</small>", unsafe_allow_html=True)
         if st.button("ログアウト"):
             st.session_state.clear()
             st.rerun()
+        stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
+        st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
+        st.markdown("<small>（別ウィンドウで開きます）</small>", unsafe_allow_html=True)
 
     current_nickname = st.session_state.nickname
     user_profile_ref = db.collection("user_profiles").document(current_nickname)
