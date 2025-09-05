@@ -269,7 +269,7 @@ if st.session_state.page == 0:
 
 # --- 認証後のメインメニューページ（page 1） ---
 elif st.session_state.page == 1:
-    col1, col2, col3 = st.columns([0.4, 0.1, 0.2])
+    col1, col2 = st.columns([0.4, 0.1])
     with col1:
         st.title(f"こんにちは、{st.session_state.nickname}さん！")
         st.markdown("---")
@@ -277,7 +277,6 @@ elif st.session_state.page == 1:
         stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
         st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
         st.markdown("<small>（別ウィンドウで開きます）</small>", unsafe_allow_html=True)
-    with col3:
         if st.button("ログアウト"):
             st.session_state.clear()
             st.rerun()
