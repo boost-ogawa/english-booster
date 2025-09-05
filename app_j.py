@@ -305,11 +305,10 @@ elif st.session_state.page == 1:
         st.write("　※　各月初回の結果が保存されます")
         if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
             pass
-
-    st.markdown("---")
-    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-    st.info("月次WPM推移グラフは後日表示されます。")
-    st.markdown("---")
+        st.markdown("---")
+        st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+        st.info("月次WPM推移グラフは後日表示されます。")
+        st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
     
 # --- 英文読解ページ（page 2） ---
