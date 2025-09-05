@@ -227,10 +227,6 @@ elif st.session_state.page == 1:
         st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
         st.markdown("<small>（別ウィンドウで開きます）</small>", unsafe_allow_html=True)
 
-    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-    st.info("月次WPM推移グラフは後日表示されます。")
-    st.markdown("---")
-    
     if st.session_state.is_admin:
         st.subheader("管理者設定")
         manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0), key="admin_fixed_row_index")
@@ -253,7 +249,7 @@ elif st.session_state.page == 1:
                 st.success(f"ユーザー **{target_nickname}** の登録日を **{enrollment_date_str}** に設定しました。")
             else:
                 st.warning("登録日を設定するユーザーのニックネームを入力してください。")
-    
+
     col1, col2 = st.columns([0.6, 0.4])
     with col1:
         st.header("授業動画")
@@ -309,6 +305,10 @@ elif st.session_state.page == 1:
         st.write("　※　各月初回の結果が保存されます")
         if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
             pass
+
+    st.markdown("---")
+    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+    st.info("月次WPM推移グラフは後日表示されます。")
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
     
