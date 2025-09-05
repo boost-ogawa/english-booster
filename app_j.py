@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 import time
 from datetime import datetime
 from pytz import timezone
@@ -71,34 +70,6 @@ def save_results(wpm, correct_answers, material_id, nickname):
         print(f"ユーザー {nickname} の教材完了履歴が更新されました: {material_id}")
     except Exception as e:
         st.error(f"結果の保存に失敗しました: {e}")
-
-# --- WPM推移グラフ表示関数 ---
-def display_wpm_history(nickname):
-    if nickname:
-        try:
-            results_ref = db.collection("results").where("nickname", "==", nickname).order_by("timestamp")
-            docs = results_ref.stream()
-            data_list = []
-            for doc in docs:
-                data = doc.to_dict()
-                dt_object = datetime.fromisoformat(data['timestamp'])
-                jst = timezone('Asia/Tokyo')
-                dt_object_jst = dt_object.astimezone(jst)
-                data['測定年月'] = dt_object_jst.strftime('%Y-%m-%d %H:%M')
-                data_list.append(data)
-            if data_list:
-                df_results = pd.DataFrame(data_list)
-                df_results['wpm'] = pd.to_numeric(df_results['wpm'], errors='coerce')
-                df_results.dropna(subset=['wpm'], inplace=True)
-                fig = px.line(df_results, x='測定年月', y='wpm', title='WPM推移')
-                fig.update_xaxes(tickangle=-45)
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("まだ学習履歴がありません。")
-        except Exception as e:
-            st.error(f"過去データの読み込みまたは処理に失敗しました: {e}")
-    else:
-        st.info("ニックネームがありません。")
 
 # --- ページ設定（最初に書く必要あり） ---
 st.set_page_config(page_title="Speed Reading App", layout="wide", initial_sidebar_state="collapsed")
@@ -183,8 +154,6 @@ if "is_admin" not in st.session_state:
     st.session_state.is_admin = False
 
 # --- ページ遷移関数 ---
-def set_page(page_number):
-    st.session_state.page = page_number
 def go_to_main_page(nickname, user_id, is_admin):
     st.session_state.nickname = nickname.strip()
     st.session_state.user_id = user_id.strip()
@@ -257,9 +226,9 @@ elif st.session_state.page == 1:
         stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
         st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
         st.markdown("<small>（別ウィンドウで開きます）</small>", unsafe_allow_html=True)
-    
+
     st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-    display_wpm_history(st.session_state.nickname)
+    st.info("月次WPM推移グラフは後日表示されます。")
     st.markdown("---")
     
     if st.session_state.is_admin:
@@ -269,6 +238,21 @@ elif st.session_state.page == 1:
             st.session_state.fixed_row_index = manual_index
             save_config(manual_index)
         st.markdown("---")
+        st.subheader("ユーザー登録日設定 (管理者のみ)")
+        target_nickname = st.text_input("登録日を設定するユーザーのニックネーム", key="target_nickname_input")
+        today_jst_date = datetime.now(timezone('Asia/Tokyo')).date()
+        selected_enrollment_date = st.date_input("登録日を選択", value=today_jst_date, key="enrollment_date_picker")
+        if st.button("登録日を設定", key="set_enrollment_date_button"):
+            if target_nickname:
+                target_user_profile_ref = db.collection("user_profiles").document(target_nickname)
+                enrollment_date_str = selected_enrollment_date.strftime('%Y-%m-%d')
+                target_user_profile_ref.set(
+                    {"enrollment_date": enrollment_date_str},
+                    merge=True
+                )
+                st.success(f"ユーザー **{target_nickname}** の登録日を **{enrollment_date_str}** に設定しました。")
+            else:
+                st.warning("登録日を設定するユーザーのニックネームを入力してください。")
     
     col1, col2 = st.columns([0.6, 0.4])
     with col1:
@@ -327,7 +311,7 @@ elif st.session_state.page == 1:
             pass
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
-
+    
 # --- 英文読解ページ（page 2） ---
 elif st.session_state.page == 2:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
@@ -377,7 +361,7 @@ elif st.session_state.page == 4:
     st.success("結果を記録しました。")
     col1, col2 = st.columns([1, 2])
     with col2:
-        display_wpm_history(st.session_state.nickname)
+        st.info("月次WPM推移グラフは後日表示されます。")
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
         if data is None:
