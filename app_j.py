@@ -13,7 +13,7 @@ import os
 import bcrypt
 
 # --- 定数設定 ---
-GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/refs/heads/main/data.csv"
+GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/main/data.csv"
 HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true"
 
 # --- Firebaseの初期化 ---
@@ -25,7 +25,6 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as f:
     if not firebase_admin._apps:
         firebase_admin.initialize_app(cred)
     os.unlink(f.name)
-
 db = firestore.client()
 
 # --- Firestoreから設定を読み込む関数 ---
@@ -36,7 +35,6 @@ def load_config():
         if doc.exists:
             return doc.to_dict()
         else:
-            print("設定ドキュメントが存在しません。")
             return {}
     except Exception as e:
         print(f"設定の読み込みに失敗しました: {e}")
@@ -129,23 +127,11 @@ st.markdown(
     div.stButton > button:first-child:hover {
         background-color: #218838;
     }
-    .google-classroom-button {
-        display: inline-block;
-        padding: 10px 20px;
-        margin-top: 10px;
-        background-color: #4285F4;
-        color: white !important;
-        text-decoration: none;
-        border-radius: 5px;
-    }
     div[data-testid="stRadio"] label p {
         font-size: 1.2rem !important;
         line-height: 1.4 !important;
         color: #FFFFFF !important;
         margin-bottom: 0.3rem !important;
-    }
-    .google-classroom-button:hover {
-        background-color: #357AE8;
     }
     </style>
     """,
@@ -172,11 +158,8 @@ def load_material(github_url, row_index):
         return None
 
 # --- セッション変数の初期化 ---
-# ここに修正を適用
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-if "row_to_load" not in st.session_state:
-    st.session_state.row_to_load = 0
 if "fixed_row_index" not in st.session_state:
     config = load_config()
     st.session_state.fixed_row_index = config.get("fixed_row_index", 2)
@@ -196,14 +179,8 @@ if "nickname" not in st.session_state:
     st.session_state.nickname = ""
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
-if "show_full_graph" not in st.session_state:
-    st.session_state.show_full_graph = False
-if "set_page_key" not in st.session_state:
-    st.session_state["set_page_key"] = "unique_key_speed"
 if "is_admin" not in st.session_state:
     st.session_state.is_admin = False
-if "enrollment_date" not in st.session_state:
-    st.session_state.enrollment_date = None
 
 # --- ページ遷移関数 ---
 def set_page(page_number):
@@ -280,16 +257,11 @@ elif st.session_state.page == 1:
         stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
         st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
         st.markdown("<small>（別ウィンドウで開きます）</small>", unsafe_allow_html=True)
-
-    current_nickname = st.session_state.nickname
-    user_profile_ref = db.collection("user_profiles").document(current_nickname)
-    user_profile_doc = user_profile_ref.get()
-    if user_profile_doc.exists:
-        user_profile_data = user_profile_doc.to_dict()
-        st.session_state.enrollment_date = user_profile_data.get("enrollment_date")
-    else:
-        st.session_state.enrollment_date = None
-
+    
+    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
+    display_wpm_history(st.session_state.nickname)
+    st.markdown("---")
+    
     if st.session_state.is_admin:
         st.subheader("管理者設定")
         manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0), key="admin_fixed_row_index")
@@ -297,70 +269,54 @@ elif st.session_state.page == 1:
             st.session_state.fixed_row_index = manual_index
             save_config(manual_index)
         st.markdown("---")
-        st.subheader("ユーザー登録日設定 (管理者のみ)")
-        target_nickname = st.text_input("登録日を設定するユーザーのニックネーム", key="target_nickname_input")
-        today_jst_date = datetime.now(timezone('Asia/Tokyo')).date()
-        selected_enrollment_date = st.date_input("登録日を選択", value=today_jst_date, key="enrollment_date_picker")
-        if st.button("登録日を設定", key="set_enrollment_date_button"):
-            if target_nickname:
-                target_user_profile_ref = db.collection("user_profiles").document(target_nickname)
-                enrollment_date_str = selected_enrollment_date.strftime('%Y-%m-%d')
-                target_user_profile_ref.set(
-                    {"enrollment_date": enrollment_date_str, "watched_videos": []},
-                    merge=True
-                )
-                st.success(f"ユーザー **{target_nickname}** の登録日を **{enrollment_date_str}** に設定しました。")
-                if target_nickname == st.session_state.nickname:
-                    st.session_state.enrollment_date = enrollment_date_str
-            else:
-                st.warning("登録日を設定するユーザーのニックネームを入力してください。")
-
+    
     col1, col2 = st.columns([0.6, 0.4])
     with col1:
         st.header("授業動画")
         st.markdown("新しい動画をチェックしましょう！")
-        if st.session_state.enrollment_date is None:
+        
+        user_profile_ref = db.collection("user_profiles").document(st.session_state.nickname)
+        user_profile_doc = user_profile_ref.get()
+        user_profile_data = user_profile_doc.to_dict() if user_profile_doc.exists else {}
+        enrollment_date_str = user_profile_data.get("enrollment_date")
+        
+        if enrollment_date_str is None:
             st.info("あなたの動画視聴開始日はまだ設定されていません。管理者に連絡してください。")
         else:
             today_jst = datetime.now(timezone('Asia/Tokyo')).date()
-            enrollment_dt = datetime.strptime(st.session_state.enrollment_date, '%Y-%m-%d').date()
+            enrollment_dt = datetime.strptime(enrollment_date_str, '%Y-%m-%d').date()
             days_since_enrollment = (today_jst - enrollment_dt).days + 1
+            
             try:
                 video_data = pd.read_csv("videos.csv")
                 video_data["date"] = pd.to_datetime(video_data["date"])
                 video_data = video_data.sort_values(by="release_day", ascending=False).reset_index(drop=True)
-                user_profile_data = {}
+                
                 watched_videos = user_profile_data.get("watched_videos", [])
+                
                 if not video_data.empty:
-                    for index, row in video_data.iterrows():
+                    for _, row in video_data.iterrows():
                         video_id = row.get('video_id')
                         release_day = row.get('release_day')
+                        
                         if video_id is None or release_day is None:
-                            st.warning(f"動画データに 'video_id' または 'release_day' がありません: {row.get('title', '不明な動画')}")
                             continue
+                        
                         if release_day <= days_since_enrollment:
                             expander_header = f"{row['title']} （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
                             if video_id in watched_videos:
                                 expander_header = f"✅ {expander_header} （視聴済み）"
+                            
                             with st.expander(expander_header):
                                 st.write(row["description"])
-                                if ".mp4" in row["url"].lower():
-                                    st.markdown(f'<video width="100%" height="315" controls><source src="{row["url"]}" type="video/mp4"></video>', unsafe_allow_html=True)
-                                elif "youtube.com" in row["url"] or "youtu.be" in row["url"]:
-                                    st.video(row["url"])
-                                elif "type" in row and row["type"] == "embed":
-                                    st.markdown(f'<iframe width="100%" height="315" src="{row["url"]}" frameborder="0" allowfullscreen></iframe>', unsafe_allow_html=True)
-                                elif "type" in row and row["type"] == "link":
-                                    st.markdown(f"[動画を見る]({row['url']})", unsafe_allow_html=True)
-                                else:
-                                    st.video(row["url"])
+                                st.video(row["url"])
                 else:
                     st.info("現在、表示できる動画はありません。")
             except FileNotFoundError:
                 st.error("動画情報ファイル (videos.csv) が見つかりません。")
-                st.info("`videos.csv`を作成してアプリのルートディレクトリにアップロードしてください。")
             except Exception as e:
                 st.error(f"動画情報の読み込み中にエラーが発生しました: {e}")
+
     with col2:
         st.header("スピード測定")
         st.write("ボタンを押して英文を読みましょう！")
@@ -369,11 +325,10 @@ elif st.session_state.page == 1:
         st.write("　※　各月初回の結果が保存されます")
         if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
             pass
-    st.subheader(f"{st.session_state.nickname}さんのWPM推移")
-    current_nickname = st.session_state.get('nickname')
-    st.info("月次WPM推移グラフは後日表示されます。")
     st.markdown("---")
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
+
+# --- 英文読解ページ（page 2） ---
 elif st.session_state.page == 2:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
@@ -392,6 +347,8 @@ elif st.session_state.page == 2:
         st.session_state.stop_time = time.time()
         st.session_state.page = 3
         st.rerun()
+
+# --- 問題解答ページ（page 3） ---
 elif st.session_state.page == 3:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
@@ -414,12 +371,13 @@ elif st.session_state.page == 3:
             st.rerun()
         else:
             st.error("両方の質問に答えてください。")
+
+# --- 結果表示ページ（page 4） ---
 elif st.session_state.page == 4:
     st.success("結果を記録しました。")
     col1, col2 = st.columns([1, 2])
     with col2:
-        current_nickname = st.session_state.get('nickname')
-        st.info("月次WPM推移グラフは後日表示されます。")
+        display_wpm_history(st.session_state.nickname)
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
         if data is None:
@@ -451,6 +409,8 @@ elif st.session_state.page == 4:
         if st.button("意味を確認"):
             st.session_state.page = 5
             st.rerun()
+
+# --- 意味確認ページ（page 5） ---
 elif st.session_state.page == 5:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
