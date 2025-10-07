@@ -308,6 +308,7 @@ elif st.session_state.page == 1:
                 st.error("動画情報ファイル (videos.csv) が見つかりません。")
             except Exception as e:
                 st.error(f"動画情報の読み込み中にエラーが発生しました: {e}")
+
     with col2:
         st.header("スピード測定")
         st.write("ボタンを押して英文を読みましょう！")
@@ -332,16 +333,13 @@ elif st.session_state.page == 1:
                 df_user["date"] = pd.to_datetime(df_user["date"])
                 df_user = df_user.sort_values("date", ascending=False)
 
-                # 表示列を整理
-                df_display = df_user[["date", "material_id", "wpm", "correct_answers"]]
+                # 表示列を WPM グラフ用に合わせる
+                df_display = df_user[["date", "wpm"]]
                 df_display = df_display.rename(columns={
                     "date": "Test Date",
-                    "material_id": "Material ID",
-                    "wpm": "WPM",
-                    "correct_answers": "Correct Answers"
+                    "wpm": "WPM"
                 })
-
-                # Test Date を文字列に変換
+                # 日付を文字列に変換
                 df_display["Test Date"] = df_display["Test Date"].dt.strftime('%Y/%m/%d')
 
                 st.dataframe(df_display.reset_index(drop=True))
@@ -351,7 +349,7 @@ elif st.session_state.page == 1:
             st.error("user.csv が見つかりません。")
         except Exception as e:
             st.error(f"結果表表示中にエラーが発生しました: {e}")
-        
+
         st.markdown("---")
 
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
