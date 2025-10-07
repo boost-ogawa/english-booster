@@ -375,29 +375,41 @@ elif st.session_state.page == 4:
             st.write(f"総単語数: {word_count} 語")
             st.write(f"所要時間: {total_time:.2f} 秒")
             st.write(f"単語数/分: **{wpm:.1f}** WPM")
+
+            # --- 判定と記録 ---
             correct1 = st.session_state.q1 == data['A1']
-            st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
-            st.write(f"あなたの解答 {st.session_state.q1}")
-            st.write(f"正しい答え: {data['A1']}")
             correct2 = st.session_state.q2 == data['A2']
+
+            # 判定を固定しておく（訳ページ遷移時に一瞬Falseになるのを防ぐ）
+            st.session_state["final_correct1"] = correct1
+            st.session_state["final_correct2"] = correct2
+
+            st.write(f"Q1: {'✅ 正解' if correct1 else '❌ 不正解'}")
+            st.write(f"あなたの解答: {st.session_state.q1}")
+            st.write(f"正しい答え: {data['A1']}")
+
             st.write(f"Q2: {'✅ 正解' if correct2 else '❌ 不正解'}")
             st.write(f"あなたの解答: {st.session_state.q2}")
             st.write(f"正しい答え: {data['A2']}")
+
             correct_answers_to_store = int(correct1) + int(correct2)
             if not st.session_state.submitted:
                 material_id_to_save = data.get('material_id_for_save', str(st.session_state.fixed_row_index))
-                save_results(wpm, correct_answers_to_store, material_id_to_save,
-                             st.session_state.nickname)
+                save_results(wpm, correct_answers_to_store, material_id_to_save, st.session_state.nickname)
                 st.session_state.submitted = True
+
         if st.button("意味を確認"):
+            # 遷移時に判定結果を保持したままpage変更
             st.session_state.page = 5
             st.rerun()
+
 
 # --- 意味確認ページ（page 5） ---
 elif st.session_state.page == 5:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
+
     st.title("英文と日本語訳")
     col_en, col_ja = st.columns(2)
     with col_en:
@@ -423,11 +435,17 @@ elif st.session_state.page == 5:
         else:
             st.error("CSVファイルに'japanese'列が存在しません。")
             st.stop()
+
+    # --- （必要に応じて結果を再確認表示）---
+    if "final_correct1" in st.session_state and "final_correct2" in st.session_state:
+        st.subheader("あなたの解答結果")
+        st.write(f"Q1: {'✅ 正解' if st.session_state.final_correct1 else '❌ 不正解'}")
+        st.write(f"Q2: {'✅ 正解' if st.session_state.final_correct2 else '❌ 不正解'}")
+
     if st.button("終了"):
+        # 終了時に状態をクリア
+        for key in ["page", "start_time", "stop_time", "submitted",
+                    "q1", "q2", "final_correct1", "final_correct2"]:
+            st.session_state[key] = None
         st.session_state.page = 1
-        st.session_state.start_time = None
-        st.session_state.stop_time = None
-        st.session_state.submitted = False
-        st.session_state.q1 = None
-        st.session_state.q2 = None
         st.rerun()
