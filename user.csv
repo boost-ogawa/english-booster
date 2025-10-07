@@ -1,8 +1,16 @@
-user_id,nickname
-mukounauser,toriaezuireru
-user001,takahiroogawa
-user002,yoshitomo_yamane
-user003,takahiroogawa
-7nBTVRXi1ars,admin
-7nBTVRXi1ars,takahiroogawa
+nickname,date,wpm
+takahiro_ogawa,2025/01/01,100
+takahiro_ogawa,2025/02/01,140
+takahiro_ogawa,2025/03/01,210
+takahiro_ogawa,2025/04/01,300
+takahiro_ogawa,2025/05/01,250
+takahiro_ogawa,2025/06/01,900
+takahiro_ogawa,2025/07/01,180
+takahiro_ogawa,2025/08/01,60
+takahiro_ogawa,2025/09/01,230
+takahiro_ogawa,2025/11/01,120
+takahiro_ogawa,2025/10/01,140
+takahiro_ogawa,2024/12/01,200
+takahiro_ogawa,2023/01/01,150
+
 
