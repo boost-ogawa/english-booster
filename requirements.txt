@@ -4,3 +4,4 @@ firebase-admin>=5.0.0
 pytz
 plotly
 bcrypt
+matplotlib
