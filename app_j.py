@@ -345,24 +345,46 @@ elif st.session_state.page == 3:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
     if data is None:
         st.stop()
+
+    # まずSubmit押下でページ遷移を判定
+    submit_pressed = st.button("Submit")
+
+    if submit_pressed:
+        if st.session_state.q1 is not None and st.session_state.q2 is not None:
+            # ページ遷移フラグを先にセット
+            st.session_state.page = 4
+            st.experimental_rerun()  # ここで即座に再描画
+        else:
+            st.error("両方の質問に答えてください。")
+            st.stop()  # エラーの場合は以降の描画をスキップ
+
+    # --- ここからページ3描画 ---
     st.info("問題を解いてSubmitボタンを押しましょう")
     col1, col2 = st.columns([2, 1])
     with col1:
         st.markdown(f'<div class="custom-paragraph">{data["main"]}</div>', unsafe_allow_html=True)
     with col2:
         st.subheader("Questions")
-        q1_choice = st.radio(data["Q1"], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1",
-                             index=([data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']].index(st.session_state.q1)
-                                    if st.session_state.get('q1') in [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']] else None))
-        q2_choice = st.radio(data["Q2"], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2",
-                             index=([data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']].index(st.session_state.q2)
-                                    if st.session_state.get('q2') in [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']] else None))
-    if st.button("Submit"):
-        if st.session_state.q1 is not None and st.session_state.q2 is not None:
-            st.session_state.page = 4
-            st.rerun()
-        else:
-            st.error("両方の質問に答えてください。")
+        q1_choice = st.radio(
+            data["Q1"],
+            [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']],
+            key="q1",
+            index=(
+                [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']].index(st.session_state.q1)
+                if st.session_state.get('q1') in [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']]
+                else None
+            )
+        )
+        q2_choice = st.radio(
+            data["Q2"],
+            [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']],
+            key="q2",
+            index=(
+                [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']].index(st.session_state.q2)
+                if st.session_state.get('q2') in [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']]
+                else None
+            )
+        )
 
 # --- 結果表示ページ（page 4） ---
 elif st.session_state.page == 4:
