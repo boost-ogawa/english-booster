@@ -351,6 +351,7 @@ elif st.session_state.page == 3:
         if st.session_state.q1 is not None and st.session_state.q2 is not None:
             st.session_state.page = 4  # ページ遷移フラグを先にセット
             st.experimental_rerun()   # 即座に再描画
+            st.stop()
         else:
             st.error("両方の質問に答えてください。")
             st.stop()  # 描画スキップ
