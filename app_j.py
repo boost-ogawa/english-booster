@@ -308,28 +308,41 @@ elif st.session_state.page == 1:
                 st.error("動画情報ファイル (videos.csv) が見つかりません。")
             except Exception as e:
                 st.error(f"動画情報の読み込み中にエラーが発生しました: {e}")
-
-    # --- 右カラム: WPM表表示 ---
     with col2:
-        st.header(f"{st.session_state.nickname}さんの過去結果（最新順）")
+        st.header("スピード測定")
+        st.write("ボタンを押して英文を読みましょう！")
+        st.write("　※　文章は毎月更新されます")
+        st.write("　※　測定は何回でもできます")
+        st.write("　※　各月初回の結果が保存されます")
+        
+        if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
+            pass
+
+        st.markdown("---")
+        st.subheader(f"{st.session_state.nickname}さんの過去結果（最新順）")
 
         try:
+            # GitHub 上の CSV を読み込む
             GITHUB_USER_CSV = "https://raw.githubusercontent.com/boost-ogawa/english-booster/main/user.csv"
             df_wpm = pd.read_csv(GITHUB_USER_CSV)
             df_user = df_wpm[df_wpm["nickname"] == st.session_state.nickname]
 
             if not df_user.empty:
+                # 日付順に降順ソート（最新が上）
                 df_user["date"] = pd.to_datetime(df_user["date"])
                 df_user = df_user.sort_values("date", ascending=False)
 
-                df_display = df_user[["date", "material_id", "wpm", "correct_answers"]].copy()
-                df_display["date"] = df_display["date"].dt.strftime("%Y/%m/%d")  # 日付文字列に変換
+                # 表示列を整理
+                df_display = df_user[["date", "material_id", "wpm", "correct_answers"]]
                 df_display = df_display.rename(columns={
                     "date": "Test Date",
                     "material_id": "Material ID",
                     "wpm": "WPM",
                     "correct_answers": "Correct Answers"
                 })
+
+                # Test Date を文字列に変換
+                df_display["Test Date"] = df_display["Test Date"].dt.strftime('%Y/%m/%d')
 
                 st.dataframe(df_display.reset_index(drop=True))
             else:
@@ -338,6 +351,8 @@ elif st.session_state.page == 1:
             st.error("user.csv が見つかりません。")
         except Exception as e:
             st.error(f"結果表表示中にエラーが発生しました: {e}")
+        
+        st.markdown("---")
 
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
     
