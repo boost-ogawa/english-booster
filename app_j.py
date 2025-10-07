@@ -346,59 +346,44 @@ elif st.session_state.page == 3:
     if data is None:
         st.stop()
 
-    # まずSubmit押下でページ遷移を判定
-    submit_pressed = st.button("Submit")
-
-    if submit_pressed:
+    # Submitボタン押下判定
+    if st.button("Submit"):
         if st.session_state.q1 is not None and st.session_state.q2 is not None:
-            # ページ遷移フラグを先にセット
-            st.session_state.page = 4
-            st.experimental_rerun()  # ここで即座に再描画
+            st.session_state.page = 4  # ページ遷移フラグを先にセット
+            st.experimental_rerun()   # 即座に再描画
         else:
             st.error("両方の質問に答えてください。")
-            st.stop()  # エラーの場合は以降の描画をスキップ
+            st.stop()  # 描画スキップ
 
-    # --- ここからページ3描画 ---
+    # page3 描画
     st.info("問題を解いてSubmitボタンを押しましょう")
     col1, col2 = st.columns([2, 1])
     with col1:
         st.markdown(f'<div class="custom-paragraph">{data["main"]}</div>', unsafe_allow_html=True)
     with col2:
         st.subheader("Questions")
-        q1_choice = st.radio(
-            data["Q1"],
-            [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']],
-            key="q1",
-            index=(
-                [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']].index(st.session_state.q1)
-                if st.session_state.get('q1') in [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']]
-                else None
-            )
-        )
-        q2_choice = st.radio(
-            data["Q2"],
-            [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']],
-            key="q2",
-            index=(
-                [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']].index(st.session_state.q2)
-                if st.session_state.get('q2') in [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']]
-                else None
-            )
-        )
+        st.radio(data["Q1"], [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']], key="q1",
+                 index=[data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']].index(st.session_state.q1)
+                 if st.session_state.get('q1') in [data['Q1A'], data['Q1B'], data['Q1C'], data['Q1D']] else None)
+        st.radio(data["Q2"], [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']], key="q2",
+                 index=[data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']].index(st.session_state.q2)
+                 if st.session_state.get('q2') in [data['Q2A'], data['Q2B'], data['Q2C'], data['Q2D']] else None)
 
 # --- 結果表示ページ（page 4） ---
 elif st.session_state.page == 4:
+    data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
+    if data is None:
+        st.stop()
+
     st.success("結果を記録しました。")
     col1, col2 = st.columns([1, 2])
     with col2:
         st.info("月次WPM推移グラフは後日表示されます。")
     with col1:
-        data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
-        if data is None:
-            st.stop()
         st.subheader("Result")
-        correct_answers_to_store = 0
         wpm = 0.0
+        correct_answers_to_store = 0
+
         if st.session_state.start_time and st.session_state.stop_time:
             total_time = st.session_state.stop_time - st.session_state.start_time
             word_count = len(data['main'].split())
@@ -407,11 +392,10 @@ elif st.session_state.page == 4:
             st.write(f"所要時間: {total_time:.2f} 秒")
             st.write(f"単語数/分: **{wpm:.1f}** WPM")
 
-            # --- 判定と記録 ---
             correct1 = st.session_state.q1 == data['A1']
             correct2 = st.session_state.q2 == data['A2']
 
-            # 判定を固定しておく（訳ページ遷移時に一瞬Falseになるのを防ぐ）
+            # 判定固定
             st.session_state["final_correct1"] = correct1
             st.session_state["final_correct2"] = correct2
 
@@ -429,11 +413,11 @@ elif st.session_state.page == 4:
                 save_results(wpm, correct_answers_to_store, material_id_to_save, st.session_state.nickname)
                 st.session_state.submitted = True
 
+        # 意味確認ボタン
         if st.button("意味を確認"):
-            # 遷移時に判定結果を保持したままpage変更
             st.session_state.page = 5
-            st.rerun()
-
+            st.experimental_rerun()  # 即座に再描画
+            st.stop()
 
 # --- 意味確認ページ（page 5） ---
 elif st.session_state.page == 5:
@@ -445,38 +429,21 @@ elif st.session_state.page == 5:
     col_en, col_ja = st.columns(2)
     with col_en:
         st.subheader("英文")
-        st.markdown(
-            f"""
-            <div class="custom-paragraph">
-            {data['main']}
-            </div>
-            """, unsafe_allow_html=True
-        )
+        st.markdown(f"<div class='custom-paragraph'>{data['main']}</div>", unsafe_allow_html=True)
     with col_ja:
         st.subheader("日本語訳")
         if 'japanese' in data:
-            st.markdown(
-                f"""
-                <div style="font-family: Georgia, serif; line-height: 1.8; font-size: 1.5rem;">
-                {data['japanese']}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.markdown(f"<div style='line-height:1.8;font-size:1.5rem'>{data['japanese']}</div>", unsafe_allow_html=True)
         else:
-            st.error("CSVファイルに'japanese'列が存在しません。")
+            st.error("CSVに 'japanese' 列が存在しません。")
             st.stop()
 
-    # --- （必要に応じて結果を再確認表示）---
-    if "final_correct1" in st.session_state and "final_correct2" in st.session_state:
-        st.subheader("あなたの解答結果")
-        st.write(f"Q1: {'✅ 正解' if st.session_state.final_correct1 else '❌ 不正解'}")
-        st.write(f"Q2: {'✅ 正解' if st.session_state.final_correct2 else '❌ 不正解'}")
-
     if st.button("終了"):
-        # 終了時に状態をクリア
-        for key in ["page", "start_time", "stop_time", "submitted",
-                    "q1", "q2", "final_correct1", "final_correct2"]:
-            st.session_state[key] = None
         st.session_state.page = 1
-        st.rerun()
+        st.session_state.start_time = None
+        st.session_state.stop_time = None
+        st.session_state.submitted = False
+        st.session_state.q1 = None
+        st.session_state.q2 = None
+        st.experimental_rerun()
+        st.stop()
