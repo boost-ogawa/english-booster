@@ -363,13 +363,47 @@ elif st.session_state.page == 3:
             st.rerun()
         else:
             st.error("両方の質問に答えてください。")
-
 # --- 結果表示ページ（page 4） ---
 elif st.session_state.page == 4:
     st.success("結果を記録しました。")
     col1, col2 = st.columns([1, 2])
+
+    # --- 右カラム: WPM推移グラフ ---
     with col2:
-        st.info("月次WPM推移グラフは後日表示されます。")
+        st.subheader(f"{st.session_state.nickname}さんのWPM推移（過去の結果）")
+
+        try:
+            GITHUB_USER_CSV = "https://raw.githubusercontent.com/boost-ogawa/english-booster/main/user.csv"
+            df_wpm = pd.read_csv(GITHUB_USER_CSV)
+            df_user = df_wpm[df_wpm["nickname"] == st.session_state.nickname]
+
+            if not df_user.empty:
+                df_user["date"] = pd.to_datetime(df_user["date"])
+                df_user = df_user.sort_values("date")
+
+                import matplotlib.pyplot as plt
+
+                fig, ax = plt.subplots(figsize=(8, 4))
+                ax.plot(df_user["date"], df_user["wpm"], marker='o', linestyle='-')
+
+                # 縦軸固定
+                ax.set_ylim(0, 400)
+                ax.set_yticks(range(0, 401, 50))
+                ax.set_ylabel("WPM")
+                ax.set_xlabel("日付")
+                ax.set_title(f"{st.session_state.nickname}さんのWPM推移")
+                plt.xticks(rotation=45)
+                plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+                st.pyplot(fig)
+            else:
+                st.info("WPMデータがまだありません。")
+        except FileNotFoundError:
+            st.error("user.csv が見つかりません。")
+        except Exception as e:
+            st.error(f"WPMグラフ描画中にエラーが発生しました: {e}")
+
+    # --- 左カラム: 今回の結果表示 ---
     with col1:
         data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
         if data is None:
