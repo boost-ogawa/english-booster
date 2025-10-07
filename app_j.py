@@ -336,7 +336,7 @@ elif st.session_state.page == 1:
                 # 表示列を WPM グラフ用に合わせる
                 df_display = df_user[["date", "wpm"]]
                 df_display = df_display.rename(columns={
-                    "date": "Test Date",
+                    "date": "測定年月日",
                     "wpm": "WPM"
                 })
                 # 日付を文字列に変換
