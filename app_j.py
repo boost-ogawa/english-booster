@@ -10,6 +10,7 @@ import tempfile
 import re
 import os
 import bcrypt
+import matplotlib.pyplot as plt
 
 # --- 定数設定 ---
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/main/data.csv"
@@ -368,40 +369,40 @@ elif st.session_state.page == 4:
     st.success("結果を記録しました。")
     col1, col2 = st.columns([1, 2])
 
-    # --- 右カラム: WPM推移グラフ ---
-    with col2:
-        st.subheader(f"{st.session_state.nickname}さんのWPM推移（過去の結果）")
+# --- 右カラム: WPM推移グラフ ---
+with col2:
+    st.subheader(f"{st.session_state.nickname}さんのWPM推移（過去の結果）")
 
-        try:
-            GITHUB_USER_CSV = "https://raw.githubusercontent.com/boost-ogawa/english-booster/main/user.csv"
-            df_wpm = pd.read_csv(GITHUB_USER_CSV)
-            df_user = df_wpm[df_wpm["nickname"] == st.session_state.nickname]
+    try:
+        GITHUB_USER_CSV = "https://raw.githubusercontent.com/boost-ogawa/english-booster/main/user.csv"
+        df_wpm = pd.read_csv(GITHUB_USER_CSV)
+        df_user = df_wpm[df_wpm["nickname"] == st.session_state.nickname]
 
-            if not df_user.empty:
-                df_user["date"] = pd.to_datetime(df_user["date"])
-                df_user = df_user.sort_values("date")
+        if not df_user.empty:
+            # 日付順に並べ替え、文字列として扱う
+            df_user = df_user.sort_values("date")
+            df_user["date"] = df_user["date"].astype(str)
 
-                import matplotlib.pyplot as plt
+            # グラフ描画
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.plot(df_user["date"], df_user["wpm"], marker='o', linestyle='-')
 
-                fig, ax = plt.subplots(figsize=(8, 4))
-                ax.plot(df_user["date"], df_user["wpm"], marker='o', linestyle='-')
+            # 縦軸固定
+            ax.set_ylim(0, 400)
+            ax.set_yticks(range(0, 401, 50))
+            ax.set_ylabel("WPM")
+            ax.set_xlabel("日付")
+            ax.set_title(f"{st.session_state.nickname}さんのWPM推移")
+            plt.xticks(rotation=45)
+            plt.grid(axis='y', linestyle='--', alpha=0.7)
 
-                # 縦軸固定
-                ax.set_ylim(0, 400)
-                ax.set_yticks(range(0, 401, 50))
-                ax.set_ylabel("WPM")
-                ax.set_xlabel("日付")
-                ax.set_title(f"{st.session_state.nickname}さんのWPM推移")
-                plt.xticks(rotation=45)
-                plt.grid(axis='y', linestyle='--', alpha=0.7)
-
-                st.pyplot(fig)
-            else:
-                st.info("WPMデータがまだありません。")
-        except FileNotFoundError:
-            st.error("user.csv が見つかりません。")
-        except Exception as e:
-            st.error(f"WPMグラフ描画中にエラーが発生しました: {e}")
+            st.pyplot(fig)
+        else:
+            st.info("WPMデータがまだありません。")
+    except FileNotFoundError:
+        st.error("user.csv が見つかりません。")
+    except Exception as e:
+        st.error(f"WPMグラフ描画中にエラーが発生しました: {e}")
 
     # --- 左カラム: 今回の結果表示 ---
     with col1:
