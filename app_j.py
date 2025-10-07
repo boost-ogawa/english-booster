@@ -162,7 +162,16 @@ def go_to_main_page(nickname, user_id, is_admin):
     st.session_state.page = 1
     time.sleep(0.1)
     st.rerun()
-
+# --- YouTube URLを埋め込み形式に正規化する関数 ---
+def normalize_youtube_url(url: str) -> str:
+    if "youtu.be/" in url:
+        video_id = url.split("/")[-1]
+        return f"https://www.youtube.com/embed/{video_id}"
+    elif "watch?v=" in url:
+        video_id = url.split("watch?v=")[-1]
+        return f"https://www.youtube.com/embed/{video_id}"
+    else:
+        return url
 # --- 「スピード測定開始」ボタンが押されたときに実行する関数 ---
 def start_reading(page_number):
     st.session_state.start_time = time.time()
@@ -289,7 +298,7 @@ elif st.session_state.page == 1:
                             
                             with st.expander(expander_header):
                                 st.write(row["description"])
-                                st.video(row["url"])
+                                st.video(normalize_youtube_url(row["url"]))
                 else:
                     st.info("現在、表示できる動画はありません。")
             except FileNotFoundError:
