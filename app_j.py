@@ -11,6 +11,18 @@ import re
 import os
 import bcrypt
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+from matplotlib import rcParams
+
+# 日本語フォントを指定（Windowsの場合の例）
+rcParams["font.family"] = "Yu Gothic"  # または "Meiryo"
+
+# macOSの場合
+# rcParams["font.family"] = "Hiragino Maru Gothic Pro"
+
+# Linuxの場合
+# rcParams["font.family"] = "IPAPGothic"
+
 
 # --- 定数設定 ---
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/main/data.csv"
