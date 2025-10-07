@@ -14,16 +14,6 @@ import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
-# 日本語フォントを指定（Windowsの場合の例）
-rcParams["font.family"] = "Yu Gothic"  # または "Meiryo"
-
-# macOSの場合
-# rcParams["font.family"] = "Hiragino Maru Gothic Pro"
-
-# Linuxの場合
-# rcParams["font.family"] = "IPAPGothic"
-
-
 # --- 定数設定 ---
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/boost-ogawa/english-booster/main/data.csv"
 HEADER_IMAGE_URL = "https://github.com/boost-ogawa/english-booster/blob/main/English%20Booster_header.jpg?raw=true"
@@ -403,8 +393,7 @@ elif st.session_state.page == 4:
                 ax.set_ylim(0, 400)
                 ax.set_yticks(range(0, 401, 50))
                 ax.set_ylabel("WPM")
-                ax.set_xlabel("日付")
-                ax.set_title(f"{st.session_state.nickname}さんのWPM推移")
+                ax.set_xlabel("Measurement Date")
                 plt.xticks(rotation=45)
                 plt.grid(axis='y', linestyle='--', alpha=0.7)
 
