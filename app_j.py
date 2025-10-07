@@ -340,7 +340,7 @@ elif st.session_state.page == 1:
                     "wpm": "WPM"
                 })
                 # 日付を文字列に変換
-                df_display["Test Date"] = df_display["Test Date"].dt.strftime('%Y/%m/%d')
+                df_display["測定年月日"] = df_display["測定年月日"].dt.strftime('%Y/%m/%d')
                 st.dataframe(df_display.reset_index(drop=True), hide_index=True)
             else:
                 st.info("過去の結果データはまだありません。")
