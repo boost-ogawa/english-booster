@@ -306,7 +306,7 @@ elif st.session_state.page == 1:
                             continue
                         
                         if release_day <= days_since_enrollment:
-                            expander_header = f"{row['title']} （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
+                            expander_header = f"[{row['title']}]({row['url']}) （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
                             if video_id in watched_videos:
                                 expander_header = f"✅ {expander_header} （視聴済み）"
                             
