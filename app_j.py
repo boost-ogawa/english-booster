@@ -167,14 +167,43 @@ def go_to_main_page(nickname, user_id, is_admin):
     st.rerun()
 # --- YouTube URLを埋め込み形式に正規化する関数 ---
 def normalize_youtube_url(url: str) -> str:
-    if "youtu.be/" in url:
-        video_id = url.split("/")[-1]
+    """
+    様々な形式のYouTube URLから動画IDを抽出し、埋め込み可能なURL形式に変換します。
+
+    Args:
+        url (str): YouTubeのURL（標準、短縮、埋め込みなど）。
+
+    Returns:
+        str: 埋め込み可能な形式 (https://www.youtube.com/embed/{video_id})。
+    """
+    
+    # 正規表現パターン: 以下の形式から11文字の動画IDを抽出します。
+    # 1. youtu.be/ (短縮URL)
+    # 2. youtube.com/embed/
+    # 3. youtube.com/v/
+    # 4. youtube.com/watch?v=
+    # 5. youtube.com/watch?.*&v= (クエリパラメータの途中にv=がある場合)
+    # 抽出されるグループ(1)が動画IDです。
+    
+    # 補足: [^&?\/]{11} は、&, ?, / 以外の文字が11個続くことを意味し、
+    # 動画IDの後に続くクエリパラメータ（?t=, &list= など）を切り捨てる効果があります。
+    
+    pattern = r"(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.*&v=))([^&?\/]{11})"
+    
+    match = re.search(pattern, url)
+    
+    if match:
+        video_id = match.group(1)
         return f"https://www.youtube.com/embed/{video_id}"
-    elif "watch?v=" in url:
-        video_id = url.split("watch?v=")[-1]
-        return f"https://www.youtube.com/embed/{video_id}"
-    else:
-        return url
+    
+    # どのパターンにも一致しない場合は、元のURLをそのまま返す（例: 既に埋め込み形式の場合や無効なURL）
+    return url
+
+# --- 使用例 (動作確認用) ---
+# print(normalize_youtube_url("https://youtu.be/Un9s90bfC-Q"))
+# print(normalize_youtube_url("https://www.youtube.com/watch?v=Un9s90bfC-Q&list=PL..."))
+# print(normalize_youtube_url("https://youtu.be/Un9s90bfC-Q?t=100"))
+
 # --- 「スピード測定開始」ボタンが押されたときに実行する関数 ---
 def start_reading(page_number):
     st.session_state.start_time = time.time()
