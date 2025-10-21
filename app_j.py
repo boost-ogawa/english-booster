@@ -306,12 +306,13 @@ elif st.session_state.page == 1:
                             continue
                         
                         if release_day <= days_since_enrollment:
-                            expander_header = f"[{row['title']}]({row['url']}) （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
+                            expander_header = f"{row['title']} （公開日: {row['date'].strftime('%Y年%m月%d日')}）"
                             if video_id in watched_videos:
                                 expander_header = f"✅ {expander_header} （視聴済み）"
                             
                             with st.expander(expander_header):
                                 st.write(row["description"])
+                                st.markdown(f"📺 **[YouTubeでこの動画を直接開く]({row['url']})**")
                                 st.video(normalize_youtube_url(row["url"]))
                 else:
                     st.info("現在、表示できる動画はありません。")
