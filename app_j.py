@@ -95,7 +95,7 @@ st.markdown(
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        padding: 15px 40px;
+        padding: 20px 40px;
         font-size: 1.8rem;
     }
     div.stButton > button:first-child:hover {
@@ -250,7 +250,7 @@ elif st.session_state.page == 1:
         # STOPWATCHリンクを中央カラムに配置
         stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
         st.markdown(f"[⏱️STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
-
+        st.write("(別ウィンドウ)")
     with col3_header:
         # ログアウトボタンを右端カラムに配置
         if st.button("ログアウト"):
