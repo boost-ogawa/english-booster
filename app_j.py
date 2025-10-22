@@ -249,7 +249,7 @@ elif st.session_state.page == 1:
             st.session_state.clear()
             st.rerun()
         stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
-        st.markdown(f"[⏱️ STOPWATCH(別ウィンドウ)]({stopwatch_url})", unsafe_allow_html=True)
+        st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
     # -----------------------------------------------------------
     # 2. 管理者設定 (既存のロジックを維持)
     # -----------------------------------------------------------
@@ -297,7 +297,7 @@ elif st.session_state.page == 1:
         
         # ★★★ 新しい3カラム定義 ★★★
         # [動画選択リスト(小)] : [動画埋め込み(大)] : [スピード測定/情報(中)]
-        col_video_list, col_video_main, col_speed_test = st.columns([0.25, 0.45, 0.3])
+        col_video_list, col_video_main, col_speed_test = st.columns([0.2, 0.6, 0.2])
 
         try:
             video_data = pd.read_csv("videos.csv")
