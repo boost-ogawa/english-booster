@@ -241,9 +241,9 @@ elif st.session_state.page == 1:
     # -----------------------------------------------------------
     # 1. ヘッダーとログアウトボタンの配置 (3カラムに変更)
     # -----------------------------------------------------------
-    # col1_header: ニックネームタイトル (0.4)
-    # col2_header: STOPWATCHリンク (0.05)
-    # col3_header: ログアウトボタン (0.05)
+    # col1_header: ニックネームタイトル (0.7)
+    # col2_header: STOPWATCHリンク (0.15)
+    # col3_header: ログアウトボタン (0.15)
     col1_header, col2_header, col3_header = st.columns([0.4, 0.05, 0.05])
 
     with col1_header:
