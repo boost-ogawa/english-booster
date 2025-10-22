@@ -241,7 +241,7 @@ elif st.session_state.page == 1:
     # -----------------------------------------------------------
     # 1. ヘッダーとログアウトボタンの配置 (3カラムに変更)
     # -----------------------------------------------------------
-    col1_header, col2_header, col3_header = st.columns([0.65, 0.15, 0.2])
+    col1_header, col2_header, col3_header = st.columns([0.68, 0.12, 0.2])
 
     with col1_header:
         st.title(f"こんにちは、{st.session_state.nickname}さん！")
@@ -249,7 +249,7 @@ elif st.session_state.page == 1:
     with col2_header:
         # STOPWATCHリンクを中央カラムに配置
         stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
-        st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
+        st.markdown(f"[⏱️STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
 
     with col3_header:
         # ログアウトボタンを右端カラムに配置
