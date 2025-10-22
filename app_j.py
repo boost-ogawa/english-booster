@@ -241,7 +241,7 @@ elif st.session_state.page == 1:
     # -----------------------------------------------------------
     # 1. ヘッダーとログアウトボタンの配置 (3カラムに変更)
     # -----------------------------------------------------------
-    col1_header, col2_header, col3_header = st.columns([0.7, 0.15, 0.15])
+    col1_header, col2_header, col3_header = st.columns([0.7, 0.1, 0.2])
 
     with col1_header:
         st.title(f"こんにちは、{st.session_state.nickname}さん！")
