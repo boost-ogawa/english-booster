@@ -238,11 +238,14 @@ if st.session_state.page == 0:
 
 # --- 認証後のメインメニューページ（page 1） ---
 elif st.session_state.page == 1:
-    col1, col2 = st.columns([0.4, 0.1])
-    with col1:
+    # -----------------------------------------------------------
+    # 1. ヘッダーとログアウトボタンの配置 (既存のロジックを維持)
+    # -----------------------------------------------------------
+    col1_header, col2_header = st.columns([0.4, 0.1])
+    with col1_header:
         st.title(f"こんにちは、{st.session_state.nickname}さん！")
         st.markdown("---")
-    with col2:
+    with col2_header:
         if st.button("ログアウト"):
             st.session_state.clear()
             st.rerun()
@@ -250,6 +253,9 @@ elif st.session_state.page == 1:
         st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
         st.markdown("<small>（別ウィンドウで開きます）</small>", unsafe_allow_html=True)
 
+    # -----------------------------------------------------------
+    # 2. 管理者設定 (既存のロジックを維持)
+    # -----------------------------------------------------------
     if st.session_state.is_admin:
         st.subheader("管理者設定")
         manual_index = st.number_input("表示する行番号 (0から始まる整数)", 0, value=st.session_state.get("fixed_row_index", 0), key="admin_fixed_row_index")
@@ -272,131 +278,130 @@ elif st.session_state.page == 1:
                 st.success(f"ユーザー **{target_nickname}** の登録日を **{enrollment_date_str}** に設定しました。")
             else:
                 st.warning("登録日を設定するユーザーのニックネームを入力してください。")
-
-# ... (管理者設定の終了位置)
-# ----------------------------------------------------------------------
-# ★ ここから下を置き換えます ★
-# ----------------------------------------------------------------------
-
-# --- ユーザー情報と視聴可能日数の計算 ---
-user_profile_ref = db.collection("user_profiles").document(st.session_state.nickname)
-user_profile_doc = user_profile_ref.get()
-user_profile_data = user_profile_doc.to_dict() if user_profile_doc.exists else {}
-enrollment_date_str = user_profile_data.get("enrollment_date")
-
-if enrollment_date_str is None:
-    st.info("あなたの動画視聴開始日はまだ設定されていません。管理者に連絡してください。")
-    # ここで処理を終了し、動画セクションの表示に進まない
-else:
-    today_jst = datetime.now(timezone('Asia/Tokyo')).date()
-    enrollment_dt = datetime.strptime(enrollment_date_str, '%Y-%m-%d').date()
-    days_since_enrollment = (today_jst - enrollment_dt).days + 1
     
-    # ----------------------------------------------------------------------
-    # 3カラムUI (動画セクション) と 既存のUI (スピード測定セクション) の統合
-    # ----------------------------------------------------------------------
+    # -----------------------------------------------------------
+    # 3. 動画と測定結果の統合UI (新しい3カラム構成)
+    # -----------------------------------------------------------
     
-    # 既存の col1, col2 の定義をここで再定義し、動画と測定結果を配置する
-    # ★ ここが以前のコードとの大きな変更点です ★
-    col_video_list, col_video_main, col_speed_test = st.columns([0.25, 0.45, 0.3])
+    # --- ユーザー情報と視聴可能日数の計算 ---
+    user_profile_ref = db.collection("user_profiles").document(st.session_state.nickname)
+    user_profile_doc = user_profile_ref.get()
+    user_profile_data = user_profile_doc.to_dict() if user_profile_doc.exists else {}
+    enrollment_date_str = user_profile_data.get("enrollment_date")
 
-    try:
-        video_data = pd.read_csv("videos.csv")
-        video_data["date"] = pd.to_datetime(video_data["date"])
+    st.markdown("---") # 管理者設定とメインコンテンツの間に区切りを追加
+
+    if enrollment_date_str is None:
+        st.info("あなたの動画視聴開始日はまだ設定されていません。管理者に連絡してください。")
+    else:
+        today_jst = datetime.now(timezone('Asia/Tokyo')).date()
+        enrollment_dt = datetime.strptime(enrollment_date_str, '%Y-%m-%d').date()
+        days_since_enrollment = (today_jst - enrollment_dt).days + 1
         
-        # 視聴可能な動画のみにフィルタリング
-        available_videos = video_data[video_data["release_day"] <= days_since_enrollment] \
-                            .sort_values(by="release_day", ascending=False)
+        # ★★★ 新しい3カラム定義 ★★★
+        # [動画選択リスト(小)] : [動画埋め込み(大)] : [スピード測定/情報(中)]
+        col_video_list, col_video_main, col_speed_test = st.columns([0.25, 0.45, 0.3])
+
+        try:
+            video_data = pd.read_csv("videos.csv")
+            video_data["date"] = pd.to_datetime(video_data["date"])
+            
+            # 視聴可能な動画のみにフィルタリング
+            available_videos = video_data[video_data["release_day"] <= days_since_enrollment] \
+                                .sort_values(by="release_day", ascending=False)
+            
+            if available_videos.empty:
+                with col_video_main:
+                    st.header("授業動画")
+                    st.info("現在、表示できる動画はありません。")
+            else:
+                # --- 左カラム (動画選択リスト) ---
+                with col_video_list:
+                    st.header("動画一覧")
+                    
+                    # 動画タイトルをリスト化
+                    video_options = available_videos["title"].tolist()
+                    
+                    # ユーザーに動画を選択させる
+                    selected_title = st.selectbox(
+                        "視聴する動画を選択：", 
+                        video_options,
+                        key="video_selectbox"
+                    )
+                    
+                    # 選択された動画のデータ行を取得
+                    selected_row = available_videos[available_videos["title"] == selected_title].iloc[0]
+
+                # --- 中央カラム (動画埋め込み) ---
+                with col_video_main:
+                    st.header("授業動画")
+                    st.subheader(selected_row["title"])
+                    
+                    # 埋め込み動画（メイン）
+                    st.video(normalize_youtube_url(selected_row["url"]))
+
+                # --- 右カラム (情報/スピード測定) ---
+                with col_speed_test:
+                    st.header("スピード測定")
+                    
+                    # 選択された動画の情報
+                    st.markdown("**— 現在の動画情報 —**")
+                    st.write(f"**公開日:** {selected_row['date'].strftime('%Y年%m月%d日')}")
+                    st.write(selected_row["description"])
+                    st.markdown("---")
+
+                    # 既存の「スピード測定」セクション
+                    st.subheader("測定開始")
+                    st.write("ボタンを押して英文を読みましょう！")
+                    st.write("　※　文章は毎月更新されます")
+                    st.write("　※　測定は何回でもできます")
+                    st.write("　※　各月初回の結果が保存されます")
+                    
+                    if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
+                        pass
+
+                    st.markdown("---")
+                    st.subheader(f"{st.session_state.nickname}さんの測定結果")
+
+                    try:
+                        # GitHub 上の CSV を読み込む
+                        GITHUB_USER_CSV = "https://raw.githubusercontent.com/boost-ogawa/english-booster/main/user.csv"
+                        df_wpm = pd.read_csv(GITHUB_USER_CSV)
+                        df_user = df_wpm[df_wpm["nickname"] == st.session_state.nickname]
+
+                        if not df_user.empty:
+                            # 日付順に降順ソート（最新が上）
+                            df_user["date"] = pd.to_datetime(df_user["date"])
+                            df_user = df_user.sort_values("date", ascending=False)
+
+                            # 表示列を WPM グラフ用に合わせる
+                            df_display = df_user[["date", "wpm"]]
+                            df_display = df_display.rename(columns={
+                                "date": "測定年月日",
+                                "wpm": "WPM"
+                            })
+                            # 日付を文字列に変換
+                            df_display["測定年月日"] = df_display["測定年月日"].dt.strftime('%Y/%m/%d')
+                            st.dataframe(df_display.reset_index(drop=True), hide_index=True)
+                        else:
+                            st.info("過去の結果データはまだありません。")
+                    except FileNotFoundError:
+                        st.error("user.csv が見つかりません。")
+                    except Exception as e:
+                        st.error(f"結果表表示中にエラーが発生しました: {e}")
+                    
+                    st.markdown("---")
+
+        except FileNotFoundError:
+            st.error("動画情報ファイル (videos.csv) が見つかりません。")
+        except Exception as e:
+            st.error(f"動画情報の読み込み中にエラーが発生しました: {e}")
+
+    # -----------------------------------------------------------
+    # 4. フッター (既存のロジックを維持)
+    # -----------------------------------------------------------
+    st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
         
-        if available_videos.empty:
-            with col_video_main:
-                st.info("現在、表示できる動画はありません。")
-        else:
-            # 1. --- 左カラム (動画選択リスト) ---
-            with col_video_list:
-                st.subheader("動画一覧")
-                
-                # 動画タイトルをリスト化
-                video_options = available_videos["title"].tolist()
-                
-                # ユーザーに動画を選択させる
-                selected_title = st.selectbox(
-                    "視聴する動画を選択：", 
-                    video_options,
-                    key="video_selectbox" # キーを追加して安定させる
-                )
-                
-                # 選択された動画のデータ行を取得
-                selected_row = available_videos[available_videos["title"] == selected_title].iloc[0]
-
-            # 2. --- 中央カラム (動画埋め込み) ---
-            with col_video_main:
-                st.header("授業動画")
-                st.subheader(selected_row["title"]) # 動画タイトルを大きく表示
-                
-                # 埋め込み動画（メイン）
-                st.video(normalize_youtube_url(selected_row["url"]))
-
-            # 3. --- 右カラム (情報/スピード測定と共有) ---
-            # 既存のスピード測定のロジックは、この col_speed_test に移動させる
-            with col_speed_test:
-                st.header("動画情報")
-                st.subheader("概要")
-                st.write(selected_row["description"])
-                st.markdown("---")
-                st.subheader("公開日")
-                st.write(selected_row["date"].strftime('%Y年%m月%d日'))
-                
-                # ここに既存の「スピード測定」セクションのコードを配置する
-                # ----------------------------------------------------------------------
-                st.header("スピード測定")
-                st.write("ボタンを押して英文を読みましょう！")
-                st.write("　※　文章は毎月更新されます")
-                st.write("　※　測定は何回でもできます")
-                st.write("　※　各月初回の結果が保存されます")
-                
-                if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
-                    pass
-
-                st.markdown("---")
-                st.subheader(f"{st.session_state.nickname}さんの測定結果")
-
-                try:
-                    # ... 既存のWPM測定結果の読み込みと表示ロジック ...
-                    GITHUB_USER_CSV = "https://raw.githubusercontent.com/boost-ogawa/english-booster/main/user.csv"
-                    df_wpm = pd.read_csv(GITHUB_USER_CSV)
-                    df_user = df_wpm[df_wpm["nickname"] == st.session_state.nickname]
-
-                    if not df_user.empty:
-                        df_user["date"] = pd.to_datetime(df_user["date"])
-                        df_user = df_user.sort_values("date", ascending=False)
-
-                        df_display = df_user[["date", "wpm"]]
-                        df_display = df_display.rename(columns={
-                            "date": "測定年月日",
-                            "wpm": "WPM"
-                        })
-                        df_display["測定年月日"] = df_display["測定年月日"].dt.strftime('%Y/%m/%d')
-                        st.dataframe(df_display.reset_index(drop=True), hide_index=True)
-                    else:
-                        st.info("過去の結果データはまだありません。")
-                except FileNotFoundError:
-                    st.error("user.csv が見つかりません。")
-                except Exception as e:
-                    st.error(f"結果表表示中にエラーが発生しました: {e}")
-
-                st.markdown("---")
-                # ----------------------------------------------------------------------
-
-    except FileNotFoundError:
-        st.error("動画情報ファイル (videos.csv) が見つかりません。")
-    except Exception as e:
-        st.error(f"動画情報の読み込み中にエラーが発生しました: {e}")
-
-# ----------------------------------------------------------------------
-# © 2025 英文速解English Booster は、if/else ブロックの外でそのまま残す
-st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
-
 # --- 英文読解ページ（page 2） ---
 elif st.session_state.page == 2:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
