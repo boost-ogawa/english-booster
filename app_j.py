@@ -244,7 +244,6 @@ elif st.session_state.page == 1:
     col1_header, col2_header = st.columns([0.4, 0.1])
     with col1_header:
         st.title(f"こんにちは、{st.session_state.nickname}さん！")
-        st.markdown("---")
     with col2_header:
         if st.button("ログアウト"):
             st.session_state.clear()
@@ -336,6 +335,8 @@ elif st.session_state.page == 1:
                 with col_video_main:
                     st.header("授業動画")
                     st.subheader(selected_row["title"])
+                    st.write(f"**公開日:** {selected_row['date'].strftime('%Y年%m月%d日')}")
+                    st.write(selected_row["description"])
                     
                     # 埋め込み動画（メイン）
                     st.video(normalize_youtube_url(selected_row["url"]))
@@ -343,15 +344,6 @@ elif st.session_state.page == 1:
                 # --- 右カラム (情報/スピード測定) ---
                 with col_speed_test:
                     st.header("スピード測定")
-                    
-                    # 選択された動画の情報
-                    st.markdown("**— 現在の動画情報 —**")
-                    st.write(f"**公開日:** {selected_row['date'].strftime('%Y年%m月%d日')}")
-                    st.write(selected_row["description"])
-                    st.markdown("---")
-
-                    # 既存の「スピード測定」セクション
-                    st.subheader("測定開始")
                     st.write("ボタンを押して英文を読みましょう！")
                     st.write("　※　文章は毎月更新されます")
                     st.write("　※　測定は何回でもできます")
@@ -401,7 +393,7 @@ elif st.session_state.page == 1:
     # 4. フッター (既存のロジックを維持)
     # -----------------------------------------------------------
     st.markdown("© 2025 英文速解English Booster", unsafe_allow_html=True)
-        
+
 # --- 英文読解ページ（page 2） ---
 elif st.session_state.page == 2:
     data = load_material(GITHUB_DATA_URL, st.session_state.fixed_row_index)
