@@ -341,7 +341,7 @@ elif st.session_state.page == 1:
                 # --- 右カラム (情報/スピード測定) ---
                 with col_speed_test:
                     st.header("スピード測定")
-                    st.write("ボタンを押して英文を読みましょう！")
+                    st.write("ボタンを押して英文を読みましょう")
                     st.write("　※　文章は毎月更新されます")
                     st.write("　※　測定は何回でもできます")
                     st.write("　※　各月初回の結果が保存されます")
