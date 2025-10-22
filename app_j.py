@@ -555,12 +555,6 @@ elif st.session_state.page == 5:
             st.error("CSVファイルに'japanese'列が存在しません。")
             st.stop()
 
-    # --- （必要に応じて結果を再確認表示）---
-    if "final_correct1" in st.session_state and "final_correct2" in st.session_state:
-        st.subheader("あなたの解答結果")
-        st.write(f"Q1: {'✅ 正解' if st.session_state.final_correct1 else '❌ 不正解'}")
-        st.write(f"Q2: {'✅ 正解' if st.session_state.final_correct2 else '❌ 不正解'}")
-
     if st.button("終了"):
         # 終了時に状態をクリア
         for key in ["page", "start_time", "stop_time", "submitted",
