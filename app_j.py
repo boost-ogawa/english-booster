@@ -249,9 +249,7 @@ elif st.session_state.page == 1:
             st.session_state.clear()
             st.rerun()
         stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
-        st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
-        st.markdown("<small>（別ウィンドウで開きます）</small>", unsafe_allow_html=True)
-
+        st.markdown(f"[⏱️ STOPWATCH(別ウィンドウ)]({stopwatch_url})", unsafe_allow_html=True)
     # -----------------------------------------------------------
     # 2. 管理者設定 (既存のロジックを維持)
     # -----------------------------------------------------------
@@ -333,13 +331,12 @@ elif st.session_state.page == 1:
 
                 # --- 中央カラム (動画埋め込み) ---
                 with col_video_main:
-                    st.header("授業動画")
-                    st.subheader(selected_row["title"])
-                    st.write(f"**公開日:** {selected_row['date'].strftime('%Y年%m月%d日')}")
+                    st.header(selected_row["title"])
                     st.write(selected_row["description"])
-                    
+                   
                     # 埋め込み動画（メイン）
                     st.video(normalize_youtube_url(selected_row["url"]))
+                    st.write(f"**公開日:** {selected_row['date'].strftime('%Y年%m月%d日')}")
 
                 # --- 右カラム (情報/スピード測定) ---
                 with col_speed_test:
@@ -353,7 +350,7 @@ elif st.session_state.page == 1:
                         pass
 
                     st.markdown("---")
-                    st.subheader(f"{st.session_state.nickname}さんの測定結果")
+                    st.subheader("過去の結果")
 
                     try:
                         # GitHub 上の CSV を読み込む
