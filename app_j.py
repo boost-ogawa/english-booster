@@ -95,7 +95,7 @@ st.markdown(
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        padding: 20px 40px;
+        padding: 10px 10px;
         font-size: 1.8rem;
     }
     div.stButton > button:first-child:hover {
