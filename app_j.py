@@ -95,7 +95,7 @@ st.markdown(
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        padding: 10px 20px;
+        padding: 10px 40px;
         font-size: 1.8rem;
     }
     div.stButton > button:first-child:hover {
@@ -241,21 +241,15 @@ elif st.session_state.page == 1:
     # -----------------------------------------------------------
     # 1. ヘッダーとログアウトボタンの配置 (3カラムに変更)
     # -----------------------------------------------------------
-    # col1_header: ニックネームタイトル (0.6)
-    # col2_header: STOPWATCHリンク (0.2)
-    # col3_header: ログアウトボタン (0.2)
-    col1_header, col2_header, col3_header = st.columns([0.4, 0.05, 0.05])
+    col1_header, col2_header, col3_header = st.columns([0.6, 0.2, 0.2])
 
     with col1_header:
         st.title(f"こんにちは、{st.session_state.nickname}さん！")
-        # 以前 col1 にあった st.markdown("---") は、タイトルと管理者設定の間に移動します。
-        # すでに後のコードで st.markdown("---") が適切に配置されているため、ここでは削除します。
 
     with col2_header:
         # STOPWATCHリンクを中央カラムに配置
         stopwatch_url = "https://english-booster-mlzrmgb7mftcynzupjqkyn.streamlit.app/"
         st.markdown(f"[⏱️ STOPWATCH]({stopwatch_url})", unsafe_allow_html=True)
-        # リンクの下の注意書きは、スペースの都合上省略または管理者設定の上に移動することを推奨します。
 
     with col3_header:
         # ログアウトボタンを右端カラムに配置
