@@ -95,7 +95,7 @@ st.markdown(
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        padding: 10px 40px;
+        padding: 15px 40px;
         font-size: 1.8rem;
     }
     div.stButton > button:first-child:hover {
@@ -241,7 +241,7 @@ elif st.session_state.page == 1:
     # -----------------------------------------------------------
     # 1. ヘッダーとログアウトボタンの配置 (3カラムに変更)
     # -----------------------------------------------------------
-    col1_header, col2_header, col3_header = st.columns([0.7, 0.1, 0.2])
+    col1_header, col2_header, col3_header = st.columns([0.65, 0.15, 0.2])
 
     with col1_header:
         st.title(f"こんにちは、{st.session_state.nickname}さん！")
