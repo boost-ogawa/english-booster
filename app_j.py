@@ -112,8 +112,19 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --- ヘッダー画像の表示 ---
-st.image(HEADER_IMAGE_URL, use_container_width=True)
+# -----------------------------------------------------------
+# 画像表示の修正 (iOS互換性を高めるために st.markdown + <img> を使用)
+# -----------------------------------------------------------
+# st.image(HEADER_IMAGE_URL, use_container_width=True) # <-- この行をコメントアウトまたは削除
+
+st.markdown(
+    f"""
+    <div style='text-align: center;'>
+        <img src='{HEADER_IMAGE_URL}' style='max-width: 100%; height: auto; border-radius: 8px;'>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # --- データ読み込み関数 ---
 @st.cache_data(ttl=3600)
