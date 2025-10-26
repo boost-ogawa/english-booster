@@ -1,78 +1,78 @@
 video_id,title,type,description,date,release_day,url
 video_001,授業映像_Day1,embed,"動画が不安定な場合はこちら→https://youtu.be/GoFe7e8on1s　(スピード測定を行ってから受講してください。)",2025-07-21,1,https://youtu.be/GoFe7e8on1s
-video_002,Everyday Training_M1,embed,今日からトレーニング開始です,2025-07-22,2,https://youtu.be/Un9s90bfC-Q
-video_003,Everyday Training_E1,embed,今回から歴史上の出来事シリーズが始まります,2025-07-23,3,https://youtu.be/Xen41P4N-wk
-video_004,Everyday Training_E2,embed,歴史上の出来事シリーズの２回目です,2025-07-24,4,https://youtu.be/8wHFh7u8r7Y
-video_005,Everyday Training_E3,embed,歴史上の出来事シリーズの３回目です,2025-07-25,5,https://youtu.be/vGr2OrayDYw
-video_006,Everyday Training_E4,embed,歴史上の出来事シリーズの４回目です,2025-07-26,6,https://youtu.be/KXO-hDEQ7t8
-video_007,Everyday Training_E5,embed,歴史上の出来事シリーズの５回目です,2025-07-28,8,https://youtu.be/jhXWAqaICvw
-video_008,Everyday Training_E6,embed,歴史上の出来事シリーズの６回目です,2025-07-29,9,https://youtu.be/ddxo0A2DDV4
-video_009,Everyday Training_E7,embed,歴史上の出来事シリーズの７回目です,2025-07-31,11,https://youtu.be/tEhn08NUIyQ
-video_010,Everyday Training_E8,embed,歴史上の出来事シリーズの８回目です,2025-08-01,12,https://youtu.be/GE3hW4HINMc
-video_011,Everyday Training_E9,embed,歴史上の出来事シリーズの９回目です,2025-08-02,13,https://youtu.be/TG1yN1j8RQw
-video_012,Everyday Training_I1,embed,発明シリーズの１回目です,2025-08-04,15,https://youtu.be/OPzZiElvMEE
-video_013,Everyday Training_I2,embed,発明シリーズの２回目です,2025-08-05,16,https://youtu.be/tVdN54oIx_0
+video_002,Training_M1,embed,今日からトレーニング開始です,2025-07-22,2,https://youtu.be/Un9s90bfC-Q
+video_003,Training_E1,embed,今回から歴史上の出来事シリーズが始まります,2025-07-23,3,https://youtu.be/Xen41P4N-wk
+video_004,Training_E2,embed,歴史上の出来事シリーズの２回目です,2025-07-24,4,https://youtu.be/8wHFh7u8r7Y
+video_005,Training_E3,embed,歴史上の出来事シリーズの３回目です,2025-07-25,5,https://youtu.be/vGr2OrayDYw
+video_006,Training_E4,embed,歴史上の出来事シリーズの４回目です,2025-07-26,6,https://youtu.be/KXO-hDEQ7t8
+video_007,Training_E5,embed,歴史上の出来事シリーズの５回目です,2025-07-28,8,https://youtu.be/jhXWAqaICvw
+video_008,Training_E6,embed,歴史上の出来事シリーズの６回目です,2025-07-29,9,https://youtu.be/ddxo0A2DDV4
+video_009,Training_E7,embed,歴史上の出来事シリーズの７回目です,2025-07-31,11,https://youtu.be/tEhn08NUIyQ
+video_010,Training_E8,embed,歴史上の出来事シリーズの８回目です,2025-08-01,12,https://youtu.be/GE3hW4HINMc
+video_011,Training_E9,embed,歴史上の出来事シリーズの９回目です,2025-08-02,13,https://youtu.be/TG1yN1j8RQw
+video_012,Training_I1,embed,発明シリーズの１回目です,2025-08-04,15,https://youtu.be/OPzZiElvMEE
+video_013,Training_I2,embed,発明シリーズの２回目です,2025-08-05,16,https://youtu.be/tVdN54oIx_0
 video_014,授業映像_Day2,embed,今回は主にscanningについての授業です,2025-08-06,17,https://youtu.be/SMFY_ZiaiJM
-video_015,Everyday Training_I3,embed,発明シリーズの３回目です,2025-08-07,18,https://youtu.be/eYfMZt0KGsE
-video_016,Everyday Training_E1,embed,本日は復習回です。,2025-08-08,19,https://youtu.be/Xen41P4N-wk
-video_017,Everyday Training_I4,embed,発明シリーズの４回目です,2025-08-09,20,https://youtu.be/G7FSjyKqmbM
-video_018,Everyday Training_I5,embed,発明シリーズの５回目です,2025-08-11,22,https://youtu.be/_os0n9hKXQI
-video_019,Everyday Training_I6,embed,発明シリーズの６回目です,2025-08-12,23,https://youtu.be/N99duxMQiTs
-video_020,Everyday Training_E10,embed,トレーニング18回目_歴史上の出来事シリーズの10回目です,2025-08-14,25,https://youtu.be/LK4jlJ4jV8Q
-video_021,Everyday Training_E11,embed,トレーニング19回目_歴史上の出来事シリーズの11回目です,2025-08-15,26,https://youtu.be/Zodi4dKQYEQ
-video_022,Everyday Training_E2,embed,本日は復習回です。,2025-08-16,27,https://youtu.be/8wHFh7u8r7Y
-video_023,Everyday Training_E12,embed,トレーニング21回目_歴史上の出来事シリーズの12回目です,2025-08-18,29,https://youtu.be/xgL5-oV5g7c
-video_024,Everyday Training_E13,embed,トレーニング22回目_歴史上の出来事シリーズの13回目です,2025-08-19,30,https://youtu.be/nMzcXyo9hJo
+video_015,Training_I3,embed,発明シリーズの３回目です,2025-08-07,18,https://youtu.be/eYfMZt0KGsE
+video_016,Training_E1,embed,本日は復習回です。,2025-08-08,19,https://youtu.be/Xen41P4N-wk
+video_017,Training_I4,embed,発明シリーズの４回目です,2025-08-09,20,https://youtu.be/G7FSjyKqmbM
+video_018,Training_I5,embed,発明シリーズの５回目です,2025-08-11,22,https://youtu.be/_os0n9hKXQI
+video_019,Training_I6,embed,発明シリーズの６回目です,2025-08-12,23,https://youtu.be/N99duxMQiTs
+video_020,Training_E10,embed,トレーニング18回目_歴史上の出来事シリーズの10回目です,2025-08-14,25,https://youtu.be/LK4jlJ4jV8Q
+video_021,Training_E11,embed,トレーニング19回目_歴史上の出来事シリーズの11回目です,2025-08-15,26,https://youtu.be/Zodi4dKQYEQ
+video_022,Training_E2,embed,本日は復習回です。,2025-08-16,27,https://youtu.be/8wHFh7u8r7Y
+video_023,Training_E12,embed,トレーニング21回目_歴史上の出来事シリーズの12回目です,2025-08-18,29,https://youtu.be/xgL5-oV5g7c
+video_024,Training_E13,embed,トレーニング22回目_歴史上の出来事シリーズの13回目です,2025-08-19,30,https://youtu.be/nMzcXyo9hJo
 video_025,授業映像_Day3,embed,今回は主にskimmingについての授業です,2025-08-20,31,https://youtu.be/dQIbYYxAJEI
-video_026,Everyday Training_E14,embed,トレーニング23回目_歴史上の出来事シリーズの14回目です,2025-08-21,32,https://youtu.be/mYiDlD0FRoc
-video_027,Everyday Training_E15,embed,トレーニング24回目_歴史上の出来事シリーズの15回目です,2025-08-22,33,https://youtu.be/aE5U4lg1Npw
-video_028,Everyday Training_E3,embed,本日は復習回です。,2025-08-23,34,https://youtu.be/vGr2OrayDYw
-video_029,Everyday Training_E16,embed,トレーニング26回目_歴史上の出来事シリーズの16回目です,2025-08-25,36,https://youtu.be/krLYAAIfs7Q
-video_030,Everyday Training_E17,embed,トレーニング27回目_歴史上の出来事シリーズの17回目です,2025-08-26,37,https://youtu.be/Cd8bozl8KcI
-video_031,Everyday Training_E18,embed,トレーニング28回目_歴史上の出来事シリーズの18回目です,2025-08-28,39,https://youtu.be/ZmvYpBoC81o
-video_032,Everyday Training_E4,embed,本日は復習回です。,2025-08-29,40,https://youtu.be/KXO-hDEQ7t8
-video_033,Everyday Training_E19,embed,トレーニング30回目_歴史上の出来事シリーズの19回目です,2025-08-30,41,https://youtu.be/tMa1OzENBIM
-video_034,Everyday Training_G1,embed,トレーニング31回目_歴史上の人物シリーズの1回目です,2025-09-01,43,https://youtu.be/UWX8p7rVwSo
-video_035,Everyday Training_E5,embed,本日は復習回です。,2025-09-02,44,https://youtu.be/jhXWAqaICvw
+video_026,Training_E14,embed,トレーニング23回目_歴史上の出来事シリーズの14回目です,2025-08-21,32,https://youtu.be/mYiDlD0FRoc
+video_027,Training_E15,embed,トレーニング24回目_歴史上の出来事シリーズの15回目です,2025-08-22,33,https://youtu.be/aE5U4lg1Npw
+video_028,Training_E3,embed,本日は復習回です。,2025-08-23,34,https://youtu.be/vGr2OrayDYw
+video_029,Training_E16,embed,トレーニング26回目_歴史上の出来事シリーズの16回目です,2025-08-25,36,https://youtu.be/krLYAAIfs7Q
+video_030,Training_E17,embed,トレーニング27回目_歴史上の出来事シリーズの17回目です,2025-08-26,37,https://youtu.be/Cd8bozl8KcI
+video_031,Training_E18,embed,トレーニング28回目_歴史上の出来事シリーズの18回目です,2025-08-28,39,https://youtu.be/ZmvYpBoC81o
+video_032,Training_E4,embed,本日は復習回です。,2025-08-29,40,https://youtu.be/KXO-hDEQ7t8
+video_033,Training_E19,embed,トレーニング30回目_歴史上の出来事シリーズの19回目です,2025-08-30,41,https://youtu.be/tMa1OzENBIM
+video_034,Training_G1,embed,トレーニング31回目_歴史上の人物シリーズの1回目です,2025-09-01,43,https://youtu.be/UWX8p7rVwSo
+video_035,Training_E5,embed,本日は復習回です。,2025-09-02,44,https://youtu.be/jhXWAqaICvw
 video_036,授業映像_Day4,embed,今回は主にディスコース・マーカーについての授業です,2025-09-03,45,https://youtu.be/15GXYsVnVkI
-video_037,Everyday Training_G2,embed,トレーニング33回目_歴史上の人物シリーズの2回目です,2025-09-04,46,https://youtu.be/qNOaJgRQKb8
-video_038,Everyday Training_E6,embed,本日は復習回です。,2025-09-05,47,https://youtu.be/ddxo0A2DDV4
-video_039,Everyday Training_G3,embed,トレーニング35回目_歴史上の人物シリーズの3回目です,2025-09-06,48,https://youtu.be/PlKlP-oFDsk
-video_040,Everyday Training_G4,embed,トレーニング36回目_歴史上の人物シリーズの4回目です,2025-09-08,50,https://youtu.be/M1bPVftddDk
-video_041,Everyday Training_E7,embed,本日は復習回です。,2025-09-09,51,https://youtu.be/tEhn08NUIyQ
-video_042,Everyday Training_G5,embed,トレーニング38回目_歴史上の人物シリーズの5回目です,2025-09-11,52,https://youtu.be/-FQg3v9TYjk
-video_043,Everyday Training_E8,embed,本日は復習回です。,2025-09-12,53,https://youtu.be/GE3hW4HINMc
-video_044,Everyday Training_G6,embed,トレーニング40回目_歴史上の人物シリーズの6回目です,2025-09-13,54,https://youtu.be/h-KtBpnNTtw
-video_045,Everyday Training_G7,embed,トレーニング41回目_歴史上の人物シリーズの7回目です,2025-09-15,56,https://youtu.be/gCgLhn-MJKU
-video_046,Everyday Training_E9,embed,本日は復習回です。,2025-09-16,57,https://youtu.be/TG1yN1j8RQw
+video_037,Training_G2,embed,トレーニング33回目_歴史上の人物シリーズの2回目です,2025-09-04,46,https://youtu.be/qNOaJgRQKb8
+video_038,Training_E6,embed,本日は復習回です。,2025-09-05,47,https://youtu.be/ddxo0A2DDV4
+video_039,Training_G3,embed,トレーニング35回目_歴史上の人物シリーズの3回目です,2025-09-06,48,https://youtu.be/PlKlP-oFDsk
+video_040,Training_G4,embed,トレーニング36回目_歴史上の人物シリーズの4回目です,2025-09-08,50,https://youtu.be/M1bPVftddDk
+video_041,Training_E7,embed,本日は復習回です。,2025-09-09,51,https://youtu.be/tEhn08NUIyQ
+video_042,Training_G5,embed,トレーニング38回目_歴史上の人物シリーズの5回目です,2025-09-11,52,https://youtu.be/-FQg3v9TYjk
+video_043,Training_E8,embed,本日は復習回です。,2025-09-12,53,https://youtu.be/GE3hW4HINMc
+video_044,Training_G6,embed,トレーニング40回目_歴史上の人物シリーズの6回目です,2025-09-13,54,https://youtu.be/h-KtBpnNTtw
+video_045,Training_G7,embed,トレーニング41回目_歴史上の人物シリーズの7回目です,2025-09-15,56,https://youtu.be/gCgLhn-MJKU
+video_046,Training_E9,embed,本日は復習回です。,2025-09-16,57,https://youtu.be/TG1yN1j8RQw
 video_047,授業映像_Day5,embed,今回は設問のパターンについての授業です,2025-09-17,58,https://youtu.be/f99K24rf0M4
-video_048,Everyday Training_G8,embed,トレーニング43回目_歴史上の人物シリーズの8回目です,2025-09-18,59,https://youtu.be/p5QEpqWZwEQ
-video_049,Everyday Training_I1,embed,本日は復習回です。,2025-09-19,60,https://youtu.be/OPzZiElvMEE
-video_050,Everyday Training_G9,embed,トレーニング45回目_歴史上の人物シリーズの9回目です,2025-09-20,60,https://youtu.be/Ya47t7DlVbM
-video_051,Everyday Training_G10,embed,トレーニング46回目_歴史上の人物シリーズの10回目です,2025-09-22,62,https://youtu.be/qh9BHDH761c
-video_052,Everyday Training_I2,embed,本日は復習回です。,2025-09-23,63,https://youtu.be/tVdN54oIx_0
-video_053,Everyday Training_G11,embed,トレーニング48回目_歴史上の人物シリーズの11回目です,2025-09-25,65,https://youtu.be/GRQiaqjEgC0
-video_054,Everyday Training_I3,embed,本日は復習回です。,2025-09-26,66,https://youtu.be/eYfMZt0KGsE
-video_055,Everyday Training_G13,embed,トレーニング50回目_歴史上の人物シリーズの12回目です,2025-09-27,67,https://youtu.be/0AKzbiFOCF0
-video_056,Everyday Training_G12,embed,トレーニング51回目_歴史上の人物シリーズの13回目です,2025-09-29,69,https://youtu.be/9ayNxo4IdeI
-video_057,Everyday Training_I4,embed,本日は復習回です。,2025-09-30,70,https://youtu.be/G7FSjyKqmbM
-video_058,Everyday Training_H01,embed,トレーニング53回目_世界遺産シリーズの1回目です,2025-10-02,72,https://youtu.be/HQfzYF2_uAY
-video_059,Everyday Training_I5,embed,本日は復習回です。,2025-10-03,73,https://youtu.be/_os0n9hKXQI
-video_060,Everyday Training_H02,embed,トレーニング55回目_世界遺産シリーズの2回目です,2025-10-04,74,https://youtu.be/tQJeHDoLS0I
-video_061,Everyday Training_H03,embed,トレーニング56回目_世界遺産シリーズの3回目です,2025-10-06,76,https://youtu.be/NAMsqCZz6L4
-video_062,Everyday Training_I6,embed,本日は復習回です。,2025-10-07,77,https://youtu.be/N99duxMQiTs
+video_048,Training_G8,embed,トレーニング43回目_歴史上の人物シリーズの8回目です,2025-09-18,59,https://youtu.be/p5QEpqWZwEQ
+video_049,Training_I1,embed,本日は復習回です。,2025-09-19,60,https://youtu.be/OPzZiElvMEE
+video_050,Training_G9,embed,トレーニング45回目_歴史上の人物シリーズの9回目です,2025-09-20,60,https://youtu.be/Ya47t7DlVbM
+video_051,Training_G10,embed,トレーニング46回目_歴史上の人物シリーズの10回目です,2025-09-22,62,https://youtu.be/qh9BHDH761c
+video_052,Training_I2,embed,本日は復習回です。,2025-09-23,63,https://youtu.be/tVdN54oIx_0
+video_053,Training_G11,embed,トレーニング48回目_歴史上の人物シリーズの11回目です,2025-09-25,65,https://youtu.be/GRQiaqjEgC0
+video_054,Training_I3,embed,本日は復習回です。,2025-09-26,66,https://youtu.be/eYfMZt0KGsE
+video_055,Training_G13,embed,トレーニング50回目_歴史上の人物シリーズの12回目です,2025-09-27,67,https://youtu.be/0AKzbiFOCF0
+video_056,Training_G12,embed,トレーニング51回目_歴史上の人物シリーズの13回目です,2025-09-29,69,https://youtu.be/9ayNxo4IdeI
+video_057,Training_I4,embed,本日は復習回です。,2025-09-30,70,https://youtu.be/G7FSjyKqmbM
+video_058,Training_H01,embed,トレーニング53回目_世界遺産シリーズの1回目です,2025-10-02,72,https://youtu.be/HQfzYF2_uAY
+video_059,Training_I5,embed,本日は復習回です。,2025-10-03,73,https://youtu.be/_os0n9hKXQI
+video_060,Training_H02,embed,トレーニング55回目_世界遺産シリーズの2回目です,2025-10-04,74,https://youtu.be/tQJeHDoLS0I
+video_061,Training_H03,embed,トレーニング56回目_世界遺産シリーズの3回目です,2025-10-06,76,https://youtu.be/NAMsqCZz6L4
+video_062,Training_I6,embed,本日は復習回です。,2025-10-07,77,https://youtu.be/N99duxMQiTs
 ideo_063,授業映像_Day6,embed,今回はscanningの練習です,2025-10-08,78,https://youtu.be/9qpvPIEwUsU
-video_064,Everyday Training_H04,embed,トレーニング58回目_世界遺産シリーズの4回目です,2025-10-09,79,https://youtu.be/E3naGz6_oMQ
-video_065,Everyday Training_E10,embed,本日は復習回です。,2025-10-10,80,https://youtu.be/LK4jlJ4jV8Q
-video_066,Everyday Training_H05,embed,トレーニング60回目_世界遺産シリーズの5回目です,2025-10-11,81,https://youtu.be/YnqU1-9SEYY
-video_067,Everyday Training_H06,embed,トレーニング61回目_世界遺産シリーズの6回目です,2025-10-13,83,https://youtu.be/-DnIO5bK7oY
-video_068,Everyday Training_E11,embed,本日は復習回です。,2025-10-14,84,https://youtu.be/Zodi4dKQYEQ
-video_069,Everyday Training_H07,embed,トレーニング63回目_世界遺産シリーズの7回目です,2025-10-16,86,https://youtu.be/SlxLKUJ6Doc
-video_070,Everyday Training_E12,embed,本日は復習回です。,2025-10-17,87,https://youtu.be/xgL5-oV5g7c
-video_071,Everyday Training_H08,embed,トレーニング65回目_世界遺産シリーズの8回目です,2025-10-18,88,https://youtu.be/Ywt4uHEgyx8
-video_072,Everyday Training_H09,embed,トレーニング66回目_世界遺産シリーズの9回目です,2025-10-20,90,https://youtu.be/73E29WvR_iA
-video_073,Everyday Training_E13,embed,本日は復習回です。,2025-10-21,91,https://youtu.be/nMzcXyo9hJo
+video_064,Training_H04,embed,トレーニング58回目_世界遺産シリーズの4回目です,2025-10-09,79,https://youtu.be/E3naGz6_oMQ
+video_065,Training_E10,embed,本日は復習回です。,2025-10-10,80,https://youtu.be/LK4jlJ4jV8Q
+video_066,Training_H05,embed,トレーニング60回目_世界遺産シリーズの5回目です,2025-10-11,81,https://youtu.be/YnqU1-9SEYY
+video_067,Training_H06,embed,トレーニング61回目_世界遺産シリーズの6回目です,2025-10-13,83,https://youtu.be/-DnIO5bK7oY
+video_068,Training_E11,embed,本日は復習回です。,2025-10-14,84,https://youtu.be/Zodi4dKQYEQ
+video_069,Training_H07,embed,トレーニング63回目_世界遺産シリーズの7回目です,2025-10-16,86,https://youtu.be/SlxLKUJ6Doc
+video_070,Training_E12,embed,本日は復習回です。,2025-10-17,87,https://youtu.be/xgL5-oV5g7c
+video_071,Training_H08,embed,トレーニング65回目_世界遺産シリーズの8回目です,2025-10-18,88,https://youtu.be/Ywt4uHEgyx8
+video_072,Training_H09,embed,トレーニング66回目_世界遺産シリーズの9回目です,2025-10-20,90,https://youtu.be/73E29WvR_iA
+video_073,Training_E13,embed,本日は復習回です。,2025-10-21,91,https://youtu.be/nMzcXyo9hJo
 video_074,授業映像_Day7,embed,今回はキーセンテンスを見抜く練習です,2025-10-22,92,https://youtu.be/A-PBqkevZyM
-video_075,Everyday Training_H10,embed,トレーニング68回目_世界遺産シリーズの10回目です,2025-10-23,93,https://youtu.be/mBRtFyYuEdw
-video_076,Everyday Training_E14,embed,本日は復習回です。,2025-10-24,94,https://youtu.be/mYiDlD0FRoc
-video_077,Everyday Training_H11,embed,トレーニング70回目_世界遺産シリーズの11回目です,2025-10-25,95,https://youtu.be/Ofa8j038iVw
+video_075,Training_H10,embed,トレーニング68回目_世界遺産シリーズの10回目です,2025-10-23,93,https://youtu.be/mBRtFyYuEdw
+video_076,Training_E14,embed,本日は復習回です。,2025-10-24,94,https://youtu.be/mYiDlD0FRoc
+video_077,Training_H11,embed,トレーニング70回目_世界遺産シリーズの11回目です,2025-10-25,95,https://youtu.be/Ofa8j038iVw
