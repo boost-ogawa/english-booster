@@ -466,20 +466,36 @@ elif st.session_state.page == 4:
             df_user = df_wpm[df_wpm["nickname"] == st.session_state.nickname]
 
             if not df_user.empty:
-                # 日付順に並べ替え、文字列として扱う
-                df_user = df_user.sort_values("date")
-                df_user["date"] = df_user["date"].astype(str)
+                # ★★★ 修正箇所: 日付処理を改善し、時系列でソートを確実に行う ★★★
+                
+                # 1. 'date' 列をDatetime型に変換（エラーが発生する場合は 'coerce' で無効な値をNaTに）
+                df_user["date"] = pd.to_datetime(df_user["date"], errors='coerce')
+                
+                # 2. NaT（無効な日付）を削除
+                df_user = df_user.dropna(subset=["date"])
+                
+                # 3. 日付（Datetimeオブジェクト）で昇順ソート（古いものが左に来るように）
+                df_user = df_user.sort_values("date", ascending=True)
+
+                # 4. グラフ描画用に、X軸の表示形式を文字列に変換（ソート後に実施）
+                df_user["display_date"] = df_user["date"].dt.strftime('%Y/%m/%d')
 
                 # グラフ描画
                 fig, ax = plt.subplots(figsize=(8, 4))
-                ax.plot(df_user["date"], df_user["wpm"], marker='o', linestyle='-')
+                # グラフのX軸には、ソートされた日付文字列（display_date）を使用
+                ax.plot(df_user["display_date"], df_user["wpm"], marker='o', linestyle='-')
 
                 # 縦軸固定
                 ax.set_ylim(0, 400)
                 ax.set_yticks(range(0, 401, 50))
                 ax.set_ylabel("WPM")
                 ax.set_xlabel("Measurement Date")
+                
+                # X軸のラベルが重ならないように45度回転
                 plt.xticks(rotation=45)
+                # X軸の目盛りをデータポイントの数に応じて設定 (省略されるのを防ぐ)
+                ax.set_xticks(df_user["display_date"])
+                
                 plt.grid(axis='y', linestyle='--', alpha=0.7)
 
                 st.pyplot(fig)
