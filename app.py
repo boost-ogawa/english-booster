@@ -332,6 +332,15 @@ elif st.session_state.page == 1:
                 # --- 左カラム (動画選択リスト) ---
                 with col_video_list:
                     st.header("動画一覧")
+                    st.markdown("""
+                        <style>
+                        /* st.radioの選択肢のテキスト部分（pタグに相当するdiv）のフォントサイズを小さくする */
+                        /* サイズは0.85remに設定。必要に応じて0.8remなどに変更してください。 */
+                        div[data-testid="stRadio"] label > div > div {
+                            font-size: 0.85rem; 
+                        }
+                        </style>
+                    """, unsafe_allow_html=True)
                     
                     # 動画タイトルをリスト化
                     video_options = available_videos["title"].tolist()
@@ -341,7 +350,7 @@ elif st.session_state.page == 1:
                     # ★★★ 修正箇所: st.container(height=300) を使用し、ネイティブにスクロールを有効化 ★★★
                     
                     # 1. ラベルをコンテナの外に配置
-                    st.subheader("視聴する動画を選択：") 
+                    st.write("視聴する動画を選択：") 
                     
                     # 2. 高さ300pxのスクロール可能なコンテナを作成
                     # コンテナ内のコンテンツが溢れた場合、自動的にスクロールバーが表示されます
