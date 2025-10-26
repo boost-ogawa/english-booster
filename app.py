@@ -338,16 +338,32 @@ elif st.session_state.page == 1:
                     
                     # ユーザーに動画を選択させる
                     
-                    # ★★★ 修正箇所: st.selectbox から st.radio に変更し、キーボード表示を回避 ★★★
+                    # ★★★ 修正箇所: スクロール可能なHTMLコンテナで st.radio を囲む ★★★
+                    
+                    # 1. スクロールコンテナの開始タグをマークダウンで挿入
+                    # 高さを300pxに固定し、オーバーフロー時にスクロールバーを表示
+                    st.markdown(
+                        '<div style="height: 300px; overflow-y: scroll; padding-right: 15px; border-bottom: 1px solid #eee;">', 
+                        unsafe_allow_html=True
+                    )
+
+                    # 2. st.radio をコンテナ内に配置
                     selected_title = st.radio(
                         "視聴する動画を選択：", 
                         video_options,
-                        key="video_radio" # キーも変更
+                        key="video_radio",
+                        # label_visibility="collapsed" # ラベルを非表示にする場合はコメントを外す
                     )
+                    
+                    # 3. スクロールコンテナの終了タグを挿入
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # -----------------------------------------------------------------
                     
                     # 選択された動画のデータ行を取得
                     # st.radio も st.selectbox と同じく選択値を返すため、以下のロジックは変更不要
                     selected_row = available_videos[available_videos["title"] == selected_title].iloc[0]
+
 
                 # --- 中央カラム (動画埋め込み) ---
                 with col_video_main:
