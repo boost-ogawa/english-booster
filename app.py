@@ -383,12 +383,12 @@ elif st.session_state.page == 1:
                 with col_speed_test:
                     st.header("スピード測定")
                     st.write("ボタンを押して英文を読みましょう")
-                    st.write("　※　文章は毎月更新されます")
-                    st.write("　※　測定は何回でもできます")
-                    st.write("　※　各月初回の結果が保存されます")
                     
                     if st.button("スピード測定開始", key="start_reading_button", use_container_width=True, on_click=start_reading, args=(2,)):
                         pass
+                    st.write("　※　文章は毎月更新されます")
+                    st.write("　※　測定は何回でもできます")
+                    st.write("　※　各月初回の結果が保存されます")
 
                     st.markdown("---")
                     st.subheader("過去の結果")
