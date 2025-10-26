@@ -337,13 +337,16 @@ elif st.session_state.page == 1:
                     video_options = available_videos["title"].tolist()
                     
                     # ユーザーに動画を選択させる
-                    selected_title = st.selectbox(
+                    
+                    # ★★★ 修正箇所: st.selectbox から st.radio に変更し、キーボード表示を回避 ★★★
+                    selected_title = st.radio(
                         "視聴する動画を選択：", 
                         video_options,
-                        key="video_selectbox"
+                        key="video_radio" # キーも変更
                     )
                     
                     # 選択された動画のデータ行を取得
+                    # st.radio も st.selectbox と同じく選択値を返すため、以下のロジックは変更不要
                     selected_row = available_videos[available_videos["title"] == selected_title].iloc[0]
 
                 # --- 中央カラム (動画埋め込み) ---
