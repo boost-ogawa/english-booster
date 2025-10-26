@@ -329,7 +329,6 @@ elif st.session_state.page == 1:
                     st.header("授業動画")
                     st.info("現在、表示できる動画はありません。")
             else:
-
                 # --- 左カラム (動画選択リスト) ---
                 with col_video_list:
                     st.header("動画一覧")
@@ -339,34 +338,28 @@ elif st.session_state.page == 1:
                     
                     # ユーザーに動画を選択させる
                     
-                    # ★★★ 修正箇所: ラベルを外に出し、スクロールコンテナをすっきりさせる ★★★
+                    # ★★★ 修正箇所: st.container(height=300) を使用し、ネイティブにスクロールを有効化 ★★★
                     
-                    # 1. ラベルをスクロールコンテナの外に配置
+                    # 1. ラベルをコンテナの外に配置
                     st.subheader("視聴する動画を選択：") 
                     
-                    # 2. スクロールコンテナの開始タグをマークダウンで挿入
-                    # 高さを300pxに固定し、オーバーフロー時にスクロールバーを表示
-                    st.markdown(
-                        '<div style="height: 300px; overflow-y: scroll; padding-right: 15px; border-bottom: 1px solid #eee;">', 
-                        unsafe_allow_html=True
-                    )
-
-                    # 3. st.radio をコンテナ内に配置し、ラベルは非表示にする
-                    selected_title = st.radio(
-                        "動画選択リスト", # ラベル自体は必須だが、非表示にする
-                        video_options,
-                        key="video_radio",
-                        label_visibility="collapsed" # ラベルを非表示
-                    )
-                    
-                    # 4. スクロールコンテナの終了タグを挿入
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    # 2. 高さ300pxのスクロール可能なコンテナを作成
+                    # コンテナ内のコンテンツが溢れた場合、自動的にスクロールバーが表示されます
+                    with st.container(height=300):
+                        # 3. st.radio をコンテナ内に配置し、ラベルは非表示にする
+                        selected_title = st.radio(
+                            "動画選択リスト", # ラベル自体は必須だが、非表示にする
+                            video_options,
+                            key="video_radio",
+                            label_visibility="collapsed" # ラベルを非表示
+                        )
                     
                     # -----------------------------------------------------------------
                     
                     # 選択された動画のデータ行を取得
                     # st.radio も st.selectbox と同じく選択値を返すため、以下のロジックは変更不要
                     selected_row = available_videos[available_videos["title"] == selected_title].iloc[0]
+
 
                 # --- 中央カラム (動画埋め込み) ---
                 with col_video_main:
