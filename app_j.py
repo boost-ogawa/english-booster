@@ -119,6 +119,51 @@ def save_quiz_result(japanese, correct_english, user_answer, is_correct):
         st.error(f"⚠️ 結果の保存中にエラーが発生しました: {e}")
 
 # ==========================================
+# 🔹 復習用データロード関数 (新規追加)
+# ==========================================
+# @st.cache_data は使用しない方が良い。常に最新の成績を取得する必要があるため。
+def load_review_data(user_id):
+    """Firestoreから過去の不正解問題を抽出し、復習用DataFrameを返す"""
+    db = init_firestore()
+    if not hasattr(db, 'collection'):
+        return pd.DataFrame({'japanese': [], 'english': []})
+
+    review_questions = []
+    
+    try:
+        # 1. ユーザーIDでフィルタリングし、不正解（is_correct: false）のドキュメントを取得
+        results = db.collection("shuffle_results").where("user_id", "==", user_id).where("is_correct", "==", False).get()
+        
+        # 2. 抽出した問題情報から重複を取り除き、復習リストを作成
+        #    ※ 復習機能を作る場合、Firestoreの構造を工夫するか、ここで重複排除が必要
+        unique_mistakes = set()
+        
+        for doc in results:
+            data = doc.to_dict()
+            # 「日本語文 + 正解英文」をユニークキーとして使用
+            unique_key = (data['question_japanese'], data['question_english_correct'])
+            
+            if unique_key not in unique_mistakes:
+                review_questions.append({
+                    'japanese': data['question_japanese'],
+                    'english': data['question_english_correct']
+                    # 'quiz_set': data['quiz_set'] # どのセットかは必要に応じて
+                })
+                unique_mistakes.add(unique_key)
+                
+        # 3. DataFrameとして返す
+        if not review_questions:
+             return pd.DataFrame({'japanese': [], 'english': []})
+        
+        # 復習用データはシャッフルして提供する
+        review_df = pd.DataFrame(review_questions).sample(frac=1).reset_index(drop=True)
+        return review_df
+
+    except Exception as e:
+        st.error(f"⚠️ 復習問題のロード中にエラーが発生しました: {e}")
+        return pd.DataFrame({'japanese': [], 'english': []})
+
+# ==========================================
 # 🔹 クイズロジック: データロード・シャッフル (再定義と統合)
 # (簡潔にするため、クイズ関連のヘルパー関数は省略せず含めます)
 # ==========================================
@@ -263,6 +308,25 @@ def show_selection_page():
                  del st.session_state.index
             st.rerun()
 
+    st.markdown("---")
+    st.subheader("💡 復習モード")
+
+    if st.button("間違えた問題に再挑戦", key="start_review_quiz", type="secondary", use_container_width=True):
+        # 復習データ取得 (ユーザーIDを使用)
+        review_df = load_review_data(st.session_state.user_id)
+        
+        if review_df.empty:
+            st.warning("現在、復習すべき間違えた問題はありません。")
+        else:
+            # 特別なモードとデータフレームを設定
+            st.session_state.app_mode = 'review_quiz'
+            st.session_state.review_df = review_df # 復習用DataFrameをセッションに保存
+            st.session_state.selected_csv = "復習モード" # 表示用の名前を設定
+            
+            if 'index' in st.session_state:
+                del st.session_state.index
+                
+            st.rerun()
 # ==========================================
 # 🔹 2. クイズ実行ページ (Page 1 の 'quiz' モード)
 # ==========================================
@@ -396,41 +460,64 @@ def quiz_main():
     """, unsafe_allow_html=True)
     
     # --- メインコンテンツの表示 ---
+    
     if st.session_state.app_mode == 'selection':
         show_selection_page()
 
-    elif st.session_state.app_mode == 'quiz':
-        if st.session_state.selected_csv is None:
-            st.session_state.app_mode = 'selection'
-            st.rerun()
-            return
-            
-        quiz_file_path = os.path.join(BASE_DIR, "shuffle_data", st.session_state.selected_csv)
+    # 【ここから修正】 quiz モードと review_quiz モードを統合
+    elif st.session_state.app_mode == 'quiz' or st.session_state.app_mode == 'review_quiz':
         
-        if not os.path.exists(quiz_file_path):
-            st.error(f"❌ 問題ファイル (`{st.session_state.selected_csv}`) が見つかりません。")
-            st.session_state.app_mode = 'selection'
-            st.rerun()
-            return
+        # データのロードロジックの判定と実行
+        if st.session_state.app_mode == 'review_quiz':
+            # 復習モード: セッションからDataFrameを取得
+            st.title("🔄 間違えた問題に再挑戦")
             
-        try:
-            df = pd.read_csv(quiz_file_path)
+            if 'review_df' not in st.session_state or st.session_state.review_df.empty:
+                st.error("復習データが見つからないか、空です。")
+                st.session_state.app_mode = 'selection'
+                st.rerun()
+                return
+            
+            df = st.session_state.review_df # 復習用DataFrameを使用
             proper_nouns = load_proper_nouns()
+
+        else: # 通常のクイズモード: CSVをロード
+            st.title("📝 英文並べ替えクイズ")
             
-            # 問題セットが切り替わった場合、セッションを初期化
-            if st.session_state.selected_csv != st.session_state.get('loaded_csv_name') or "shuffled" not in st.session_state:
-                st.session_state.index = 0
-                init_session_state(df, proper_nouns)
-                st.session_state.loaded_csv_name = st.session_state.selected_csv
+            if st.session_state.selected_csv is None:
+                st.session_state.app_mode = 'selection'
+                st.rerun()
+                return
                 
-            show_quiz_page(df, proper_nouns)
+            quiz_file_path = os.path.join(BASE_DIR, "shuffle_data", st.session_state.selected_csv)
             
-        except Exception as e:
-            st.error(f"問題データ読み込み中にエラーが発生しました: {e}")
-            st.session_state.app_mode = 'selection'
-            st.rerun()
+            if not os.path.exists(quiz_file_path):
+                st.error(f"❌ 問題ファイル (`{st.session_state.selected_csv}`) が見つかりません。")
+                st.session_state.app_mode = 'selection'
+                st.rerun()
+                return
+                
+            try:
+                df = pd.read_csv(quiz_file_path)
+                proper_nouns = load_proper_nouns()
+            except Exception as e:
+                st.error(f"問題データ読み込み中にエラーが発生しました: {e}")
+                st.session_state.app_mode = 'selection'
+                st.rerun()
+                return
+        
+        # 共通: 問題セットが切り替わった場合、セッションを初期化
+        # ※ 復習モードでも selected_csv が '復習モード' に設定されるため、問題セットの切り替えを正しく判定できます。
+        if st.session_state.selected_csv != st.session_state.get('loaded_csv_name') or "shuffled" not in st.session_state:
+            st.session_state.index = 0
+            # DFが復習用か通常用かにかかわらず、DFと固有名詞リストを使って初期化
+            init_session_state(df, proper_nouns)
+            st.session_state.loaded_csv_name = st.session_state.selected_csv
+            
+        show_quiz_page(df, proper_nouns)
+        
     # --- メインコンテンツ終了 ---
-    
+        
     st.markdown("---") # フッターとの区切り線
     
     # フッター用のコンテナを作成し、セクションを分ける
