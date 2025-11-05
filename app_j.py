@@ -30,18 +30,17 @@ db = init_firestore()
 # ==========================================
 # 🔹 セッション初期化
 # ==========================================
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "page" not in st.session_state:
-    st.session_state.page = 0
-if "nickname" not in st.session_state:
-    st.session_state.nickname = ""
-if "user_id" not in st.session_state:
-    st.session_state.user_id = ""
-if "is_admin" not in st.session_state:
-    st.session_state.is_admin = False
-if "index" not in st.session_state:
-    st.session_state.index = 0
+defaults = {
+    "logged_in": False,
+    "page": 0,
+    "nickname": "",
+    "user_id": "",
+    "is_admin": False,
+    "index": 0,
+}
+for key, val in defaults.items():
+    if key not in st.session_state:
+        st.session_state[key] = val
 
 # ==========================================
 # 🔹 ログイン関連関数
@@ -109,20 +108,15 @@ if st.session_state.page == 0:
 # 🔹 ログイン後ページ（shuffleメイン）
 # ==========================================
 elif st.session_state.page == 1:
-    # --- ログアウトボタン ---
-    st.sidebar.title(f"👤 {st.session_state.nickname}")
-    if st.sidebar.button("ログアウト"):
-        st.session_state.clear()
-        st.rerun()
+    st.markdown(f"### 👋 ようこそ、{st.session_state.nickname}さん！")
 
-    # --- 以下は shuffle.py の main() の内容 ---
+    # --- 以下は shuffle.py の main() 内容を保持 ---
     BASE_DIR = os.path.dirname(os.path.abspath(__file__)) if '__file__' in locals() else os.getcwd()
     QUESTIONS_SELECT_PATH = os.path.join(BASE_DIR, "shuffle_data", "questions_select.csv")
     PROPER_NOUNS_PATH = os.path.join(BASE_DIR, "shuffle_data", "proper_nouns.csv")
     AUDIO_CORRECT_PATH = os.path.join(BASE_DIR, "shuffle_data", "audio_correct.mp3")
-    AUDIO_FALSE_PATH = os.path.join(BASE_DIR, "shuffle_data", "audio_false.mp3")
+    AUDIO_FALSE_PATH = os.path.join(BASE_DIR, "audio_false.mp3")
 
-    # === キャッシュ関数 ===
     @st.cache_data
     def load_selection_data():
         try:
@@ -148,7 +142,6 @@ elif st.session_state.page == 1:
         except Exception:
             return ["I", "Tokyo", "Osaka", "Japan"]
 
-    # === トークン化・シャッフル ===
     def tokenize(sentence, proper_nouns):
         temp = sentence
         for pn in sorted(proper_nouns, key=len, reverse=True):
@@ -175,7 +168,6 @@ elif st.session_state.page == 1:
             words.append(punctuation)
         return words
 
-    # === クイズUI ===
     def show_selection_page():
         st.title("📚 問題セット選択")
         df_select = load_selection_data()
@@ -227,7 +219,6 @@ elif st.session_state.page == 1:
             st.session_state.pop("shuffled", None)
             st.rerun()
 
-    # === メインアプリロジック ===
     if "app_mode" not in st.session_state:
         st.session_state.app_mode = 'selection'
         st.session_state.selected_csv = None
