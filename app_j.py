@@ -292,14 +292,14 @@ def play_audio_trick(is_correct: bool):
     st.audio(str(audio_path), format="audio/mp3", autoplay=True, loop=False)
 
 # ==========================================
-# 🔹 3. 結果表示ページ (新規追加) 【ここにまるごと追加してください】
+# 🔹 3. 結果表示ページ (新規追加)
 # ==========================================
 def show_result_page():
     """クイズセット終了後の結果表示ページ"""
     st.title("🎉 クイズセット完了！")
     
-    total = st.session_state.total_questions
-    correct = st.session_state.correct_count
+    total = st.session_state.get('total_questions', 0)
+    correct = st.session_state.get('correct_count', 0)
     
     # ゼロ除算を避ける
     if total > 0:
@@ -308,14 +308,7 @@ def show_result_page():
         st.success(f"**正答率: {accuracy:.1f}%**")
     else:
         st.subheader("結果は記録されていません。")
-        accuracy = 0
-    # --- 👇 ここにクイズ状態のクリアを追加 👇 --- 
-    # 結果画面で、クイズ実行に関するすべてのセッション状態をクリアする
-    for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
-        if key in st.session_state:
-            del st.session_state[key]
-            
-    # --- 👆 ここにクイズ状態のクリアを追加 👆 ---
+    
     st.markdown("---")
     
     # 復習モードだった場合の処理
@@ -329,27 +322,19 @@ def show_result_page():
     # 【次のアクション】
     st.markdown("### 次に何をしますか？")
     
-    col_retry, col_select = st.columns(2)
+    # レイアウトをシンプルに一本化
     
-    with col_select:
-        if st.button("📚 問題セット選択に戻る", type="primary", use_container_width=True):
-            st.session_state.app_mode = 'selection'
-            st.rerun()
+    # 「問題セット選択に戻る」ボタン
+    if st.button("📚 問題セット選択に戻る", type="primary", use_container_width=True):
+        
+        # 選択ページに戻る際は、全てのクイズ状態を削除します
+        for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
+            st.session_state.pop(key, None) # AttributeError回避のため .pop を使用
+            
+        st.session_state.app_mode = 'selection'
+        st.rerun()
 
-    with col_retry:
-        # 現在のセット名が復習モードでない場合のみ「リトライ」を表示
-        if st.session_state.get('selected_csv') != "復習モード":
-            if st.button("🔄 同じセットに再挑戦", type="secondary", use_container_width=True):
-                # セッションを完全にリセットして再挑戦モードへ
-                st.session_state.app_mode = 'quiz'
-                st.session_state.index = 0
-                del st.session_state.shuffled
-                del st.session_state.used_indices
-                st.rerun()
-        else:
-             # 復習モードだった場合は、リトライボタンの代わりにダミーを表示
-             st.button("リトライ (復習モード)", disabled=True, use_container_width=True)
-
+    # NOTE: 「同じセットに再挑戦」ボタン（col_retry）のロジックは完全に削除されました。
 # ==========================================
 # 🔹 1. 問題セット選択ページ (Page 1 の 'selection' モード)
 # ==========================================
