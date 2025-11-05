@@ -86,6 +86,39 @@ def logout():
     st.rerun()
 
 # ==========================================
+# 🔹 Firestore データ保存関数 (新規追加)
+# ==========================================
+def save_quiz_result(japanese, correct_english, user_answer, is_correct):
+    """Firestoreにクイズ結果を保存する (コレクション名: shuffle_results)"""
+    db = init_firestore() # キャッシュされたクライアントを取得
+    
+    # ダミークライアントの場合は保存をスキップ (Firebaseが初期化されていない場合)
+    if not hasattr(db, 'collection'):
+        # Streamlitが初期化の警告を表示するため、ここではst.errorをコメントアウト
+        return
+
+    # コレクション名を "shuffle_results" に設定
+    collection_ref = db.collection("shuffle_results")
+    
+    data = {
+        "user_id": st.session_state.user_id,
+        "nickname": st.session_state.nickname,
+        "quiz_set": st.session_state.selected_csv,
+        "question_japanese": japanese,
+        "question_english_correct": correct_english,
+        "user_answer": user_answer,
+        "is_correct": is_correct,
+        "timestamp": firestore.SERVER_TIMESTAMP # サーバー側でタイムスタンプを記録
+    }
+    
+    try:
+        # ドキュメントIDは自動生成
+        collection_ref.add(data)
+    except Exception as e:
+        # 開発中はエラーを表示
+        st.error(f"⚠️ 結果の保存中にエラーが発生しました: {e}")
+
+# ==========================================
 # 🔹 クイズロジック: データロード・シャッフル (再定義と統合)
 # (簡潔にするため、クイズ関連のヘルパー関数は省略せず含めます)
 # ==========================================
@@ -157,6 +190,7 @@ def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
     st.session_state.selected = [] 
     st.session_state.used_indices = []
     st.session_state.quiz_complete = False
+    st.session_state.quiz_saved = False # 【追記】問題が切り替わったらリセット
 
 def handle_word_click(i: int, word: str):
     if st.session_state.quiz_complete:
@@ -304,7 +338,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     # ----------------------------------------------------
     # 3. コントロールボタン (OK/Undo/Next)
     # ----------------------------------------------------
-    
+  
     col_undo, col_ok, col_next = st.columns([1, 1, 1])
 
     if col_undo.button("↩️ やり直し", on_click=undo_selection, disabled=not st.session_state.selected, use_container_width=True):
@@ -317,11 +351,20 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         user_answer_cleaned = re.sub(r'\s+([\.\?!])$', r'\1', user_answer_raw)
         
         if user_answer_cleaned and user_answer_cleaned[0].islower():
-             user_answer_final = user_answer_cleaned[0].upper() + user_answer_cleaned[1:]
+            user_answer_final = user_answer_cleaned[0].upper() + user_answer_cleaned[1:]
         else:
             user_answer_final = user_answer_cleaned
 
-        if user_answer_final == current_correct:
+        # 正誤判定
+        is_correct = (user_answer_final == current_correct)
+
+        # 【結果の保存ロジック】
+        if not st.session_state.quiz_saved:
+            # Firestoreに結果を保存
+            save_quiz_result(japanese, current_correct, user_answer_final, is_correct)
+            st.session_state.quiz_saved = True # 保存フラグを立てて二重保存を防ぐ
+
+        if is_correct:
             col_ok.success("✅ 正解！")
             st.balloons()
             play_audio_trick(True)
@@ -334,7 +377,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         if col_next.button("次の問題へ ▶", type="primary", use_container_width=True, on_click=next_question, args=(df, proper_nouns)):
             st.rerun()
             
-    else:
+    else: # if len(...) == len(...) の else に対応
         col_ok.button("OK (未完成)", disabled=True, use_container_width=True)
         if col_next.button("🔄 リセット", on_click=reset_question, args=(df, proper_nouns), use_container_width=True):
             st.rerun()
@@ -430,6 +473,10 @@ def run_app():
         "selected": [], 
         "used_indices": [],
         "quiz_complete": False,
+        "selected": [], 
+        "quiz_saved": False, # 【追記】結果保存済みフラグ
+    }
+    # ... (省略)
     }
     for key, val in defaults.items():
         if key not in st.session_state:
