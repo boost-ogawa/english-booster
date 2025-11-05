@@ -236,6 +236,8 @@ def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
     st.session_state.used_indices = []
     st.session_state.quiz_complete = False
     st.session_state.quiz_saved = False # 【追記】問題が切り替わったらリセット
+    st.session_state.correct_count = 0 # 【追記】リセット
+    st.session_state.total_questions = len(df) # 【追記】問題の総数を設定
 
 def handle_word_click(i: int, word: str):
     if st.session_state.quiz_complete:
@@ -256,8 +258,27 @@ def undo_selection():
         st.session_state.used_indices.pop() 
 
 def next_question(df: pd.DataFrame, proper_nouns: List[str]):
-    st.session_state.index = (st.session_state.index + 1) % len(df)
-    init_session_state(df, proper_nouns) 
+    """次の問題へ進むためのロジック。最終問題なら結果画面へ遷移するフラグを立てる。"""
+    current_index = st.session_state.index
+    total_questions = len(df) # 総問題数をdfから取得
+    
+    # 【修正箇所】最終問題かどうかを判定
+    if current_index + 1 >= total_questions:
+        # 最終問題の次のステップは結果表示
+        st.session_state.quiz_complete = True # 全問終了フラグ
+        st.session_state.app_mode = 'quiz_result' # 【新規】結果表示モードへ遷移
+        
+        # ※ この時、indexは更新せず、結果画面で処理する
+    else:
+        # 次の問題へ進む
+        st.session_state.index += 1
+        st.session_state.selected = []
+        # 次の問題のシャッフルリストを生成
+        st.session_state.shuffled = shuffle_question(df.iloc[st.session_state.index]['english'], proper_nouns)
+    
+    # 次の問題（または結果画面）へ進むため、保存フラグをリセット
+    st.session_state.quiz_saved = False 
+    # st.rerun() は呼び出し元（ボタン）で行う
 
 def reset_question(df: pd.DataFrame, proper_nouns: List[str]):
     current_index = st.session_state.index
@@ -269,6 +290,59 @@ def play_audio_trick(is_correct: bool):
     if not os.path.exists(audio_path):
         return
     st.audio(str(audio_path), format="audio/mp3", autoplay=True, loop=False)
+
+# ==========================================
+# 🔹 3. 結果表示ページ (新規追加) 【ここにまるごと追加してください】
+# ==========================================
+def show_result_page():
+    """クイズセット終了後の結果表示ページ"""
+    st.title("🎉 クイズセット完了！")
+    
+    total = st.session_state.total_questions
+    correct = st.session_state.correct_count
+    
+    # ゼロ除算を避ける
+    if total > 0:
+        accuracy = (correct / total) * 100
+        st.subheader(f"✅ 結果: {correct} / {total} 問 正解")
+        st.success(f"**正答率: {accuracy:.1f}%**")
+    else:
+        st.subheader("結果は記録されていません。")
+        accuracy = 0
+
+    st.markdown("---")
+    
+    # 復習モードだった場合の処理
+    if st.session_state.get('app_mode') == 'review_quiz':
+        st.info("お疲れ様でした！復習クイズを完了しました。")
+        # 復習用DFを削除してメモリを解放
+        if 'review_df' in st.session_state:
+            del st.session_state.review_df
+
+    
+    # 【次のアクション】
+    st.markdown("### 次に何をしますか？")
+    
+    col_retry, col_select = st.columns(2)
+    
+    with col_select:
+        if st.button("📚 問題セット選択に戻る", type="primary", use_container_width=True):
+            st.session_state.app_mode = 'selection'
+            st.rerun()
+
+    with col_retry:
+        # 現在のセット名が復習モードでない場合のみ「リトライ」を表示
+        if st.session_state.get('selected_csv') != "復習モード":
+            if st.button("🔄 同じセットに再挑戦", type="secondary", use_container_width=True):
+                # セッションを完全にリセットして再挑戦モードへ
+                st.session_state.app_mode = 'quiz'
+                st.session_state.index = 0
+                del st.session_state.shuffled
+                del st.session_state.used_indices
+                st.rerun()
+        else:
+             # 復習モードだった場合は、リトライボタンの代わりにダミーを表示
+             st.button("リトライ (復習モード)", disabled=True, use_container_width=True)
 
 # ==========================================
 # 🔹 1. 問題セット選択ページ (Page 1 の 'selection' モード)
@@ -399,10 +473,12 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
                 handle_word_click(i, word)
                 st.rerun()
 
+
+    
     # ----------------------------------------------------
     # 3. コントロールボタン (OK/Undo/Next)
     # ----------------------------------------------------
-  
+    
     col_undo, col_ok, col_next = st.columns([1, 1, 1])
 
     if col_undo.button("↩️ やり直し", on_click=undo_selection, disabled=not st.session_state.selected, use_container_width=True):
@@ -422,6 +498,12 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         # 正誤判定
         is_correct = (user_answer_final == current_correct)
 
+        # 【修正箇所 1: 正解時にスコアをカウント】
+        if is_correct:
+            # 正解であればカウントアップ（二重カウント防止のために quiz_saved フラグを使用）
+            if not st.session_state.quiz_saved:
+                st.session_state.correct_count += 1
+                
         # 【結果の保存ロジック】
         if not st.session_state.quiz_saved:
             # Firestoreに結果を保存
@@ -438,16 +520,19 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             
         st.markdown(f"**正解の英文:** `{current_correct}`")
         
+        # 【修正箇所 2: next_question 関数呼び出し】
+        # next_question の中で最終問題かを判定し、結果画面に遷移させます。
         if col_next.button("次の問題へ ▶", type="primary", use_container_width=True, on_click=next_question, args=(df, proper_nouns)):
             st.rerun()
             
-    else: # if len(...) == len(...) の else に対応
+    else: # クイズが未完成の場合のロジック
         col_ok.button("OK (未完成)", disabled=True, use_container_width=True)
         if col_next.button("🔄 リセット", on_click=reset_question, args=(df, proper_nouns), use_container_width=True):
             st.rerun()
             
     progress_ratio = (current_index + 1) / total_questions
     st.progress(progress_ratio, text=f"**進捗: {current_index + 1} / {total_questions} 問**")
+
 
 def quiz_main():
     """Page 1 (メインコンテンツ) のロジックを管理"""
@@ -515,7 +600,10 @@ def quiz_main():
             st.session_state.loaded_csv_name = st.session_state.selected_csv
             
         show_quiz_page(df, proper_nouns)
-        
+    # 【新規追加】結果表示モード
+    elif st.session_state.app_mode == 'quiz_result':
+        show_result_page() # 結果表示関数を呼び出す
+
     # --- メインコンテンツ終了 ---
         
     st.markdown("---") # フッターとの区切り線
@@ -562,6 +650,8 @@ def run_app():
         "quiz_complete": False,
         "selected": [], 
         "quiz_saved": False, # 【追記】結果保存済みフラグ
+        "correct_count": 0, # 【追記】正解数
+        "total_questions": 0, # 【追記】総問題数
     }
     for key, val in defaults.items():
         if key not in st.session_state:
