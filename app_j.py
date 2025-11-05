@@ -309,7 +309,13 @@ def show_result_page():
     else:
         st.subheader("結果は記録されていません。")
         accuracy = 0
-
+    # --- 👇 ここにクイズ状態のクリアを追加 👇 --- 
+    # 結果画面で、クイズ実行に関するすべてのセッション状態をクリアする
+    for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
+        if key in st.session_state:
+            del st.session_state[key]
+            
+    # --- 👆 ここにクイズ状態のクリアを追加 👆 ---
     st.markdown("---")
     
     # 復習モードだった場合の処理
@@ -392,6 +398,12 @@ def show_selection_page():
         if review_df.empty:
             st.warning("現在、復習すべき間違えた問題はありません。")
         else:
+
+            # --- 👇 ここにクイズ状態のクリアを再追加 👇 ---
+            for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
+                 if key in st.session_state:
+                     del st.session_state[key]
+             # --- 👆 ここにクイズ状態のクリアを再追加 👆 ---
             # 特別なモードとデータフレームを設定
             st.session_state.app_mode = 'review_quiz'
             st.session_state.review_df = review_df # 復習用DataFrameをセッションに保存
