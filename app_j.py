@@ -40,6 +40,8 @@ if "user_id" not in st.session_state:
     st.session_state.user_id = ""
 if "is_admin" not in st.session_state:
     st.session_state.is_admin = False
+if "index" not in st.session_state:
+    st.session_state.index = 0
 
 # ==========================================
 # 🔹 ログイン関連関数
