@@ -118,11 +118,12 @@ def save_quiz_result(japanese, correct_english, user_answer, is_correct):
         # 開発中はエラーを表示
         st.error(f"⚠️ 結果の保存中にエラーが発生しました: {e}")
 
+
 # ==========================================
-# 🔹 復習用データロード関数 (新規追加)
+# 🔹 復習用データロード関数 (修正)
 # ==========================================
 # @st.cache_data は使用しない方が良い。常に最新の成績を取得する必要があるため。
-def load_review_data(user_id):
+def load_review_data(user_id, quiz_set=None): # <-- quiz_set 引数を追加
     """Firestoreから過去の不正解問題を抽出し、復習用DataFrameを返す"""
     db = init_firestore()
     if not hasattr(db, 'collection'):
@@ -131,11 +132,17 @@ def load_review_data(user_id):
     review_questions = []
     
     try:
-        # 1. ユーザーIDでフィルタリングし、不正解（is_correct: false）のドキュメントを取得
-        results = db.collection("shuffle_results").where("user_id", "==", user_id).where("is_correct", "==", False).get()
+        # 1. クエリの作成: ユーザーIDと不正解でフィルタリング
+        collection_ref = db.collection("shuffle_results")
+        query = collection_ref.where("user_id", "==", user_id).where("is_correct", "==", False)
+        
+        # 【修正点】 quiz_set が指定されていればクエリに追加
+        if quiz_set and quiz_set != "復習モード": 
+            query = query.where("quiz_set", "==", quiz_set) 
+            
+        results = query.get()
         
         # 2. 抽出した問題情報から重複を取り除き、復習リストを作成
-        #    ※ 復習機能を作る場合、Firestoreの構造を工夫するか、ここで重複排除が必要
         unique_mistakes = set()
         
         for doc in results:
@@ -147,13 +154,12 @@ def load_review_data(user_id):
                 review_questions.append({
                     'japanese': data['question_japanese'],
                     'english': data['question_english_correct']
-                    # 'quiz_set': data['quiz_set'] # どのセットかは必要に応じて
                 })
                 unique_mistakes.add(unique_key)
                 
         # 3. DataFrameとして返す
         if not review_questions:
-             return pd.DataFrame({'japanese': [], 'english': []})
+            return pd.DataFrame({'japanese': [], 'english': []})
         
         # 復習用データはシャッフルして提供する
         review_df = pd.DataFrame(review_questions).sample(frac=1).reset_index(drop=True)
@@ -329,18 +335,16 @@ def show_result_page():
         st.rerun()
 
     # NOTE: 「同じセットに再挑戦」ボタン（col_retry）のロジックは完全に削除されました。
+
 # ==========================================
-# 🔹 1. 問題セット選択ページ (Page 1 の 'selection' モード)
+# 🔹 1. 問題セット選択ページ (修正)
 # ==========================================
 def show_selection_page():
     st.title("📚 問題セット選択")
     st.caption("挑戦したい英文並べ替えセットを選んでください。")
 
     df_select = load_selection_data()
-
-    if df_select.empty:
-        st.warning("問題セットの選択データがありません。")
-        return
+    # ... (中略：空のデータフレームチェック) ...
 
     st.markdown("---")
     
@@ -383,12 +387,13 @@ def show_selection_page():
         # 3. 間違えた問題に再挑戦ボタン (右カラム)
         with col_review:
             st.subheader("復習")
+            # 【修正点】load_review_data に csv_name を渡す
             if st.button("間違えた問題に再挑戦", key="start_review_quiz", type="secondary", use_container_width=True):
-                # 復習データ取得 (ユーザーIDを使用)
-                review_df = load_review_data(st.session_state.user_id)
+                # 復習データ取得 (ユーザーIDと選択されたセット名を使用)
+                review_df = load_review_data(st.session_state.user_id, quiz_set=csv_name) # <-- ここを変更
                 
                 if review_df.empty:
-                    st.warning("現在、復習すべき間違えた問題はありません。")
+                    st.warning(f"現在、**選択中のセット**には復習すべき問題はありません。") # <-- 警告メッセージもセット限定に変更
                 else:
                     # クイズ状態のクリア
                     for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
@@ -403,8 +408,8 @@ def show_selection_page():
     
     # 選択されていない場合に備えて、開始/復習ボタンのエリアを空欄にする
     else:
-         col_start.empty()
-         col_review.empty()
+        col_start.empty()
+        col_review.empty()
 # ==========================================
 # 🔹 2. クイズ実行ページ (Page 1 の 'quiz' モード)
 # ==========================================
