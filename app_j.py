@@ -272,7 +272,14 @@ def next_question(df: pd.DataFrame, proper_nouns: List[str]):
     else:
         # 次の問題へ進む
         st.session_state.index += 1
+        
+        # --- 👇 次の問題へ進むための状態をリセット・初期化 👇 ---
         st.session_state.selected = []
+        st.session_state.used_indices = [] # 👈 これが重要！
+        st.session_state.quiz_complete = False
+        st.session_state.quiz_saved = False 
+        # --------------------------------------------------------
+        
         # 次の問題のシャッフルリストを生成
         st.session_state.shuffled = shuffle_question(df.iloc[st.session_state.index]['english'], proper_nouns)
     
