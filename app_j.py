@@ -317,12 +317,6 @@ def show_result_page():
         # 復習用DFを削除してメモリを解放
         if 'review_df' in st.session_state:
             del st.session_state.review_df
-
-    
-    # 【次のアクション】
-    st.markdown("### 次に何をしますか？")
-    
-    # レイアウトをシンプルに一本化
     
     # 「問題セット選択に戻る」ボタン
     if st.button("📚 問題セット選択に戻る", type="primary", use_container_width=True):
