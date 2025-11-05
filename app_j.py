@@ -412,30 +412,19 @@ def show_selection_page():
         col_review.empty()
 
 # ==========================================
-# 🔹 2. クイズ実行ページ (Page 1 の 'quiz' モード) のセクション内
+# 🔹 2. クイズ実行ページ (Page 1 の 'quiz' モード)
 # ==========================================
 def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
+    # (中略: CSSの定義は run_app または quiz_main で一括で呼び出すのが望ましい)
     
-    # ----------------------------------------------------
-    # 1. 最上部ヘッダー (タイトルと戻るボタン)
-    # ----------------------------------------------------
-    
-    # 【修正箇所 1: 最上部2カラムの定義】
-    col_title_top, col_button_top = st.columns([4, 1])
+    col_title, col_button = st.columns([4, 1])
 
-    # モードに応じてヘッダーテキストを動的に設定
-    if st.session_state.app_mode == 'review_quiz':
-        header_text = "🔄 間違えた問題に再挑戦"
-    else:
-        header_text = "📝 英文並べ替えクイズ" # 通常モードのタイトルを簡潔に
-        
-    with col_title_top:
-        # 左カラムにタイトル（subheaderレベルで表示）
-        st.subheader(header_text)
-        
-    with col_button_top:
-        # ボタンをタイトルと縦位置を合わせるためマージン調整
-        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True) 
+    with col_title:
+        st.subheader("🧩 英文並べ替えトレーニング")
+        st.markdown(f"問題セット: `{st.session_state.selected_csv}`")
+    
+    with col_button:
+        st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True) 
         if st.button("⬅️ 選択に戻る", key="back_to_selection", use_container_width=True):
             st.session_state.app_mode = 'selection'
             # 状態をクリア
@@ -445,10 +434,18 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             st.session_state.loaded_csv_name = None 
             st.rerun()
             
-    # 【補足】削除された問題セット名は、ここで復活させることができます
-    st.markdown(f"問題セット: `{st.session_state.selected_csv}`")
-    st.info(f"**問題 {current_index + 1}**: {japanese}", icon="💬")
+    st.markdown("---")
 
+    # 現在の問題情報
+    total_questions = len(df)
+    current_index = st.session_state.index % total_questions
+    row = df.iloc[current_index]
+    japanese = row["japanese"]
+    english = row["english"]
+    current_correct = english.strip()
+
+    st.info(f"**問題 {current_index + 1}**: {japanese}", icon="💬")
+    
     # ----------------------------------------------------
     # 1. あなたの回答エリア (Selected Words)
     # ----------------------------------------------------
