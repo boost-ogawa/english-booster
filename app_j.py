@@ -262,27 +262,20 @@ def next_question(df: pd.DataFrame, proper_nouns: List[str]):
     current_index = st.session_state.index
     total_questions = len(df) # 総問題数をdfから取得
     
-    # 【修正箇所】最終問題かどうかを判定
+    # 最終問題かどうかを判定
     if current_index + 1 >= total_questions:
         # 最終問題の次のステップは結果表示
         st.session_state.quiz_complete = True # 全問終了フラグ
-        st.session_state.app_mode = 'quiz_result' # 【新規】結果表示モードへ遷移
+        st.session_state.app_mode = 'quiz_result' # 結果表示モードへ遷移
         
-        # ※ この時、indexは更新せず、結果画面で処理する
     else:
         # 次の問題へ進む
         st.session_state.index += 1
         
-        # --- 👇 次の問題へ進むための状態をリセット・初期化 👇 ---
-        st.session_state.selected = []
-        st.session_state.used_indices = [] # 👈 これが重要！
-        st.session_state.quiz_complete = False
-        st.session_state.quiz_saved = False 
-        # --------------------------------------------------------
-        
-        # 次の問題のシャッフルリストを生成
-        st.session_state.shuffled = shuffle_question(df.iloc[st.session_state.index]['english'], proper_nouns)
-    
+        # --- 👇 次の問題のためにセッションステートを完全に初期化 👇 ---
+        # 次のインデックスの問題データを使用して、すべての状態を初期化します。
+        # これにより、selected, used_indices, quiz_complete, quiz_savedがリセットされます。
+        init_session_state(df, proper_nouns) 
     # 次の問題（または結果画面）へ進むため、保存フラグをリセット
     st.session_state.quiz_saved = False 
     # st.rerun() は呼び出し元（ボタン）で行う
