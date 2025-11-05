@@ -291,11 +291,11 @@ def reset_question(df: pd.DataFrame, proper_nouns: List[str]):
     st.session_state.index = current_index 
     init_session_state(df, proper_nouns)
 
-def play_audio_trick(is_correct: bool):
-    audio_path = AUDIO_CORRECT_PATH if is_correct else AUDIO_FALSE_PATH
-    if not os.path.exists(audio_path):
-        return
-    st.audio(str(audio_path), format="audio/mp3", autoplay=True, loop=False)
+# def play_audio_trick(is_correct: bool):
+#     audio_path = AUDIO_CORRECT_PATH if is_correct else AUDIO_FALSE_PATH
+#     if not os.path.exists(audio_path):
+#         return
+#     st.audio(str(audio_path), format="audio/mp3", autoplay=True, loop=False)
 
 # ==========================================
 # 🔹 3. 結果表示ページ (新規追加)
@@ -522,10 +522,10 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         if is_correct:
             col_ok.success("✅ 正解！")
             st.balloons()
-            play_audio_trick(True)
+        #     play_audio_trick(True)
         else:
             col_ok.error("❌ 不正解。")
-            play_audio_trick(False)
+        #     play_audio_trick(False)
             
         st.markdown(f"**正解の英文:** `{current_correct}`")
         
