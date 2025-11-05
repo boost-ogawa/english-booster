@@ -346,52 +346,65 @@ def show_selection_page():
     
     instructions = df_select['instruction'].tolist()
     
-    selected_instruction = st.radio(
-        "**セットを選択してください**",
-        options=instructions,
-        key='instruction_selector',
-    )
+    # --- 👇 3カラムレイアウトの開始 (1:1:1) 👇 ---
+    col_radio, col_start, col_review = st.columns(3)
+    
+    selected_instruction = None
+    csv_name = None
 
+    # 1. 問題セットの選択 (ラジオボタン) - 左カラム
+    with col_radio:
+        st.subheader("セットを選択")
+        # ラジオボタンはst.subheaderの下に配置
+        selected_instruction = st.radio(
+            "_", # ラベルを非表示にするため、アンダースコアを使用
+            options=instructions,
+            key='instruction_selector',
+            label_visibility="hidden"
+        )
+        
     if selected_instruction:
         selected_row = df_select[df_select['instruction'] == selected_instruction].iloc[0]
         csv_name = selected_row['csv_name']
         
-        st.caption(f"（ファイル: `{csv_name}`）")
+        # ファイル名のキャプションはカラムの外に配置して見やすくする
+        st.caption(f"選択ファイル: `{csv_name}`")
         
-        st.markdown("---")
-        
-        if st.button("このセットで開始 ▶", key="start_quiz_set", type="primary", use_container_width=True):
-            st.session_state.selected_csv = csv_name
-            st.session_state.app_mode = 'quiz'
-            if 'index' in st.session_state:
-                 del st.session_state.index
-            st.rerun()
+        # 2. このセットで開始ボタン (中央カラム)
+        with col_start:
+            st.subheader("開始")
+            if st.button("このセットで開始 ▶", key="start_quiz_set", type="primary", use_container_width=True):
+                st.session_state.selected_csv = csv_name
+                st.session_state.app_mode = 'quiz'
+                # 開始前にインデックスを確実にリセット
+                st.session_state.pop('index', None)
+                st.rerun()
 
-    st.markdown("---")
-    st.subheader("💡 復習モード")
-
-    if st.button("間違えた問題に再挑戦", key="start_review_quiz", type="secondary", use_container_width=True):
-        # 復習データ取得 (ユーザーIDを使用)
-        review_df = load_review_data(st.session_state.user_id)
-        
-        if review_df.empty:
-            st.warning("現在、復習すべき間違えた問題はありません。")
-        else:
-
-            # --- 👇 ここにクイズ状態のクリアを再追加 👇 ---
-            for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
-                 if key in st.session_state:
-                     del st.session_state[key]
-             # --- 👆 ここにクイズ状態のクリアを再追加 👆 ---
-            # 特別なモードとデータフレームを設定
-            st.session_state.app_mode = 'review_quiz'
-            st.session_state.review_df = review_df # 復習用DataFrameをセッションに保存
-            st.session_state.selected_csv = "復習モード" # 表示用の名前を設定
-            
-            if 'index' in st.session_state:
-                del st.session_state.index
+        # 3. 間違えた問題に再挑戦ボタン (右カラム)
+        with col_review:
+            st.subheader("復習")
+            if st.button("間違えた問題に再挑戦", key="start_review_quiz", type="secondary", use_container_width=True):
+                # 復習データ取得 (ユーザーIDを使用)
+                review_df = load_review_data(st.session_state.user_id)
                 
-            st.rerun()
+                if review_df.empty:
+                    st.warning("現在、復習すべき間違えた問題はありません。")
+                else:
+                    # クイズ状態のクリア
+                    for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
+                        st.session_state.pop(key, None) # 安全な削除
+                    
+                    # 特別なモードとデータフレームを設定
+                    st.session_state.app_mode = 'review_quiz'
+                    st.session_state.review_df = review_df # 復習用DataFrameをセッションに保存
+                    st.session_state.selected_csv = "復習モード" # 表示用の名前を設定
+                    st.rerun()
+    # --- 👆 3カラムレイアウトの終了 👆 ---
+    
+    # 選択されていない場合に備えて、開始/復習ボタンのエリアを空欄にする
+    else:
+         col_start.empty()
+         col_review.empty()
 # ==========================================
 # 🔹 2. クイズ実行ページ (Page 1 の 'quiz' モード)
 # ==========================================
