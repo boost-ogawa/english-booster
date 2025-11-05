@@ -476,8 +476,6 @@ def run_app():
         "selected": [], 
         "quiz_saved": False, # 【追記】結果保存済みフラグ
     }
-    # ... (省略)
-    }
     for key, val in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = val
