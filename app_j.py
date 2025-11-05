@@ -342,7 +342,6 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     progress_ratio = (current_index + 1) / total_questions
     st.progress(progress_ratio, text=f"**進捗: {current_index + 1} / {total_questions} 問**")
 
-
 def quiz_main():
     """Page 1 (メインコンテンツ) のロジックを管理"""
     
@@ -353,12 +352,7 @@ def quiz_main():
     </style>
     """, unsafe_allow_html=True)
     
-    # ログアウトボタンをサイドバーに配置
-    st.sidebar.markdown(f"**ようこそ、{st.session_state.nickname}さん**")
-    if st.session_state.is_admin:
-        st.sidebar.caption("（管理者）")
-    st.sidebar.button("ログアウト", on_click=logout, key="logout_button")
-
+    # --- メインコンテンツの表示 ---
     if st.session_state.app_mode == 'selection':
         show_selection_page()
 
@@ -392,6 +386,26 @@ def quiz_main():
             st.error(f"問題データ読み込み中にエラーが発生しました: {e}")
             st.session_state.app_mode = 'selection'
             st.rerun()
+    # --- メインコンテンツ終了 ---
+    
+    st.markdown("---") # フッターとの区切り線
+    
+    # フッター用のコンテナを作成し、セクションを分ける
+    footer_container = st.container()
+    
+    with footer_container:
+        col_user, col_logout = st.columns([7, 3])
+
+        with col_user:
+            user_info = f"👤 **ログインユーザー:** {st.session_state.nickname} "
+            if st.session_state.is_admin:
+                user_info += " (管理者)"
+            st.caption(user_info) # captionで控えめに表示
+
+        with col_logout:
+            # ログアウトボタンを右側に配置
+            st.button("ログアウト", on_click=logout, key="logout_button_footer", use_container_width=True)
+            
 
 
 # ==========================================
