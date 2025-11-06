@@ -242,8 +242,6 @@ def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
     st.session_state.used_indices = []
     st.session_state.quiz_complete = False
     st.session_state.quiz_saved = False # 【追記】問題が切り替わったらリセット
-    st.session_state.correct_count = 0 # 【追記】リセット
-    st.session_state.total_questions = len(df) # 【追記】問題の総数を設定
 
 def handle_word_click(i: int, word: str):
     if st.session_state.quiz_complete:
