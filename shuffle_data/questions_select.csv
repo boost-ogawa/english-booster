@@ -1,5 +1,6 @@
 csv_name,instruction
-questions_01.csv,"関係代名詞１"
-questions_02.csv,"関係代名詞２"
-questions_03.csv,"関係代名詞３"
+the SVO&SVOO pattern_01.csv,"第３文型・第４文型１"
+the SVO&SVOO pattern_02.csv,"第３文型・第４文型２"
+the SVOC pattern_01.csv,"第５文型１"
+the SVOC pattern_02.csv,"第５文型２"
 
