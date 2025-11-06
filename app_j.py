@@ -414,28 +414,22 @@ def show_selection_page():
 # ==========================================
 # 🔹 2. クイズ実行ページ (Page 1 の 'quiz' モード)
 # ==========================================
+# show_quiz_page 関数（冒頭）
 def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
-    # (中略: CSSの定義は run_app または quiz_main で一括で呼び出すのが望ましい)
     
-    col_title, col_button = st.columns([4, 1])
-
-    with col_title:
-        st.subheader("🧩 英文並べ替えトレーニング")
-        st.markdown(f"問題セット: `{st.session_state.selected_csv}`")
-    
-    with col_button:
-        st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True) 
-        if st.button("⬅️ 選択に戻る", key="back_to_selection", use_container_width=True):
-            st.session_state.app_mode = 'selection'
-            # 状態をクリア
-            st.session_state.selected = []
-            st.session_state.used_indices = []
-            st.session_state.quiz_complete = False
-            st.session_state.loaded_csv_name = None 
-            st.rerun()
+    # 【削除】以前存在した以下のコードはすべて削除/コメントアウト
+    # col_title, col_button = st.columns([4, 1])
+    # with col_title:
+    #     st.subheader("🧩 英文並べ替えトレーニング")
+    #     st.markdown(f"問題セット: `{st.session_state.selected_csv}`")
+    # with col_button:
+    #     st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True) 
+    #     if st.button("⬅️ 選択に戻る", key="back_to_selection", use_container_width=True):
+    #         # ... (ロジックも削除) ...
+    # st.markdown("---") # 区切り線も削除（quiz_mainで描画済みのため）
             
-    st.markdown("---")
-
+    # 【残す部分】
+    
     # 現在の問題情報
     total_questions = len(df)
     current_index = st.session_state.index % total_questions
@@ -444,8 +438,10 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     english = row["english"]
     current_correct = english.strip()
 
-    st.info(f"**問題 {current_index + 1}**: {japanese}", icon="💬")
+    st.markdown(f"問題セット: `{st.session_state.selected_csv}`") # セット名だけは再表示
     
+    st.info(f"**問題 {current_index + 1}**: {japanese}", icon="💬")
+        
     # ----------------------------------------------------
     # 1. あなたの回答エリア (Selected Words)
     # ----------------------------------------------------
@@ -491,7 +487,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     
     col_undo, col_ok, col_next = st.columns([1, 1, 1])
 
-    if col_undo.button("↩️ やり直し", on_click=undo_selection, disabled=not st.session_state.selected, use_container_width=True):
+    if col_undo.button("↩️ １語消去", on_click=undo_selection, disabled=not st.session_state.selected, use_container_width=True):
         st.rerun()
 
     if len(st.session_state.selected) == len(st.session_state.shuffled):
@@ -558,6 +554,9 @@ def quiz_main():
     
     if st.session_state.app_mode == 'selection':
         show_selection_page()
+# quiz_main 関数の一部 (修正後)
+
+# ... (中略) ...
 
     # 【ここから修正】 quiz モードと review_quiz モードを統合
     elif st.session_state.app_mode == 'quiz' or st.session_state.app_mode == 'review_quiz':
@@ -565,8 +564,8 @@ def quiz_main():
         # データのロードロジックの判定と実行
         if st.session_state.app_mode == 'review_quiz':
             # 復習モード: セッションからDataFrameを取得
-            st.title("🔄 間違えた問題に再挑戦")
             
+            # 【修正 1】 st.title の呼び出しを削除
             if 'review_df' not in st.session_state or st.session_state.review_df.empty:
                 st.error("復習データが見つからないか、空です。")
                 st.session_state.app_mode = 'selection'
@@ -575,9 +574,12 @@ def quiz_main():
             
             df = st.session_state.review_df # 復習用DataFrameを使用
             proper_nouns = load_proper_nouns()
+            # 【修正 2】 ヘッダーテキストを定義
+            header_text = "🔄 間違えた問題に再挑戦"
 
         else: # 通常のクイズモード: CSVをロード
-            st.title("📝 英文並べ替えクイズ")
+            # 【修正 1】 st.title の呼び出しを削除
+            header_text = "📝 英文並べ替えクイズ"
             
             if st.session_state.selected_csv is None:
                 st.session_state.app_mode = 'selection'
@@ -600,6 +602,36 @@ def quiz_main():
                 st.session_state.app_mode = 'selection'
                 st.rerun()
                 return
+
+        # 【新規追加】データが空ではないか最終チェック (ゼロ除算/IndexError対策)
+        if df.empty:
+            st.error("問題データが空です。問題セット選択ページに戻ります。")
+            st.session_state.app_mode = 'selection'
+            st.rerun()
+            return
+
+        # ----------------------------------------------------
+        # 【新規追加】 2カラムヘッダーの表示
+        # ----------------------------------------------------
+        col_title_top, col_button_top = st.columns([4, 1])
+
+        with col_title_top:
+            st.title(header_text) # <-- st.titleで大きく表示
+            
+        with col_button_top:
+            # ボタンをタイトルと縦位置を合わせるためマージン調整
+            st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True) 
+            if st.button("⬅️ 選択に戻る", key="back_to_selection_main", use_container_width=True):
+                # show_quiz_page内で行っていた戻るロジックを再実装
+                st.session_state.app_mode = 'selection'
+                st.session_state.selected = []
+                st.session_state.used_indices = []
+                st.session_state.quiz_complete = False
+                st.session_state.loaded_csv_name = None 
+                st.rerun()
+                return # 戻るボタンが押されたらここで処理を中断
+
+        st.markdown("---") # ヘッダーと本文の区切り線
         
         # 共通: 問題セットが切り替わった場合、セッションを初期化
         # ※ 復習モードでも selected_csv が '復習モード' に設定されるため、問題セットの切り替えを正しく判定できます。
@@ -609,7 +641,9 @@ def quiz_main():
             init_session_state(df, proper_nouns)
             st.session_state.loaded_csv_name = st.session_state.selected_csv
             
+        # show_quiz_pageからはヘッダーの描画ロジックを削除する必要がある！
         show_quiz_page(df, proper_nouns)
+
     # 【新規追加】結果表示モード
     elif st.session_state.app_mode == 'quiz_result':
         show_result_page() # 結果表示関数を呼び出す
