@@ -339,7 +339,7 @@ def show_result_page():
 # ==========================================
 def show_selection_page():
     st.title("📚 問題セット選択")
-    st.caption("挑戦したい英文並べ替えセットを選んでください。")
+    st.caption("挑戦したいセットを選んでください。")
 
     df_select = load_selection_data()
     # ... (中略：空のデータフレームチェック) ...
@@ -577,7 +577,7 @@ def quiz_main():
 
         else: # 通常のクイズモード: CSVをロード
             # 【修正 1】 st.title の呼び出しを削除
-            header_text = "📝 英文並べ替えクイズ"
+            header_text = "📝 英文並べかえ問題に挑戦"
             
             if st.session_state.selected_csv is None:
                 st.session_state.app_mode = 'selection'
