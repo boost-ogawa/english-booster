@@ -440,18 +440,22 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     st.markdown(f"問題セット: `{st.session_state.selected_csv}`") # セット名だけは再表示
     
     st.info(f"**問題 {current_index + 1}**: {japanese}", icon="💬")
-        
+
     # ----------------------------------------------------
     # 1. あなたの回答エリア (Selected Words)
     # ----------------------------------------------------
-    if st.session_state.duplicate_error:
-    # エラーが発生した場合は、最後の単語を削除し、警告を表示します
-        if st.session_state.selected:
-            st.session_state.selected.pop()
-            st.session_state.used_indices.pop()
-        st.warning("🚨 その単語は直前に選択済みです！")
-        # エラーを処理したらフラグをリセットして、再描画の準備
-        st.session_state.duplicate_error = False
+    # used_indicesの末尾2つが同じ（＝同じボタンが連続でクリックされた）場合をチェック
+    if len(st.session_state.used_indices) >= 2 and st.session_state.used_indices[-1] == st.session_state.used_indices[-2]:
+        # 💡 修正箇所：2つ目の重複した単語だけを削除します
+
+        # 最後に選ばれた（＝重複した）単語とインデックスを1つずつ削除
+        # これにより、1回目のクリックで追加された単語はリストに残ります
+        st.session_state.selected.pop() 
+        st.session_state.used_indices.pop() 
+
+        st.warning("🚨 同じ単語を連続して選択しました。重複した2つ目の単語は取り消されました。", icon="❌")
+
+
         selected_words_html = ""
         # (HTML生成ロジックは省略せずにそのまま保持。文字数のためここでは省略します)
     if not st.session_state.selected:
