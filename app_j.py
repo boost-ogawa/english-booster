@@ -338,7 +338,7 @@ def show_selection_page():
         if '中2' in df_grouped.groups:
             df_m2 = df_grouped.get_group('中2')
             m2_instructions = df_m2['instruction'].tolist()
-            st.markdown("**🔹 中学2年生**")
+            st.caption("**🔹 中学2年生**")
             m2_selected = st.selectbox(
                 "中2_セレクター", # キーを変更
                 options=["セットを選択してください"] + m2_instructions, 
@@ -352,7 +352,7 @@ def show_selection_page():
         if '中3' in df_grouped.groups:
             df_m3 = df_grouped.get_group('中3')
             m3_instructions = df_m3['instruction'].tolist()
-            st.markdown("**🔹 中学3年生**")
+            st.caption("**🔹 中学3年生**")
             
             # 中2が選択されているかどうかで中3のセレクトボックスの有効/無効を切り替える
             is_m3_disabled = (m2_selected_instruction is not None)
