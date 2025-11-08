@@ -1,9 +1,15 @@
-csv_name,instruction
-the SVO&SVOO pattern_01.csv,"第３文型・第４文型１"
-the SVO&SVOO pattern_02.csv,"第３文型・第４文型２"
-the SVOC pattern_01.csv,"第５文型１"
-the SVOC pattern_02.csv,"第５文型２"
-関係代名詞主格_1.csv,"関係代名詞の主格１"
-関係代名詞主格_2.csv,"関係代名詞の主格２"
-関係代名詞目的格_1.csv,"関係代名詞の目的格(省略なし)１"
-関係代名詞目的格_2.csv,"関係代名詞の目的格(省略なし)２"
+csv_name,instruction,grade
+the SVO&SVOO pattern_01.csv,"第３文型・第４文型１",中2
+the SVO&SVOO pattern_02.csv,"第３文型・第４文型２",中2
+the SVO&SVOO pattern_03.csv,"第３文型・第４文型３",中2
+the SVO&SVOO pattern_04.csv,"第３文型・第４文型４",中2
+the SVOC pattern_01.csv,"第５文型１",中2
+the SVOC pattern_02.csv,"第５文型２",中2
+the SVOC pattern_03.csv,"第５文型３",中2
+the SVOC pattern_04.csv,"第５文型４",中2
+関係代名詞主格_1.csv,"関係代名詞の主格１",中3
+関係代名詞主格_2.csv,"関係代名詞の主格２",中3
+関係代名詞目的格_1.csv,"関係代名詞の目的格(省略なし)１",中3
+関係代名詞目的格_2.csv,"関係代名詞の目的格(省略なし)２",中3
+関係代名詞目的格_3.csv,"関係代名詞の目的格(省略あり含む)１",中3
+関係代名詞目的格_4.csv,"関係代名詞の目的格(省略あり含む)２",中3

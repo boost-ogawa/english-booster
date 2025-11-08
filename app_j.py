@@ -309,32 +309,62 @@ def show_selection_page():
     if df_select.empty:
         st.error("問題セットの選択リストが空です。`questions_select.csv` を確認してください。")
         return
-
-    st.markdown("---")
+        
+    # 🚨 新規追加：DataFrameを 'grade' 列でグループ化
+    df_grouped = df_select.groupby('grade')
     
-    instructions = df_select['instruction'].tolist()
-    
-    col_radio, col_start, col_review = st.columns(3)
+    # ------------------------------------------------------------------
+    # --- 👇 3カラムレイアウトの開始 (1:1:1) 👇 ---
+    col_selector, col_start, col_review = st.columns(3)
     
     selected_instruction = None
     csv_name = None
-
-    with col_radio:
+    
+    # 1. 問題セットの選択 (セレクトボックスで2段構成) - 左カラム
+    with col_selector:
         st.subheader("セットを選択")
-        selected_instruction = st.radio(
-            "_",
-            options=instructions,
-            key='instruction_selector',
-            label_visibility="hidden"
-        )
         
+        # 1-1. 中2コンテナ
+        if '中2' in df_grouped.groups:
+            df_m2 = df_grouped.get_group('中2')
+            m2_instructions = df_m2['instruction'].tolist()
+            st.markdown("**🔹 中学2年生**")
+            m2_selected = st.selectbox(
+                "_", 
+                options=["選択してください"] + m2_instructions, 
+                key='m2_selector', 
+                label_visibility="hidden"
+            )
+            if m2_selected != "選択してください":
+                selected_instruction = m2_selected
+                
+        # 1-2. 中3コンテナ
+        if '中3' in df_grouped.groups:
+            df_m3 = df_grouped.get_group('中3')
+            m3_instructions = df_m3['instruction'].tolist()
+            st.markdown("**🔹 中学3年生**")
+            # 注: 中2が選択されていない場合にのみ中3のセレクトボックスを有効にする
+            m3_selected = st.selectbox(
+                "__", 
+                options=["選択してください"] + m3_instructions, 
+                key='m3_selector', 
+                label_visibility="hidden",
+                disabled=(selected_instruction is not None) # どちらか一方が選択されている場合に無効化
+            )
+            if selected_instruction is None and m3_selected != "選択してください":
+                 selected_instruction = m3_selected
+
+
+    # 2. 以降のロジックは 'selected_instruction' がセットされたかどうかで動く
     if selected_instruction:
         selected_row = df_select[df_select['instruction'] == selected_instruction].iloc[0]
         csv_name = selected_row['csv_name']
         
         st.caption(f"選択ファイル: `{csv_name}`")
         
+        # 2. このセットで開始ボタン (中央カラム)
         with col_start:
+            # ... (開始ボタンのロジックは変更なし) ...
             st.subheader("開始")
             if st.button("このセットで開始 ▶", key="start_quiz_set", type="primary", use_container_width=True):
                 st.session_state.selected_csv = csv_name
@@ -342,7 +372,9 @@ def show_selection_page():
                 st.session_state.pop('index', None)
                 st.rerun()
 
+        # 3. 間違えた問題に再挑戦ボタン (右カラム)
         with col_review:
+            # ... (復習ボタンのロジックは変更なし) ...
             st.subheader("復習")
             if st.button("間違えた問題に再挑戦", key="start_review_quiz", type="secondary", use_container_width=True):
                 review_df = load_review_data(st.session_state.user_id, quiz_set=csv_name)
@@ -350,6 +382,7 @@ def show_selection_page():
                 if review_df.empty:
                     st.warning(f"現在、**選択中のセット**には復習すべき問題はありません。")
                 else:
+                    # ... (セッションステートのクリアとモード変更ロジックは変更なし) ...
                     for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
                         st.session_state.pop(key, None)
                         
@@ -357,9 +390,12 @@ def show_selection_page():
                     st.session_state.review_df = review_df
                     st.session_state.selected_csv = "復習モード"
                     st.rerun()
-    else:
+                    
+    else: # どちらも選択されていない場合
         col_start.empty()
         col_review.empty()
+        
+    st.markdown("---") # 区切り線は最後に統一
 
 # ==========================================
 # 🔹 2. クイズ実行ページ
