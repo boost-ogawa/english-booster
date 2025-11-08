@@ -340,30 +340,29 @@ def show_selection_page():
             m2_instructions = df_m2['instruction'].tolist()
             m2_selected = st.selectbox(
                 "中2_セレクター", # キーを変更
-                options=["中学２年生（セットを選択してください）"] + m2_instructions, 
+                options=["中学２年生（セットを選択）"] + m2_instructions, 
                 key='m2_selector', 
                 label_visibility="hidden"
             )
-            if m2_selected != "中学２年生（セットを選択してください）":
+            if m2_selected != "中学２年生（セットを選択）":
                 m2_selected_instruction = m2_selected
                 
         # 1-2. 中3コンテナの処理
         if '中3' in df_grouped.groups:
             df_m3 = df_grouped.get_group('中3')
             m3_instructions = df_m3['instruction'].tolist()
-            st.markdown("**🔹 中学3年生**")
             
             # 中2が選択されているかどうかで中3のセレクトボックスの有効/無効を切り替える
             is_m3_disabled = (m2_selected_instruction is not None)
             
             m3_selected = st.selectbox(
                 "中3_セレクター", # キーを変更
-                options=["中学３年生（セットを選択してください）"] + m3_instructions, 
+                options=["中学３年生（セットを選択）"] + m3_instructions, 
                 key='m3_selector', 
                 label_visibility="hidden",
                 disabled=is_m3_disabled
             )
-            if not is_m3_disabled and m3_selected != "中学３年生（セットを選択してください）":
+            if not is_m3_disabled and m3_selected != "中学３年生（セットを選択）":
                  m3_selected_instruction = m3_selected
 
         # 最終的に選択された Instruction を決定
