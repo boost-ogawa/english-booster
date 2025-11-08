@@ -478,14 +478,19 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             label = word 
             button_key = f"word_{st.session_state.selected_csv}_{st.session_state.index}_{i}"
             col_index = i % max_cols
-            
+
             # ボタンが押されたとき
-            if cols[col_index].button(label, key=button_key, disabled=is_picked, use_container_width=True):
-                
-                # 【重要修正】handle_word_clickを呼ばず、ここで処理を行う
-                if st.session_state.quiz_complete:
-                    st.rerun() # 処理は行わず再実行
-                    
+            if cols[col_index].button(
+                label, 
+                key=button_key, 
+                disabled=is_picked, 
+                use_container_width=True,
+                on_click=handle_word_click, # 👈 ここを追加/変更
+                args=(i, word) # 👈 ここを追加/変更
+            ):
+                # 【重要】ボタンがクリックされたら、on_click実行後に即座に再描画
+                st.rerun()            
+                 
                 word_to_append = word
                 
                 # 最初の単語の小文字/大文字の処理
