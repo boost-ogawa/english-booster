@@ -15,13 +15,11 @@ from typing import List
 # ==========================================
 # 🔹 Firebase 初期化
 # ==========================================
-# Streamlitのキャッシュ機能を利用して、アプリ実行中に一度だけ実行されるようにする
 @st.cache_resource
 def init_firestore():
-    # Firebase secretsから認証情報を取得
+    """Streamlitのキャッシュを利用し、Firestoreクライアントを一度だけ初期化する"""
     if "firebase" not in st.secrets:
         st.warning("⚠️ Streamlit Secretsに 'firebase' の設定が見つかりませんでした。", icon="🔒")
-        # ダミーのクライアントを返す
         class DummyFirestoreClient:
             def collection(self, *args, **kwargs): return self
             def document(self, *args, **kwargs): return self
@@ -36,11 +34,9 @@ def init_firestore():
         f.flush()
         cred = credentials.Certificate(f.name)
         
-        # アプリが未初期化の場合のみ初期化
         if not firebase_admin._apps:
             firebase_admin.initialize_app(cred)
             
-        # 一時ファイルを削除
         os.unlink(f.name)
     return firestore.client()
 
@@ -63,9 +59,8 @@ def go_to_main_page(nickname, user_id, is_admin):
     st.session_state.user_id = user_id.strip()
     st.session_state.is_admin = is_admin
     st.session_state.logged_in = True
-    st.session_state.page = 1 # メインページ(クイズ選択)へ
+    st.session_state.page = 1 
     
-    # ログイン後のクイズ初期状態をリセット
     st.session_state.app_mode = 'selection'
     st.session_state.selected_csv = None
     st.session_state.loaded_csv_name = None
@@ -79,25 +74,21 @@ def logout():
     """ログアウト処理"""
     st.session_state.logged_in = False
     st.session_state.page = 0
-    # ログイン情報以外のセッションステートをクリア
     for key in list(st.session_state.keys()):
         if key not in ['page', 'logged_in']: 
             del st.session_state[key] 
     st.rerun()
 
 # ==========================================
-# 🔹 Firestore データ保存関数 (新規追加)
+# 🔹 Firestore データ保存関数
 # ==========================================
 def save_quiz_result(japanese, correct_english, user_answer, is_correct):
     """Firestoreにクイズ結果を保存する (コレクション名: shuffle_results)"""
-    db = init_firestore() # キャッシュされたクライアントを取得
+    db = init_firestore()
     
-    # ダミークライアントの場合は保存をスキップ (Firebaseが初期化されていない場合)
     if not hasattr(db, 'collection'):
-        # Streamlitが初期化の警告を表示するため、ここではst.errorをコメントアウト
         return
 
-    # コレクション名を "shuffle_results" に設定
     collection_ref = db.collection("shuffle_results")
     
     data = {
@@ -108,22 +99,19 @@ def save_quiz_result(japanese, correct_english, user_answer, is_correct):
         "question_english_correct": correct_english,
         "user_answer": user_answer,
         "is_correct": is_correct,
-        "timestamp": firestore.SERVER_TIMESTAMP # サーバー側でタイムスタンプを記録
+        "timestamp": firestore.SERVER_TIMESTAMP
     }
     
     try:
-        # ドキュメントIDは自動生成
         collection_ref.add(data)
     except Exception as e:
-        # 開発中はエラーを表示
         st.error(f"⚠️ 結果の保存中にエラーが発生しました: {e}")
 
 
 # ==========================================
-# 🔹 復習用データロード関数 (修正)
+# 🔹 復習用データロード関数
 # ==========================================
-# @st.cache_data は使用しない方が良い。常に最新の成績を取得する必要があるため。
-def load_review_data(user_id, quiz_set=None): # <-- quiz_set 引数を追加
+def load_review_data(user_id, quiz_set=None):
     """Firestoreから過去の不正解問題を抽出し、復習用DataFrameを返す"""
     db = init_firestore()
     if not hasattr(db, 'collection'):
@@ -136,7 +124,7 @@ def load_review_data(user_id, quiz_set=None): # <-- quiz_set 引数を追加
         collection_ref = db.collection("shuffle_results")
         query = collection_ref.where("user_id", "==", user_id).where("is_correct", "==", False)
         
-        # 【修正点】 quiz_set が指定されていればクエリに追加
+        # quiz_set が指定されていればクエリに追加
         if quiz_set and quiz_set != "復習モード": 
             query = query.where("quiz_set", "==", quiz_set) 
             
@@ -147,7 +135,6 @@ def load_review_data(user_id, quiz_set=None): # <-- quiz_set 引数を追加
         
         for doc in results:
             data = doc.to_dict()
-            # 「日本語文 + 正解英文」をユニークキーとして使用
             unique_key = (data['question_japanese'], data['question_english_correct'])
             
             if unique_key not in unique_mistakes:
@@ -161,7 +148,6 @@ def load_review_data(user_id, quiz_set=None): # <-- quiz_set 引数を追加
         if not review_questions:
             return pd.DataFrame({'japanese': [], 'english': []})
         
-        # 復習用データはシャッフルして提供する
         review_df = pd.DataFrame(review_questions).sample(frac=1).reset_index(drop=True)
         return review_df
 
@@ -170,8 +156,7 @@ def load_review_data(user_id, quiz_set=None): # <-- quiz_set 引数を追加
         return pd.DataFrame({'japanese': [], 'english': []})
 
 # ==========================================
-# 🔹 クイズロジック: データロード・シャッフル (再定義と統合)
-# (簡潔にするため、クイズ関連のヘルパー関数は省略せず含めます)
+# 🔹 クイズロジック: データロード・シャッフル
 # ==========================================
 
 @st.cache_data
@@ -241,8 +226,7 @@ def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
     st.session_state.selected = [] 
     st.session_state.used_indices = []
     st.session_state.quiz_complete = False
-    st.session_state.quiz_saved = False # 【追記】問題が切り替わったらリセット
-    st.session_state.clicked_index_list = []
+    st.session_state.quiz_saved = False
 
 def handle_word_click(i: int, word: str):
     if st.session_state.quiz_complete:
@@ -265,39 +249,24 @@ def undo_selection():
 def next_question(df: pd.DataFrame, proper_nouns: List[str]):
     """次の問題へ進むためのロジック。最終問題なら結果画面へ遷移するフラグを立てる。"""
     current_index = st.session_state.index
-    total_questions = len(df) # 総問題数をdfから取得
+    total_questions = len(df)
     
-    # 最終問題かどうかを判定
     if current_index + 1 >= total_questions:
-        # 最終問題の次のステップは結果表示
-        st.session_state.quiz_complete = True # 全問終了フラグ
-        st.session_state.app_mode = 'quiz_result' # 結果表示モードへ遷移
-        
+        st.session_state.quiz_complete = True
+        st.session_state.app_mode = 'quiz_result'
     else:
-        # 次の問題へ進む
         st.session_state.index += 1
-        
-        # --- 👇 次の問題のためにセッションステートを完全に初期化 👇 ---
-        # 次のインデックスの問題データを使用して、すべての状態を初期化します。
-        # これにより、selected, used_indices, quiz_complete, quiz_savedがリセットされます。
         init_session_state(df, proper_nouns) 
-    # 次の問題（または結果画面）へ進むため、保存フラグをリセット
+        
     st.session_state.quiz_saved = False 
-    # st.rerun() は呼び出し元（ボタン）で行う
 
 def reset_question(df: pd.DataFrame, proper_nouns: List[str]):
     current_index = st.session_state.index
     st.session_state.index = current_index 
     init_session_state(df, proper_nouns)
 
-# def play_audio_trick(is_correct: bool):
-#     audio_path = AUDIO_CORRECT_PATH if is_correct else AUDIO_FALSE_PATH
-#     if not os.path.exists(audio_path):
-#         return
-#     st.audio(str(audio_path), format="audio/mp3", autoplay=True, loop=False)
-
 # ==========================================
-# 🔹 3. 結果表示ページ (新規追加)
+# 🔹 3. 結果表示ページ
 # ==========================================
 def show_result_page():
     """クイズセット終了後の結果表示ページ"""
@@ -306,7 +275,6 @@ def show_result_page():
     total = st.session_state.get('total_questions', 0)
     correct = st.session_state.get('correct_count', 0)
     
-    # ゼロ除算を避ける
     if total > 0:
         accuracy = (correct / total) * 100
         st.subheader(f"✅ 結果: {correct} / {total} 問 正解")
@@ -316,51 +284,45 @@ def show_result_page():
     
     st.markdown("---")
     
-    # 復習モードだった場合の処理
     if st.session_state.get('app_mode') == 'review_quiz':
         st.info("お疲れ様でした！復習クイズを完了しました。")
-        # 復習用DFを削除してメモリを解放
         if 'review_df' in st.session_state:
             del st.session_state.review_df
     
-    # 「問題セット選択に戻る」ボタン
     if st.button("📚 問題セット選択に戻る", type="primary", use_container_width=True):
         
-        # 選択ページに戻る際は、全てのクイズ状態を削除します
         for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
-            st.session_state.pop(key, None) # AttributeError回避のため .pop を使用
+            st.session_state.pop(key, None)
             
         st.session_state.app_mode = 'selection'
         st.rerun()
 
-    # NOTE: 「同じセットに再挑戦」ボタン（col_retry）のロジックは完全に削除されました。
-
 # ==========================================
-# 🔹 1. 問題セット選択ページ (修正)
+# 🔹 1. 問題セット選択ページ
 # ==========================================
 def show_selection_page():
     st.title("📚 問題セット選択")
     st.caption("挑戦したいセットを選んでください。")
 
     df_select = load_selection_data()
-    # ... (中略：空のデータフレームチェック) ...
+    
+    if df_select.empty:
+        st.error("問題セットの選択リストが空です。`questions_select.csv` を確認してください。")
+        return
 
     st.markdown("---")
     
     instructions = df_select['instruction'].tolist()
     
-    # --- 👇 3カラムレイアウトの開始 (1:1:1) 👇 ---
     col_radio, col_start, col_review = st.columns(3)
     
     selected_instruction = None
     csv_name = None
 
-    # 1. 問題セットの選択 (ラジオボタン) - 左カラム
     with col_radio:
         st.subheader("セットを選択")
-        # ラジオボタンはst.subheaderの下に配置
         selected_instruction = st.radio(
-            "_", # ラベルを非表示にするため、アンダースコアを使用
+            "_",
             options=instructions,
             key='instruction_selector',
             label_visibility="hidden"
@@ -370,66 +332,40 @@ def show_selection_page():
         selected_row = df_select[df_select['instruction'] == selected_instruction].iloc[0]
         csv_name = selected_row['csv_name']
         
-        # ファイル名のキャプションはカラムの外に配置して見やすくする
         st.caption(f"選択ファイル: `{csv_name}`")
         
-        # 2. このセットで開始ボタン (中央カラム)
         with col_start:
             st.subheader("開始")
             if st.button("このセットで開始 ▶", key="start_quiz_set", type="primary", use_container_width=True):
                 st.session_state.selected_csv = csv_name
                 st.session_state.app_mode = 'quiz'
-                # 開始前にインデックスを確実にリセット
                 st.session_state.pop('index', None)
                 st.rerun()
 
-        # 3. 間違えた問題に再挑戦ボタン (右カラム)
         with col_review:
             st.subheader("復習")
-            # 【修正点】load_review_data に csv_name を渡す
             if st.button("間違えた問題に再挑戦", key="start_review_quiz", type="secondary", use_container_width=True):
-                # 復習データ取得 (ユーザーIDと選択されたセット名を使用)
-                review_df = load_review_data(st.session_state.user_id, quiz_set=csv_name) # <-- ここを変更
+                review_df = load_review_data(st.session_state.user_id, quiz_set=csv_name)
                 
                 if review_df.empty:
-                    st.warning(f"現在、**選択中のセット**には復習すべき問題はありません。") # <-- 警告メッセージもセット限定に変更
+                    st.warning(f"現在、**選択中のセット**には復習すべき問題はありません。")
                 else:
-                    # クイズ状態のクリア
                     for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
-                        st.session_state.pop(key, None) # 安全な削除
-                    
-                    # 特別なモードとデータフレームを設定
+                        st.session_state.pop(key, None)
+                        
                     st.session_state.app_mode = 'review_quiz'
-                    st.session_state.review_df = review_df # 復習用DataFrameをセッションに保存
-                    st.session_state.selected_csv = "復習モード" # 表示用の名前を設定
+                    st.session_state.review_df = review_df
+                    st.session_state.selected_csv = "復習モード"
                     st.rerun()
-    # --- 👆 3カラムレイアウトの終了 👆 ---
-    
-    # 選択されていない場合に備えて、開始/復習ボタンのエリアを空欄にする
     else:
         col_start.empty()
         col_review.empty()
 
 # ==========================================
-# 🔹 2. クイズ実行ページ (Page 1 の 'quiz' モード)
+# 🔹 2. クイズ実行ページ
 # ==========================================
-# show_quiz_page 関数（冒頭）
 def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     
-    # 【削除】以前存在した以下のコードはすべて削除/コメントアウト
-    # col_title, col_button = st.columns([4, 1])
-    # with col_title:
-    #     st.subheader("🧩 英文並べ替えトレーニング")
-    #     st.markdown(f"問題セット: `{st.session_state.selected_csv}`")
-    # with col_button:
-    #     st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True) 
-    #     if st.button("⬅️ 選択に戻る", key="back_to_selection", use_container_width=True):
-    #         # ... (ロジックも削除) ...
-    # st.markdown("---") # 区切り線も削除（quiz_mainで描画済みのため）
-            
-    # 【残す部分】
-    
-    # 現在の問題情報
     total_questions = len(df)
     current_index = st.session_state.index % total_questions
     row = df.iloc[current_index]
@@ -437,7 +373,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     english = row["english"]
     current_correct = english.strip()
 
-    st.markdown(f"問題セット: `{st.session_state.selected_csv}`") # セット名だけは再表示
+    st.markdown(f"問題セット: `{st.session_state.selected_csv}`")
     
     st.info(f"**問題 {current_index + 1}**: {japanese}", icon="💬")
 
@@ -446,18 +382,11 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     # ----------------------------------------------------
     # used_indicesの末尾2つが同じ（＝同じボタンが連続でクリックされた）場合をチェック
     if len(st.session_state.used_indices) >= 2 and st.session_state.used_indices[-1] == st.session_state.used_indices[-2]:
-        # 💡 修正箇所：2つ目の重複した単語だけを削除します
-
-        # 最後に選ばれた（＝重複した）単語とインデックスを1つずつ削除
-        # これにより、1回目のクリックで追加された単語はリストに残ります
+        # 2つ目の重複した単語だけを削除
         st.session_state.selected.pop() 
         st.session_state.used_indices.pop() 
 
-        st.warning("🚨 同じ単語を連続して選択しました。重複した2つ目の単語は取り消されました。", icon="❌")
-
-
-        selected_words_html = ""
-        # (HTML生成ロジックは省略せずにそのまま保持。文字数のためここでは省略します)
+    selected_words_html = ""
     if not st.session_state.selected:
         selected_words_html = "<div style='border: 2px dashed #9ca3af; padding: 12px; border-radius: 8px; text-align: center; color: #9ca3af; font-style: italic; min-height: 50px;'>下の語句を順番にタップしてください</div>"
     else:
@@ -478,30 +407,25 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         num_words = len(st.session_state.shuffled)
         max_cols = min(num_words, 8) 
         cols = st.columns([1] * max_cols)
-        
-        # 【削除】不要になったため、clicked_index_listは削除します
 
         for i, word in enumerate(st.session_state.shuffled):
             
-            # 修正: used_indicesのみを無効化の判定に使用
             is_picked = i in st.session_state.used_indices
             
             label = word 
             button_key = f"word_{st.session_state.selected_csv}_{st.session_state.index}_{i}"
             col_index = i % max_cols
 
-            # ボタンが押されたとき
             if cols[col_index].button(
                 label, 
                 key=button_key, 
                 disabled=is_picked, 
                 use_container_width=True,
-                on_click=handle_word_click, # 👈 ここを追加/変更
-                args=(i, word) # 👈 ここを追加/変更
+                on_click=handle_word_click,
+                args=(i, word)
             ):
-                # 【重要】ボタンがクリックされたら、on_click実行後に即座に再描画
-                st.rerun()            
-                   
+                st.rerun() 
+                    
     # ----------------------------------------------------
     # 3. コントロールボタン (OK/Undo/Next)
     # ----------------------------------------------------
@@ -522,37 +446,27 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         else:
             user_answer_final = user_answer_cleaned
 
-        # 正誤判定
         is_correct = (user_answer_final == current_correct)
 
-        # 【修正箇所 1: 正解時にスコアをカウント】
-        if is_correct:
-            # 正解であればカウントアップ（二重カウント防止のために quiz_saved フラグを使用）
-            if not st.session_state.quiz_saved:
-                st.session_state.correct_count += 1
+        if is_correct and not st.session_state.quiz_saved:
+            st.session_state.correct_count += 1
                 
-        # 【結果の保存ロジック】
         if not st.session_state.quiz_saved:
-            # Firestoreに結果を保存
             save_quiz_result(japanese, current_correct, user_answer_final, is_correct)
-            st.session_state.quiz_saved = True # 保存フラグを立てて二重保存を防ぐ
+            st.session_state.quiz_saved = True
 
         if is_correct:
             col_ok.success("✅ 正解！")
             st.balloons()
-        #     play_audio_trick(True)
         else:
             col_ok.error("❌ 不正解。")
-        #     play_audio_trick(False)
             
         st.markdown(f"**正解の英文:** `{current_correct}`")
         
-        # 【修正箇所 2: next_question 関数呼び出し】
-        # next_question の中で最終問題かを判定し、結果画面に遷移させます。
         if col_next.button("次の問題へ ▶", type="primary", use_container_width=True, on_click=next_question, args=(df, proper_nouns)):
             st.rerun()
             
-    else: # クイズが未完成の場合のロジック
+    else:
         col_ok.button("OK (未完成)", disabled=True, use_container_width=True)
         if col_next.button("🔄 リセット", on_click=reset_question, args=(df, proper_nouns), use_container_width=True):
             st.rerun()
@@ -564,7 +478,6 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
 def quiz_main():
     """Page 1 (メインコンテンツ) のロジックを管理"""
     
-    # CSSの定義 (省略、簡潔化のため)
     st.markdown("""
     <style>
     /* ... (CSSの定義は省略) ... */
@@ -575,31 +488,21 @@ def quiz_main():
     
     if st.session_state.app_mode == 'selection':
         show_selection_page()
-# quiz_main 関数の一部 (修正後)
 
-# ... (中略) ...
-
-    # 【ここから修正】 quiz モードと review_quiz モードを統合
     elif st.session_state.app_mode == 'quiz' or st.session_state.app_mode == 'review_quiz':
         
-        # データのロードロジックの判定と実行
         if st.session_state.app_mode == 'review_quiz':
-            # 復習モード: セッションからDataFrameを取得
-            
-            # 【修正 1】 st.title の呼び出しを削除
             if 'review_df' not in st.session_state or st.session_state.review_df.empty:
                 st.error("復習データが見つからないか、空です。")
                 st.session_state.app_mode = 'selection'
                 st.rerun()
                 return
             
-            df = st.session_state.review_df # 復習用DataFrameを使用
+            df = st.session_state.review_df
             proper_nouns = load_proper_nouns()
-            # 【修正 2】 ヘッダーテキストを定義
             header_text = "🔄 間違えた問題に再挑戦"
 
-        else: # 通常のクイズモード: CSVをロード
-            # 【修正 1】 st.title の呼び出しを削除
+        else:
             header_text = "📝 英文並べかえ問題に挑戦"
             
             if st.session_state.selected_csv is None:
@@ -624,56 +527,46 @@ def quiz_main():
                 st.rerun()
                 return
 
-        # 【新規追加】データが空ではないか最終チェック (ゼロ除算/IndexError対策)
         if df.empty:
             st.error("問題データが空です。問題セット選択ページに戻ります。")
             st.session_state.app_mode = 'selection'
             st.rerun()
             return
 
-        # ----------------------------------------------------
-        # 【新規追加】 2カラムヘッダーの表示
-        # ----------------------------------------------------
+        # 2カラムヘッダーの表示
         col_title_top, col_button_top = st.columns([4, 1])
 
         with col_title_top:
-            st.title(header_text) # <-- st.titleで大きく表示
+            st.title(header_text)
             
         with col_button_top:
-            # ボタンをタイトルと縦位置を合わせるためマージン調整
             st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True) 
             if st.button("⬅️ 選択に戻る", key="back_to_selection_main", use_container_width=True):
-                # show_quiz_page内で行っていた戻るロジックを再実装
                 st.session_state.app_mode = 'selection'
                 st.session_state.selected = []
                 st.session_state.used_indices = []
                 st.session_state.quiz_complete = False
                 st.session_state.loaded_csv_name = None 
                 st.rerun()
-                return # 戻るボタンが押されたらここで処理を中断
+                return
 
-        st.markdown("---") # ヘッダーと本文の区切り線
+        st.markdown("---")
         
-        # 共通: 問題セットが切り替わった場合、セッションを初期化
-        # ※ 復習モードでも selected_csv が '復習モード' に設定されるため、問題セットの切り替えを正しく判定できます。
         if st.session_state.selected_csv != st.session_state.get('loaded_csv_name') or "shuffled" not in st.session_state:
             st.session_state.index = 0
-            # DFが復習用か通常用かにかかわらず、DFと固有名詞リストを使って初期化
             init_session_state(df, proper_nouns)
             st.session_state.loaded_csv_name = st.session_state.selected_csv
             
-        # show_quiz_pageからはヘッダーの描画ロジックを削除する必要がある！
         show_quiz_page(df, proper_nouns)
 
-    # 【新規追加】結果表示モード
     elif st.session_state.app_mode == 'quiz_result':
-        show_result_page() # 結果表示関数を呼び出す
-
+        show_result_page()
+        
     # --- メインコンテンツ終了 ---
         
-    st.markdown("---") # フッターとの区切り線
+    st.markdown("---")
     
-    # フッター用のコンテナを作成し、セクションを分ける
+    # フッター
     footer_container = st.container()
     
     with footer_container:
@@ -683,13 +576,11 @@ def quiz_main():
             user_info = f"👤 **ログインユーザー:** {st.session_state.nickname} "
             if st.session_state.is_admin:
                 user_info += " (管理者)"
-            st.caption(user_info) # captionで控えめに表示
+            st.caption(user_info)
 
         with col_logout:
-            # ログアウトボタンを右側に配置
             st.button("ログアウト", on_click=logout, key="logout_button_footer", use_container_width=True)
             
-
 
 # ==========================================
 # 🔹 アプリケーション実行のメインロジック
@@ -697,7 +588,7 @@ def quiz_main():
 def run_app():
     st.set_page_config(layout="wide")
 
-    # セッション初期化 (Streamlitアプリの実行開始時に一度だけ実行される)
+    # セッション初期化
     defaults = {
         "logged_in": False,
         "page": 0,
@@ -713,24 +604,21 @@ def run_app():
         "selected": [], 
         "used_indices": [],
         "quiz_complete": False,
-        "selected": [], 
-        "quiz_saved": False, # 【追記】結果保存済みフラグ
-        "correct_count": 0, # 【追記】正解数
-        "total_questions": 0, # 【追記】総問題数
+        "quiz_saved": False,
+        "correct_count": 0,
+        "total_questions": 0,
         "duplicate_error": False,
     }
     for key, val in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = val
 
-    db = init_firestore() # Firebase 初期化はここで実行
+    db = init_firestore()
 
     # ------------------------------------------
     # 🔹 Page 0: ログインページ 
     # ------------------------------------------
-
     if st.session_state.page == 0:
-        # ログイン済みならメインへ
         if st.session_state.logged_in:
             st.session_state.page = 1
             st.rerun()
@@ -740,7 +628,6 @@ def run_app():
         st.caption("管理者としてログインするには、secrets.tomlに設定したADMIN_USERNAMEとADMIN_PASSWORDを使用してください。")
         st.markdown("---")
         
-        # ユーザー入力
         nickname = st.text_input("ニックネーム", key="nickname_input")
         user_id_input = st.text_input("パスワード", type="password", key="user_id_input")
 
@@ -785,7 +672,6 @@ def run_app():
     # 🔹 Page 1: メインコンテンツ (問題セット選択/クイズ実行)
     # ------------------------------------------
     elif st.session_state.page == 1:
-        # 未ログインならログインページへリダイレクト
         if not st.session_state.logged_in:
             st.session_state.page = 0
             st.rerun()
