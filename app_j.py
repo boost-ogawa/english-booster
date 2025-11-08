@@ -242,6 +242,7 @@ def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
     st.session_state.used_indices = []
     st.session_state.quiz_complete = False
     st.session_state.quiz_saved = False # 【追記】問題が切り替わったらリセット
+    st.session_state.clicked_index_list = []
 
 def handle_word_click(i: int, word: str):
     if st.session_state.quiz_complete:
@@ -461,22 +462,35 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     # ----------------------------------------------------
     # 2. 選択肢エリア (Shuffled Words)
     # ----------------------------------------------------
-    shuffled_container = st.container()
     with shuffled_container:
         num_words = len(st.session_state.shuffled)
         max_cols = min(num_words, 8) 
         cols = st.columns([1] * max_cols)
-        
+        clicked_index_list = st.session_state.get('clicked_index_list', []) 
+
         for i, word in enumerate(st.session_state.shuffled):
-            is_picked = i in st.session_state.used_indices
+        
+        # 修正: 既に使われたインデックスに加え、今回クリックされたインデックスも無効化の対象とする
+        # is_picked = i in st.session_state.used_indices 
+            is_picked = i in st.session_state.used_indices or i in clicked_index_list
+        
             label = word 
             button_key = f"word_{st.session_state.selected_csv}_{st.session_state.index}_{i}"
             col_index = i % max_cols
-            
+        
+        # ボタンが押されたとき
             if cols[col_index].button(label, key=button_key, disabled=is_picked, use_container_width=True):
+            
+            # 【新規追加】クリックされたインデックスを一時リストに追加し、即座に無効化に反映させる
+                st.session_state.clicked_index_list = st.session_state.used_indices + [i]
+            
+            # 実際の選択処理を実行
                 handle_word_click(i, word)
+            
                 st.rerun()
 
+    # 【追加】次の問題へ移る、またはリセットされたらこの一時リストをクリアする必要がある
+    # これは init_session_state や next_question, reset_question などのロジックに任せる
 
     
     # ----------------------------------------------------
