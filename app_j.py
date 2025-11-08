@@ -490,24 +490,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             ):
                 # 【重要】ボタンがクリックされたら、on_click実行後に即座に再描画
                 st.rerun()            
-                 
-                word_to_append = word
-                
-                # 最初の単語の小文字/大文字の処理
-                if not st.session_state.selected: 
-                    if not re.match(r"[\.\?!]$", word):
-                        if word[0].islower():
-                            word_to_append = word[0].upper() + word[1:] if len(word) > 1 else word.upper()
-                
-                # 【即時更新】単語をselectedに追加し、インデックスをused_indicesに即座に追加する
-                st.session_state.selected.append(word_to_append)
-                st.session_state.used_indices.append(i) # 👈 これが最重要！即座に更新される
-
-                # 処理後にst.rerun()
-                st.rerun() 
-                # このロジックにより、二度押しの処理が走る前に used_indices が更新され、
-                # is_picked が True になるため、二度押しを防げます。
-    
+                   
     # ----------------------------------------------------
     # 3. コントロールボタン (OK/Undo/Next)
     # ----------------------------------------------------
