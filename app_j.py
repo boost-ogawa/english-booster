@@ -462,6 +462,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     # ----------------------------------------------------
     # 2. 選択肢エリア (Shuffled Words)
     # ----------------------------------------------------
+    shuffled_container = st.container()
     with shuffled_container:
         num_words = len(st.session_state.shuffled)
         max_cols = min(num_words, 8) 
