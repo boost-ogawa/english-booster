@@ -467,32 +467,41 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         num_words = len(st.session_state.shuffled)
         max_cols = min(num_words, 8) 
         cols = st.columns([1] * max_cols)
-        clicked_index_list = st.session_state.get('clicked_index_list', []) 
+        
+        # 【削除】不要になったため、clicked_index_listは削除します
 
         for i, word in enumerate(st.session_state.shuffled):
-        
-        # 修正: 既に使われたインデックスに加え、今回クリックされたインデックスも無効化の対象とする
-        # is_picked = i in st.session_state.used_indices 
-            is_picked = i in st.session_state.used_indices or i in clicked_index_list
-        
+            
+            # 修正: used_indicesのみを無効化の判定に使用
+            is_picked = i in st.session_state.used_indices
+            
             label = word 
             button_key = f"word_{st.session_state.selected_csv}_{st.session_state.index}_{i}"
             col_index = i % max_cols
-        
-        # ボタンが押されたとき
+            
+            # ボタンが押されたとき
             if cols[col_index].button(label, key=button_key, disabled=is_picked, use_container_width=True):
-            
-            # 【新規追加】クリックされたインデックスを一時リストに追加し、即座に無効化に反映させる
-                st.session_state.clicked_index_list = st.session_state.used_indices + [i]
-            
-            # 実際の選択処理を実行
-                handle_word_click(i, word)
-            
-                st.rerun()
+                
+                # 【重要修正】handle_word_clickを呼ばず、ここで処理を行う
+                if st.session_state.quiz_complete:
+                    st.rerun() # 処理は行わず再実行
+                    
+                word_to_append = word
+                
+                # 最初の単語の小文字/大文字の処理
+                if not st.session_state.selected: 
+                    if not re.match(r"[\.\?!]$", word):
+                        if word[0].islower():
+                            word_to_append = word[0].upper() + word[1:] if len(word) > 1 else word.upper()
+                
+                # 【即時更新】単語をselectedに追加し、インデックスをused_indicesに即座に追加する
+                st.session_state.selected.append(word_to_append)
+                st.session_state.used_indices.append(i) # 👈 これが最重要！即座に更新される
 
-    # 【追加】次の問題へ移る、またはリセットされたらこの一時リストをクリアする必要がある
-    # これは init_session_state や next_question, reset_question などのロジックに任せる
-
+                # 処理後にst.rerun()
+                st.rerun() 
+                # このロジックにより、二度押しの処理が走る前に used_indices が更新され、
+                # is_picked が True になるため、二度押しを防げます。
     
     # ----------------------------------------------------
     # 3. コントロールボタン (OK/Undo/Next)
