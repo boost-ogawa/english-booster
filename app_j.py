@@ -462,10 +462,23 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             col_ok.error("❌ 不正解。")
             
         st.markdown(f"**正解の英文:** `{current_correct}`")
+
+        total_questions = len(df)
+        current_index = st.session_state.index % total_questions
+        is_last_question = (current_index + 1 >= total_questions)
+
+        next_button_label = "結果を確認 ✅" if is_last_question else "次の問題へ ▶"
+        next_button_type = "secondary" if is_last_question else "primary"
         
-        if col_next.button("次の問題へ ▶", type="primary", use_container_width=True, on_click=next_question, args=(df, proper_nouns)):
+        if col_next.button(
+            next_button_label,               # ラベルを動的に変更
+            type=next_button_type,           # 最終問題ではボタンの色を変えて強調
+            use_container_width=True, 
+            on_click=next_question, 
+            args=(df, proper_nouns)
+        ):
             st.rerun()
-            
+                          
     else:
         col_ok.button("OK (未完成)", disabled=True, use_container_width=True)
         if col_next.button("🔄 リセット", on_click=reset_question, args=(df, proper_nouns), use_container_width=True):
@@ -556,7 +569,11 @@ def quiz_main():
             st.session_state.index = 0
             init_session_state(df, proper_nouns)
             st.session_state.loaded_csv_name = st.session_state.selected_csv
+
+            st.session_state.correct_count = 0
+            st.session_state.total_questions = len(df) # 総問題数をここでセット
             
+
         show_quiz_page(df, proper_nouns)
 
     elif st.session_state.app_mode == 'quiz_result':
