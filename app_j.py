@@ -247,18 +247,6 @@ def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
 def handle_word_click(i: int, word: str):
     if st.session_state.quiz_complete:
         return
-    
-    # 【変更点 1: 直前単語との重複チェックを追加】
-    # 直前の単語（selected[-1]）と、現在選ばれた単語（word）が同じかチェックする
-    # selectedが空ではない、かつ、今回の単語のインデックスがused_indicesの最後（直前に使われたボタン）と同じか
-    # かつ、その単語自体が直前の単語と同じである場合、二度押し（実質的な重複クリック）と見なす
-    if st.session_state.selected and i == st.session_state.used_indices[-1] and word == st.session_state.shuffled[st.session_state.used_indices[-1]]:
-        # 重複が確認されたら、エラーフラグを立てて、処理を中断する
-        st.session_state.duplicate_error = True
-        return
-    
-    # エラーフラグをリセット (正常なクリックの場合)
-    st.session_state.duplicate_error = False
 
     word_to_append = word
     if not st.session_state.selected: 
