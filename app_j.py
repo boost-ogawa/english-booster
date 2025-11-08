@@ -247,6 +247,18 @@ def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
 def handle_word_click(i: int, word: str):
     if st.session_state.quiz_complete:
         return
+    
+    # 【変更点 1: 直前単語との重複チェックを追加】
+    # 直前の単語（selected[-1]）と、現在選ばれた単語（word）が同じかチェックする
+    # selectedが空ではない、かつ、今回の単語のインデックスがused_indicesの最後（直前に使われたボタン）と同じか
+    # かつ、その単語自体が直前の単語と同じである場合、二度押し（実質的な重複クリック）と見なす
+    if st.session_state.selected and i == st.session_state.used_indices[-1] and word == st.session_state.shuffled[st.session_state.used_indices[-1]]:
+        # 重複が確認されたら、エラーフラグを立てて、処理を中断する
+        st.session_state.duplicate_error = True
+        return
+    
+    # エラーフラグをリセット (正常なクリックの場合)
+    st.session_state.duplicate_error = False
 
     word_to_append = word
     if not st.session_state.selected: 
@@ -444,9 +456,16 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     # ----------------------------------------------------
     # 1. あなたの回答エリア (Selected Words)
     # ----------------------------------------------------
-    
-    selected_words_html = ""
-    # (HTML生成ロジックは省略せずにそのまま保持。文字数のためここでは省略します)
+    if st.session_state.duplicate_error:
+    # エラーが発生した場合は、最後の単語を削除し、警告を表示します
+        if st.session_state.selected:
+            st.session_state.selected.pop()
+            st.session_state.used_indices.pop()
+        st.warning("🚨 その単語は直前に選択済みです！")
+        # エラーを処理したらフラグをリセットして、再描画の準備
+        st.session_state.duplicate_error = False
+        selected_words_html = ""
+        # (HTML生成ロジックは省略せずにそのまま保持。文字数のためここでは省略します)
     if not st.session_state.selected:
         selected_words_html = "<div style='border: 2px dashed #9ca3af; padding: 12px; border-radius: 8px; text-align: center; color: #9ca3af; font-style: italic; min-height: 50px;'>下の語句を順番にタップしてください</div>"
     else:
@@ -706,6 +725,7 @@ def run_app():
         "quiz_saved": False, # 【追記】結果保存済みフラグ
         "correct_count": 0, # 【追記】正解数
         "total_questions": 0, # 【追記】総問題数
+        "duplicate_error": False,
     }
     for key, val in defaults.items():
         if key not in st.session_state:
