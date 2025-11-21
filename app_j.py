@@ -297,153 +297,179 @@ def show_result_page():
         st.session_state.app_mode = 'selection'
         st.rerun()
 
-# ==========================================
-# 🔹 1. 問題セット選択ページ (修正版)
-# ==========================================
 def show_selection_page():
     st.title("📚 問題セット選択")
-    st.caption("学年とレッスンを選択し、問題セットに挑戦してください。")
+    st.caption("学年、レッスン、問題セットを順番に選択し、開始してください。")
 
-    df_select = load_selection_data()
-    
+    # --- データ準備 ---
+    try:
+        df_select = load_selection_data()
+    except Exception as e:
+        st.error(f"問題セット選択リストの読み込み中にエラーが発生しました: {e}")
+        return
+        
     if df_select.empty:
         st.error("問題セットの選択リストが空です。`questions_select.csv` を確認してください。")
         return
         
-    # 'grade' 列がない場合はエラーメッセージを表示して処理を中断
-    if 'grade' not in df_select.columns or 'lesson' not in df_select.columns:
-        st.error("⚠️ エラー: 問題セットCSVに 'grade' または 'lesson' 列が見つかりません。")
+    if 'grade' not in df_select.columns or 'lesson' not in df_select.columns or 'instruction' not in df_select.columns:
+        st.error("⚠️ エラー: 問題セットCSVに必須の列('grade', 'lesson', 'instruction')が見つかりません。")
         return
 
-    # DataFrameを 'grade' と 'lesson' 列でグループ化
     df_grouped = df_select.groupby('grade')
+    
+    # --- セッションステートの初期化と取得 ---
+    # 現在の選択状態
+    current_grade = st.session_state.get('selected_grade')
+    current_lesson = st.session_state.get('selected_lesson')
+    current_instruction = st.session_state.get('selected_set_instruction')
+    
+    # 選択確定後の変数
+    selected_grade = None
+    selected_lesson = None
+    selected_instruction = None
+    csv_name = None 
     
     st.markdown("---") 
     
-    # --- 👇 3カラムレイアウトの開始 (1:2:1) 👇 ---
-    col_selector, col_content, col_review = st.columns([1, 2, 1])
+    # --- 👇 4カラムレイアウトの開始 (1:1:1:1) 👇 ---
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     
-    selected_instruction = None
-    csv_name = None
-    
-    # 1. 学年/レッスン選択エリア (左カラム)
-    with col_selector:
-        st.subheader("レッスン選択")
+    # ==========================================
+    # 🔹 COL 1: 学年選択 (ラジオボタン, 固定) 
+    # ==========================================
+    with col1:
+        st.subheader("ステップ 1: 学年")
         
-        # セッションステートに選択状態を保持
-        if 'selected_lesson' not in st.session_state:
-            st.session_state.selected_lesson = None
-        if 'selected_set_instruction' not in st.session_state:
-            st.session_state.selected_set_instruction = None
-
-        # --- 中2コンテナの処理 ---
-        if '中2' in df_grouped.groups:
-            df_m2 = df_grouped.get_group('中2')
-            m2_lessons = ['選択してください'] + sorted(df_m2['lesson'].unique().tolist())
-            
-            with st.expander("🎓 中学２年生"):
-                m2_selected_lesson = st.selectbox(
-                    "中2_レッスンセレクター", 
-                    options=m2_lessons, 
-                    key='m2_lesson_selector', 
-                    label_visibility="collapsed"
-                )
-                if m2_selected_lesson != "選択してください":
-                    # 中3の選択をリセット
-                    if st.session_state.selected_lesson != m2_selected_lesson:
-                        st.session_state.selected_set_instruction = None 
-                    st.session_state.selected_lesson = m2_selected_lesson
-                    st.session_state.grade = '中2'
-
-
-        # --- 中3コンテナの処理 ---
-        if '中3' in df_grouped.groups:
-            df_m3 = df_grouped.get_group('中3')
-            m3_lessons = ['選択してください'] + sorted(df_m3['lesson'].unique().tolist())
-            
-            with st.expander("🎓 中学３年生"):
-                # 中2が選択されていたら中3のセレクトボックスを無効化
-                is_m3_disabled = (st.session_state.get('grade') == '中2' and st.session_state.selected_lesson in m2_lessons and st.session_state.selected_lesson != '選択してください')
-                
-                m3_selected_lesson = st.selectbox(
-                    "中3_レッスンセレクター", 
-                    options=m3_lessons, 
-                    key='m3_lesson_selector', 
-                    label_visibility="collapsed",
-                    disabled=is_m3_disabled
-                )
-                
-                if not is_m3_disabled and m3_selected_lesson != "選択してください":
-                    # 中2の選択をリセット
-                    if st.session_state.selected_lesson != m3_selected_lesson:
-                        st.session_state.selected_set_instruction = None 
-                    st.session_state.selected_lesson = m3_selected_lesson
-                    st.session_state.grade = '中3'
-
-
-    # 2. 問題セットのラジオボタン表示と開始ボタン (中央カラム)
-    with col_content:
-        st.subheader("問題の選択")
+        grades = sorted(df_grouped.groups.keys())
         
-        if st.session_state.selected_lesson and st.session_state.selected_lesson != '選択してください':
-            # 選択されたレッスンに基づいて問題セットをフィルタリング
-            df_lesson = df_select[(df_select['grade'] == st.session_state.grade) & (df_select['lesson'] == st.session_state.selected_lesson)]
+        # 既存の選択があればインデックスを取得
+        initial_grade_index = grades.index(current_grade) if current_grade in grades else 0
+        
+        selected_grade = st.radio(
+            "学年を選択:",
+            options=grades,
+            index=initial_grade_index,
+            key='grade_radio',
+            label_visibility='collapsed'
+        )
+
+        # 選択が変更されたら、下位の選択をリセット
+        if selected_grade != current_grade:
+            st.session_state.pop('selected_lesson', None)
+            st.session_state.pop('selected_set_instruction', None)
+            st.rerun() # リセットされたら再描画
+
+        st.session_state.selected_grade = selected_grade
+        current_grade = selected_grade # 最新の選択を更新
+        
+    # ==========================================
+    # 🔹 COL 2: レッスン選択 (ラジオボタン) 
+    # ==========================================
+    with col2:
+        st.subheader("ステップ 2: レッスン")
+        
+        if current_grade:
+            df_grade = df_grouped.get_group(current_grade)
+            lesson_options = sorted(df_grade['lesson'].unique().tolist())
             
-            if not df_lesson.empty:
-                set_instructions = df_lesson['instruction'].tolist()
-                
-                # ラジオボタンでInstructionを選択
-                selected_instruction = st.radio(
-                    "セット名を選択してください", 
-                    options=set_instructions,
-                    index=set_instructions.index(st.session_state.selected_set_instruction) if st.session_state.selected_set_instruction in set_instructions else 0,
-                    key='set_radio',
-                    label_visibility='hidden'
-                )
-                
-                st.session_state.selected_set_instruction = selected_instruction
-                
-                selected_row = df_lesson[df_lesson['instruction'] == selected_instruction].iloc[0]
-                csv_name = selected_row['csv_name']
-                
-                st.caption(f"選択ファイル: `{csv_name}`")
-                
-                st.markdown("---") 
-                
-                # 開始ボタン
-                if st.button("このセットで開始 ▶", key="start_quiz_set", type="primary", use_container_width=True):
-                    st.session_state.selected_csv = csv_name
-                    st.session_state.app_mode = 'quiz'
-                    st.session_state.pop('index', None)
-                    st.session_state.correct_count = 0 # カウンターリセット
-                    st.rerun()
-            else:
-                st.info("選択されたレッスンに対応する問題セットがありません。")
+            # 既存の選択があればインデックスを取得
+            initial_lesson_index = lesson_options.index(current_lesson) if current_lesson in lesson_options else 0
+            
+            selected_lesson = st.radio(
+                "レッスンを選択:",
+                options=lesson_options,
+                index=initial_lesson_index,
+                key='lesson_radio',
+                label_visibility='collapsed'
+            )
+
+            # 選択が変更されたら、下位の選択をリセット
+            if selected_lesson != current_lesson:
+                st.session_state.pop('selected_set_instruction', None)
+                st.rerun() # リセットされたら再描画
+
+            st.session_state.selected_lesson = selected_lesson
+            current_lesson = selected_lesson # 最新の選択を更新
+        else:
+            st.info("← 学年を選択してください")
+            
+    # ==========================================
+    # 🔹 COL 3: 問題セット選択 (ラジオボタン) 
+    # ==========================================
+    with col3:
+        st.subheader("ステップ 3: セット")
+        
+        if current_grade and current_lesson:
+            df_lesson = df_select[
+                (df_select['grade'] == current_grade) & 
+                (df_select['lesson'] == current_lesson)
+            ]
+            set_instructions = df_lesson['instruction'].tolist()
+
+            # 既存の選択があればインデックスを取得
+            initial_set_index = set_instructions.index(current_instruction) if current_instruction in set_instructions else 0
+            
+            selected_instruction = st.radio(
+                "セットを選択:", 
+                options=set_instructions,
+                index=initial_set_index,
+                key='set_radio',
+                label_visibility='collapsed'
+            )
+            
+            st.session_state.selected_set_instruction = selected_instruction
+            
+            # 最終的なファイル名を取得
+            selected_row = df_lesson[df_lesson['instruction'] == selected_instruction].iloc[0]
+            csv_name = selected_row['csv_name']
+
+            # ファイル名表示（選択の確定）
+            st.caption(f"選択: `{csv_name}`")
 
         else:
-            st.info("左のセクションからレッスンを選択してください。")
+            st.info("← レッスンを選択してください")
 
-    # 3. 間違えた問題に再挑戦ボタン (右カラム)
-    with col_review:
-        st.subheader("復習モード")
+    # ==========================================
+    # 🔹 COL 4: アクション (ボタン) 
+    # ==========================================
+    with col4:
+        st.subheader("ステップ 4: 開始")
         
-        # 復習ボタンの処理はcsv_nameが確定している場合のみ有効化
-        is_review_disabled = not csv_name
+        # ボタンの有効化判定
+        is_button_enabled = csv_name is not None
         
-        if st.button("間違えた問題に再挑戦", key="start_review_quiz", type="secondary", use_container_width=True, disabled=is_review_disabled):
-            review_df = load_review_data(st.session_state.user_id, quiz_set=csv_name)
-            
-            if review_df.empty:
-                st.warning(f"現在、**選択中のセット**には復習すべき問題はありません。")
-            else:
-                # クイズ状態をリセット
-                for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
-                    st.session_state.pop(key, None)
-                    
-                st.session_state.app_mode = 'review_quiz'
-                st.session_state.review_df = review_df
-                st.session_state.selected_csv = "復習モード"
+        if is_button_enabled:
+            # 1. 開始ボタン
+            if st.button("このセットで開始 ▶", key="start_quiz_set", type="primary", use_container_width=True):
+                st.session_state.selected_csv = csv_name
+                st.session_state.app_mode = 'quiz'
+                # クイズ開始時の状態リセット
+                st.session_state.pop('index', None)
+                st.session_state.pop('current_correct', None)
+                st.session_state.correct_count = 0
                 st.rerun()
+
+            st.markdown("---") 
+            
+            # 2. 復習ボタン
+            if st.button("間違えた問題に再挑戦 🔄", key="start_review_quiz", use_container_width=True):
+                # load_review_data は外部関数と想定
+                review_df = load_review_data(st.session_state.user_id, quiz_set=csv_name)
+                
+                if review_df.empty:
+                    st.warning("復習すべき問題はありません。")
+                else:
+                    # 復習モードへの切り替え
+                    for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
+                        st.session_state.pop(key, None)
+                    
+                    st.session_state.app_mode = 'review_quiz'
+                    st.session_state.review_df = review_df
+                    st.session_state.selected_csv = "復習モード"
+                    st.rerun()
+        else:
+            st.info("← 問題セットを選択してください")
 
     st.markdown("---")
 # ==========================================
