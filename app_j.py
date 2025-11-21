@@ -270,7 +270,7 @@ def reset_question(df: pd.DataFrame, proper_nouns: List[str]):
 # ==========================================
 def show_result_page():
     """クイズセット終了後の結果表示ページ"""
-    st.title("🎉 クイズセット完了！")
+    st.subheader("🎉 クイズセット完了！")
     
     total = st.session_state.get('total_questions', 0)
     correct = st.session_state.get('correct_count', 0)
@@ -301,7 +301,7 @@ def show_result_page():
 # 🔹 1. 問題セット選択ページ (インデックス計算・完全永続化版)
 # ==========================================
 def show_selection_page():
-    st.title("📚 問題セット選択")
+    st.subheader("📚 問題セット選択")
     st.caption("左から順に項目を選択して、問題セットを決定してください。")
 
     df_select = load_selection_data()
