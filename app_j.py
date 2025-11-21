@@ -598,7 +598,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             st.rerun()
                           
     else:
-        if col_next.button("🔄 リセット", on_click=reset_question, args=(df, proper_nouns), use_container_width=True):
+        if col_next.button("🔄 リセット(すべてクリア))", on_click=reset_question, args=(df, proper_nouns), use_container_width=True):
             st.rerun()
             
     progress_ratio = (current_index + 1) / total_questions
