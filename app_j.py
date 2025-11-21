@@ -668,7 +668,7 @@ def quiz_main():
         col_title_top, col_button_top = st.columns([4, 1])
 
         with col_title_top:
-            st.title(header_text)
+            st.subheader(header_text)
             
         with col_button_top:
             st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True) 
