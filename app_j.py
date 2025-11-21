@@ -598,7 +598,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             st.rerun()
                           
     else:
-        col_ok.button("OK (未完成)", disabled=True, use_container_width=True)
+        col_ok.button("最後に「.」「?」を押す", disabled=True, use_container_width=True)
         if col_next.button("🔄 リセット", on_click=reset_question, args=(df, proper_nouns), use_container_width=True):
             st.rerun()
             
