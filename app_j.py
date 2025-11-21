@@ -579,7 +579,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         else:
             col_ok.error("❌ 不正解。")
             
-        st.markdown(f"**正解の英文:** `{current_correct}`")
+        st.info(f"**正解の英文:** `{current_correct}`")
 
         total_questions = len(df)
         current_index = st.session_state.index % total_questions
