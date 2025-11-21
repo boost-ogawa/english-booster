@@ -578,8 +578,9 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             st.balloons()
         else:
             col_ok.error("❌ 不正解。")
-        st.success(f"**正解の英文:** **`{current_correct}`**")
-        
+            
+        st.subheader(f"**正解の英文:** `{current_correct}`")
+
         total_questions = len(df)
         current_index = st.session_state.index % total_questions
         is_last_question = (current_index + 1 >= total_questions)
