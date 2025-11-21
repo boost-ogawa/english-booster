@@ -596,13 +596,14 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             args=(df, proper_nouns)
         ):
             st.rerun()
+                          
     else:
-            # on_click が処理を実行し、自動的にリランします
-            col_next.button("🔄 リセット", on_click=reset_question, args=(df, proper_nouns), use_container_width=True)
-                
-        progress_ratio = (current_index + 1) / total_questions
-        st.progress(progress_ratio, text=f"**進捗: {current_index + 1} / {total_questions} 問**")                          
-    else:
+        col_ok.button("最後に「.」「?」を押す", disabled=True, use_container_width=True)
+        if col_next.button("🔄 リセット", on_click=reset_question, args=(df, proper_nouns), use_container_width=True):
+            st.rerun()
+            
+    progress_ratio = (current_index + 1) / total_questions
+    st.progress(progress_ratio, text=f"**進捗: {current_index + 1} / {total_questions} 問**")
 
 
 def quiz_main():
