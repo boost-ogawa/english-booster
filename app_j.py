@@ -681,8 +681,7 @@ def quiz_main():
                 st.rerun()
                 return
 
-        st.markdown("---")
-        
+       
         if st.session_state.selected_csv != st.session_state.get('loaded_csv_name') or "shuffled" not in st.session_state:
             st.session_state.index = 0
             init_session_state(df, proper_nouns)
