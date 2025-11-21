@@ -301,7 +301,7 @@ def show_result_page():
 # 🔹 1. 問題セット選択ページ (インデックス計算・完全永続化版)
 # ==========================================
 def show_selection_page():
-    st.subheader("📚 問題セット選択(左から順に項目を選択して、問題セットを決定してください。)")
+    st.subheader("📚 問題セット選択（左から順に選択）")
     df_select = load_selection_data()
     
     if df_select.empty:
