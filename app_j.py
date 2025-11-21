@@ -492,10 +492,8 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     japanese = row["japanese"]
     english = row["english"]
     current_correct = english.strip()
-
-    st.markdown(f"問題セット: `{st.session_state.selected_csv}`")
     
-    st.info(f"**問題 {current_index + 1}**: {japanese}", icon="💬")
+    st.caption(f"**問題 {current_index + 1}**: {japanese}", icon="💬")
 
     # ----------------------------------------------------
     # 1. あなたの回答エリア (Selected Words)
