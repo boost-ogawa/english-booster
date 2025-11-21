@@ -444,7 +444,7 @@ def show_selection_page():
     # ==========================================
     with col4:
         if csv_name:
-            st.markdown(f"**選択中:**\n\n`{st.session_state.saved_grade}` > `{st.session_state.saved_lesson}` > `{st.session_state.saved_instruction}`")
+            st.markdown(f"**選択中:** > `{st.session_state.saved_grade}` > `{st.session_state.saved_lesson}` > `{st.session_state.saved_instruction}`")
             
             st.markdown("---")
             
