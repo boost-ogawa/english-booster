@@ -351,17 +351,14 @@ def show_selection_page():
 
     st.markdown("---")
     
-    # 4カラムレイアウト (1:1:1:1)
-    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+    # 4カラムレイアウト (1:1:1:2)
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
     
     # ==========================================
     # 🟢 Col 1: 学年選択
     # ==========================================
     with col1:
-        st.subheader("① 学年")
         grade_options = ['中2', '中3'] 
-        
-        # 保存されている値が、選択肢の何番目にあるか計算
         grade_index = None
         if st.session_state.saved_grade in grade_options:
             grade_index = grade_options.index(st.session_state.saved_grade)
@@ -378,9 +375,6 @@ def show_selection_page():
     # 🟢 Col 2: Lesson選択
     # ==========================================
     with col2:
-        st.subheader("② Lesson")
-        
-        # 表示判断には「保存された値」を使う（dd_gradeは消えている可能性があるため）
         current_grade = st.session_state.saved_grade
         
         if current_grade:
@@ -408,10 +402,7 @@ def show_selection_page():
     csv_name = None
     
     with col3:
-        st.subheader("③ 問題")
-        
         current_lesson = st.session_state.saved_lesson
-        
         if current_grade and current_lesson:
             df_target = df_select[
                 (df_select['grade'] == current_grade) & 
@@ -448,8 +439,6 @@ def show_selection_page():
     # 🟢 Col 4: ボタン配置
     # ==========================================
     with col4:
-        st.subheader("④ 開始")
-        
         if csv_name:
             st.markdown(f"**選択中:**\n\n`{st.session_state.saved_grade}` > `{st.session_state.saved_lesson}`\n\n`{st.session_state.saved_instruction}`")
             
@@ -487,7 +476,7 @@ def show_selection_page():
                  st.info("👈 問題を選択してください")
 
     st.markdown("---")
-    
+
 # ==========================================
 # 🔹 2. クイズ実行ページ
 # ==========================================
@@ -502,8 +491,6 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
 
     st.markdown(f"問題セット: `{st.session_state.selected_csv}`")
     
-    st.info(f"**問題 {current_index + 1}**: {japanese}", icon="💬")
-
     # ----------------------------------------------------
     # 1. あなたの回答エリア (Selected Words)
     # ----------------------------------------------------
