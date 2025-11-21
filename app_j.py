@@ -298,7 +298,7 @@ def show_result_page():
         st.rerun()
 
 # ==========================================
-# 🔹 1. 問題セット選択ページ (状態保持・修正版)
+# 🔹 1. 問題セット選択ページ (4カラム・状態保持対応版)
 # ==========================================
 def show_selection_page():
     st.title("📚 問題セット選択")
@@ -314,8 +314,8 @@ def show_selection_page():
         st.error("⚠️ エラー: CSVに 'grade' または 'lesson' 列が見つかりません。")
         return
 
-    # --- セッションステートの初期化 ---
-    # 初回アクセス時のみ None で初期化し、値がある場合は保持する
+    # --- セッションステートの初期化 (選択状態保持用) ---
+    # ページをリロードしても値が消えないように初期化
     if "dd_grade" not in st.session_state:
         st.session_state.dd_grade = None
     if "dd_lesson" not in st.session_state:
@@ -323,12 +323,13 @@ def show_selection_page():
     if "dd_set_instruction" not in st.session_state:
         st.session_state.dd_set_instruction = None
 
-    # コールバック関数：学年が変わったらLesson以下をリセット
+    # --- コールバック関数 ---
+    # 学年を変更したら、下位の選択（Lesson, 問題）をクリアする
     def on_grade_change():
         st.session_state.dd_lesson = None
         st.session_state.dd_set_instruction = None
 
-    # コールバック関数：Lessonが変わったら問題セットをリセット
+    # Lessonを変更したら、下位の選択（問題）をクリアする
     def on_lesson_change():
         st.session_state.dd_set_instruction = None
 
@@ -342,9 +343,10 @@ def show_selection_page():
     # ==========================================
     with col1:
         st.subheader("① 学年")
+        # データから学年リストを取得（あるいは固定）
         grade_options = ['中2', '中3'] 
         
-        # 保存されている値からインデックスを計算（復元用）
+        # 以前の選択状態があれば、そのインデックスを計算して復元する
         grade_index = None
         if st.session_state.dd_grade in grade_options:
             grade_index = grade_options.index(st.session_state.dd_grade)
@@ -352,8 +354,8 @@ def show_selection_page():
         st.radio(
             "学年を選択",
             options=grade_options,
-            key="dd_grade",
-            index=grade_index, # 前回選択した位置を復元
+            key="dd_grade",       # session_stateと紐づけ
+            index=grade_index,    # 位置を復元
             on_change=on_grade_change
         )
 
@@ -366,10 +368,11 @@ def show_selection_page():
         current_grade = st.session_state.dd_grade
         
         if current_grade:
+            # 選択された学年で絞り込み
             df_grade = df_select[df_select['grade'] == current_grade]
             lesson_options = sorted(df_grade['lesson'].unique().tolist())
             
-            # 保存されている値が現在のリストにあるか確認してインデックス計算
+            # 以前の選択状態があれば、そのインデックスを計算して復元する
             lesson_index = None
             if st.session_state.dd_lesson in lesson_options:
                 lesson_index = lesson_options.index(st.session_state.dd_lesson)
@@ -378,7 +381,7 @@ def show_selection_page():
                 "Lessonを選択",
                 options=lesson_options,
                 key="dd_lesson",
-                index=lesson_index, # 前回選択した位置を復元
+                index=lesson_index, # 位置を復元
                 on_change=on_lesson_change
             )
         else:
@@ -387,7 +390,7 @@ def show_selection_page():
     # ==========================================
     # 🟢 Col 3: 問題セット選択
     # ==========================================
-    csv_name = None
+    csv_name = None # この変数が特定されるかどうかがボタン表示の鍵
     
     with col3:
         st.subheader("③ 問題")
@@ -395,6 +398,7 @@ def show_selection_page():
         current_lesson = st.session_state.dd_lesson
         
         if current_grade and current_lesson:
+            # 学年とLessonで絞り込み
             df_target = df_select[
                 (df_select['grade'] == current_grade) & 
                 (df_select['lesson'] == current_lesson)
@@ -403,7 +407,7 @@ def show_selection_page():
             if not df_target.empty:
                 instruction_options = df_target['instruction'].tolist()
                 
-                # 保存されている値からインデックス計算
+                # 以前の選択状態があれば、そのインデックスを計算して復元する
                 instr_index = None
                 if st.session_state.dd_set_instruction in instruction_options:
                     instr_index = instruction_options.index(st.session_state.dd_set_instruction)
@@ -412,11 +416,11 @@ def show_selection_page():
                     "問題セットを選択",
                     options=instruction_options,
                     key="dd_set_instruction",
-                    index=instr_index # 前回選択した位置を復元
+                    index=instr_index # 位置を復元
                 )
                 
+                # 選択済みのInstructionがあれば、対応するCSVファイル名を特定
                 if st.session_state.dd_set_instruction:
-                    # InstructionからCSV名を特定
                     selected_row = df_target[df_target['instruction'] == st.session_state.dd_set_instruction]
                     if not selected_row.empty:
                         csv_name = selected_row.iloc[0]['csv_name']
@@ -431,16 +435,20 @@ def show_selection_page():
     with col4:
         st.subheader("④ 開始")
         
+        # CSVファイル名が決まっている＝③まで選択完了している場合のみ表示
         if csv_name:
             st.markdown(f"**選択中:**\n\n`{st.session_state.dd_grade}` > `{st.session_state.dd_lesson}`\n\n`{st.session_state.dd_set_instruction}`")
             
             st.markdown("---")
             
+            # --- 開始ボタン ---
             if st.button("開始 ▶", key="start_quiz_new", type="primary", use_container_width=True):
+                # クイズ実行に必要な情報をセット
                 st.session_state.selected_lesson = st.session_state.dd_lesson
                 st.session_state.grade = st.session_state.dd_grade
                 st.session_state.selected_csv = csv_name
                 
+                # 状態リセット（問題番号など）
                 st.session_state.app_mode = 'quiz'
                 st.session_state.pop('index', None)
                 st.session_state.correct_count = 0
@@ -448,12 +456,14 @@ def show_selection_page():
             
             st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
+            # --- 復習ボタン ---
             if st.button("復習 ↺", key="review_quiz_new", type="secondary", use_container_width=True):
                 review_df = load_review_data(st.session_state.user_id, quiz_set=csv_name)
                 
                 if review_df.empty:
                     st.toast("🎉 このセットに復習すべき問題はありません！", icon="✅")
                 else:
+                    # 復習モード用初期化
                     for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
                         st.session_state.pop(key, None)
                         
@@ -462,11 +472,11 @@ def show_selection_page():
                     st.session_state.selected_csv = "復習モード"
                     st.rerun()
         else:
+             # 途中まで選択されている場合のガイド
              if current_grade and current_lesson:
                  st.info("👈 問題を選択してください")
 
     st.markdown("---")
-
 # ==========================================
 # 🔹 2. クイズ実行ページ
 # ==========================================
