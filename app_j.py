@@ -298,7 +298,7 @@ def show_result_page():
         st.rerun()
 
 # ==========================================
-# 🔹 1. 問題セット選択ページ (完全永続化対応版)
+# 🔹 1. 問題セット選択ページ (インデックス計算・完全永続化版)
 # ==========================================
 def show_selection_page():
     st.title("📚 問題セット選択")
@@ -315,8 +315,8 @@ def show_selection_page():
         return
 
     # -------------------------------------------------------
-    # 💾 1. 「保管用（金庫）」変数の初期化
-    # これは画面遷移しても Streamlit に勝手に消されない変数です
+    # 💾 1. 「保存用変数（金庫）」の初期化
+    # dd_がついた変数は画面移動で消えますが、これらは消えません
     # -------------------------------------------------------
     if "saved_grade" not in st.session_state:
         st.session_state.saved_grade = None
@@ -326,34 +326,13 @@ def show_selection_page():
         st.session_state.saved_instruction = None
 
     # -------------------------------------------------------
-    # 🔄 2. 「ウィジェット用（レジ）」変数への復元処理
-    # クイズ画面から戻ってきた時、ウィジェット用変数は消えているため、
-    # 保管用変数から値をコピーして復元します。
-    # -------------------------------------------------------
-    if "dd_grade" not in st.session_state:
-        st.session_state.dd_grade = st.session_state.saved_grade
-    
-    # Lessonは、現在の学年と整合性が取れている場合のみ復元
-    if "dd_lesson" not in st.session_state:
-        if st.session_state.dd_grade == st.session_state.saved_grade:
-            st.session_state.dd_lesson = st.session_state.saved_lesson
-        else:
-            st.session_state.dd_lesson = None
-
-    # Instructionも同様に整合性チェックして復元
-    if "dd_set_instruction" not in st.session_state:
-        if st.session_state.dd_lesson == st.session_state.saved_lesson:
-            st.session_state.dd_set_instruction = st.session_state.saved_instruction
-        else:
-            st.session_state.dd_set_instruction = None
-
-    # -------------------------------------------------------
-    # ⚡ 3. コールバック関数（操作時に金庫へ保存する処理）
+    # ⚡ 2. コールバック関数
+    # 操作されたら「保存用変数」を更新します
     # -------------------------------------------------------
     def on_grade_change():
         # 金庫に保存
         st.session_state.saved_grade = st.session_state.dd_grade
-        # 下位の金庫・レジをクリア
+        # 学年が変わったら下位の選択をリセット
         st.session_state.saved_lesson = None
         st.session_state.dd_lesson = None
         st.session_state.saved_instruction = None
@@ -362,7 +341,7 @@ def show_selection_page():
     def on_lesson_change():
         # 金庫に保存
         st.session_state.saved_lesson = st.session_state.dd_lesson
-        # 下位の金庫・レジをクリア
+        # Lessonが変わったら下位の選択をリセット
         st.session_state.saved_instruction = None
         st.session_state.dd_set_instruction = None
 
@@ -382,11 +361,16 @@ def show_selection_page():
         st.subheader("① 学年")
         grade_options = ['中2', '中3'] 
         
+        # 保存されている値が、選択肢の何番目にあるか計算
+        grade_index = None
+        if st.session_state.saved_grade in grade_options:
+            grade_index = grade_options.index(st.session_state.saved_grade)
+
         st.radio(
             "学年を選択",
             options=grade_options,
-            key="dd_grade",      # ウィジェット用キー
-            index=None,          # session_stateに値があればそれが優先されるのでNoneでOK
+            key="dd_grade",
+            index=grade_index,  # 計算した位置を指定（これで復元される）
             on_change=on_grade_change
         )
 
@@ -396,17 +380,23 @@ def show_selection_page():
     with col2:
         st.subheader("② Lesson")
         
-        current_grade = st.session_state.dd_grade
+        # 表示判断には「保存された値」を使う（dd_gradeは消えている可能性があるため）
+        current_grade = st.session_state.saved_grade
         
         if current_grade:
             df_grade = df_select[df_select['grade'] == current_grade]
             lesson_options = sorted(df_grade['lesson'].unique().tolist())
             
+            # 保存されている値が、今回の選択肢リストに含まれているか確認してインデックス計算
+            lesson_index = None
+            if st.session_state.saved_lesson in lesson_options:
+                lesson_index = lesson_options.index(st.session_state.saved_lesson)
+            
             st.radio(
                 "Lessonを選択",
                 options=lesson_options,
                 key="dd_lesson",
-                index=None,
+                index=lesson_index, # 計算した位置を指定
                 on_change=on_lesson_change
             )
         else:
@@ -420,7 +410,7 @@ def show_selection_page():
     with col3:
         st.subheader("③ 問題")
         
-        current_lesson = st.session_state.dd_lesson
+        current_lesson = st.session_state.saved_lesson
         
         if current_grade and current_lesson:
             df_target = df_select[
@@ -431,17 +421,22 @@ def show_selection_page():
             if not df_target.empty:
                 instruction_options = df_target['instruction'].tolist()
                 
+                # インデックス計算
+                instr_index = None
+                if st.session_state.saved_instruction in instruction_options:
+                    instr_index = instruction_options.index(st.session_state.saved_instruction)
+
                 st.radio(
                     "問題セットを選択",
                     options=instruction_options,
                     key="dd_set_instruction",
-                    index=None,
+                    index=instr_index, # 計算した位置を指定
                     on_change=on_instruction_change
                 )
                 
-                # 現在の選択に基づいてCSVを特定
-                if st.session_state.dd_set_instruction:
-                    selected_row = df_target[df_target['instruction'] == st.session_state.dd_set_instruction]
+                # 保存されたInstructionに基づいてCSVを特定
+                if st.session_state.saved_instruction:
+                    selected_row = df_target[df_target['instruction'] == st.session_state.saved_instruction]
                     if not selected_row.empty:
                         csv_name = selected_row.iloc[0]['csv_name']
             else:
@@ -456,15 +451,14 @@ def show_selection_page():
         st.subheader("④ 開始")
         
         if csv_name:
-            st.markdown(f"**選択中:**\n\n`{st.session_state.dd_grade}` > `{st.session_state.dd_lesson}`\n\n`{st.session_state.dd_set_instruction}`")
+            st.markdown(f"**選択中:**\n\n`{st.session_state.saved_grade}` > `{st.session_state.saved_lesson}`\n\n`{st.session_state.saved_instruction}`")
             
             st.markdown("---")
             
             # --- 開始ボタン ---
             if st.button("開始 ▶", key="start_quiz_new", type="primary", use_container_width=True):
-                # アプリ動作に必要なメインの状態変数を更新
-                st.session_state.selected_lesson = st.session_state.dd_lesson
-                st.session_state.grade = st.session_state.dd_grade
+                st.session_state.selected_lesson = st.session_state.saved_lesson
+                st.session_state.grade = st.session_state.saved_grade
                 st.session_state.selected_csv = csv_name
                 
                 st.session_state.app_mode = 'quiz'
@@ -493,7 +487,7 @@ def show_selection_page():
                  st.info("👈 問題を選択してください")
 
     st.markdown("---")
-
+    
 # ==========================================
 # 🔹 2. クイズ実行ページ
 # ==========================================
