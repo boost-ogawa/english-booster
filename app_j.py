@@ -751,7 +751,10 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         # 準備ができていない場合、リセットボタンを表示
         if col_next.button("🔄 リセット(すべてクリア)", on_click=reset_question, args=(df, proper_nouns), use_container_width=True):
             st.rerun()
-            
+
+    current_index = st.session_state.index % len(df)
+    total_questions = len(df)
+
     progress_ratio = (current_index + 1) / total_questions
     st.progress(progress_ratio, text=f"**進捗: {current_index + 1} / {total_questions} 問**")
 
