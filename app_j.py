@@ -701,7 +701,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
 
         if not st.session_state.quiz_saved:
             # 💡 id と current_quiz_set を渡して保存
-            save_quiz_result(int(id_value), current_quiz_set, user_answer_final, is_correct, quiz_type)
+            save_quiz_result(int(id), current_quiz_set, user_answer_final, is_correct, quiz_type)
             st.session_state.quiz_saved = True
 
         if is_correct:
