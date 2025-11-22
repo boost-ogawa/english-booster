@@ -278,7 +278,6 @@ def generate_shuffling_data(english_sentence: str, proper_nouns: List[str]) -> T
         
     return shuffled_words, correct_tokens
 
-
 # 💡 問題形式に応じてセッションステートを初期化する関数
 def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
     if "index" not in st.session_state:
@@ -287,15 +286,22 @@ def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
     current_index = st.session_state.index % len(df)
     row = df.iloc[current_index]
     
-    quiz_type = st.session_state.get('quiz_type', 'shuffling') 
+    # 💡 [修正点 A] 復習モードの場合は 'quiz_type_review' を優先して問題タイプを決定
+    if st.session_state.get('app_mode') == 'review_quiz':
+        quiz_type = row.get('quiz_type_review', 'shuffling')
+    else:
+        quiz_type = st.session_state.get('quiz_type', 'shuffling') 
     
     # 共通の初期化
     st.session_state.current_correct = row.get("english", "").strip()
-    st.session_state.current_id = row.get("id") # 💡 idを保存
+    st.session_state.current_id = row.get("id")
     st.session_state.selected = [] 
     st.session_state.used_indices = []
     st.session_state.quiz_complete = False
     st.session_state.quiz_saved = False
+    
+    # 💡 [新規] 現在の問題タイプをセッションに保存
+    st.session_state.quiz_type_current = quiz_type
 
     if quiz_type == 'shuffling':
         english_sentence = st.session_state.current_correct
@@ -311,13 +317,16 @@ def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
         if isinstance(options_raw, str):
             # 択一問題の正解は current_correct ではなく correct_answer を使用する
             st.session_state.mc_options = [opt.strip() for opt in options_raw.split(',')]
+            
+            # 💡 [追加] 択一問題の選択肢がない場合に表示
+            if not st.session_state.mc_options:
+                st.session_state.mc_options = ["No options to select."] 
+                
         else:
-            st.session_state.mc_options = []
+            st.session_state.mc_options = ["No options to select."]
             
         st.session_state.mc_correct_answer = row.get("correct_answer", "").strip()
-        st.session_state.multiple_choice_selection = None 
-        
-# (省略: handle_word_click, undo_selection, next_question, reset_question は変更なし)
+        st.session_state.multiple_choice_selection = None
 
 def handle_word_click(i: int, word: str):
     if st.session_state.quiz_complete:
@@ -572,7 +581,10 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     total_questions = len(df)
     current_index = st.session_state.index % total_questions
     row = df.iloc[current_index]
-    
+    quiz_type = st.session_state.get('quiz_type_current', 'shuffling')
+    japanese = row["japanese"]
+    id = row["id"]
+    current_quiz_set = st.session_state.selected_csv
     # 💡 復習モードの場合、quiz_typeを上書きする
     if st.session_state.app_mode == 'review_quiz':
         quiz_type = row.get('quiz_type_review', 'shuffling')
@@ -636,19 +648,26 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
                     args=(i, word)
                 ):
                     st.rerun() 
-                    
     elif quiz_type == 'multiple':
-        # ... 1-C. 択一：問題文とラジオボタンの表示 (keyを固定値にして再描画時に選択肢をリセット)
-        st.subheader(row.get('english', '英文が設定されていません')) 
-        
-        # 択一問題では、選択されていれば st.session_state.multiple_choice_selection に値が入る
-        st.radio(
-            "正しい選択肢を選んでください:",
-            options=st.session_state.mc_options,
-            key="multiple_choice_selection",
-            # 💡 indexを動的に計算するロジックを修正
-            index=st.session_state.mc_options.index(st.session_state.get('multiple_choice_selection')) if st.session_state.get('multiple_choice_selection') in st.session_state.mc_options else None
-        )
+            # ... 1-C. 択一：問題文とラジオボタンの表示
+            st.subheader(row.get('english', '英文が設定されていません')) 
+            
+            # 💡 修正: 現在の選択肢のインデックスを安全に計算
+            try:
+                # 選択されている値が mc_options の中のどこにあるか探す
+                current_selection_value = st.session_state.get('multiple_choice_selection')
+                current_index = st.session_state.mc_options.index(current_selection_value) 
+            except (ValueError, AttributeError):
+                # 選択肢がまだ未選択 (None) の場合、またはリストに見つからない場合は index=None (デフォルト)
+                current_index = None 
+                
+            st.radio(
+                "正しい選択肢を選んでください:",
+                options=st.session_state.mc_options,
+                key="multiple_choice_selection",
+                # 計算したインデックスを渡す
+                index=current_index
+            )
 
     # ----------------------------------------------------
     # 2. コントロールボタン (判定/リセット/次へ)
