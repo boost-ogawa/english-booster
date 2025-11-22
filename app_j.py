@@ -649,26 +649,55 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
                 ):
                     st.rerun() 
     elif quiz_type == 'multiple':
-            # ... 1-C. 択一：問題文とラジオボタンの表示
-            st.subheader(row.get('english', '英文が設定されていません')) 
-            
-            # 💡 修正: 現在の選択肢のインデックスを安全に計算
-            try:
-                # 選択されている値が mc_options の中のどこにあるか探す
-                current_selection_value = st.session_state.get('multiple_choice_selection')
-                current_index = st.session_state.mc_options.index(current_selection_value) 
-            except (ValueError, AttributeError):
-                # 選択肢がまだ未選択 (None) の場合、またはリストに見つからない場合は index=None (デフォルト)
-                current_index = None 
-                
-            st.radio(
-                "正しい選択肢を選んでください:",
-                options=st.session_state.mc_options,
-                key="multiple_choice_selection",
-                # 計算したインデックスを渡す
-                index=current_index
-            )
+        # ... 1-C. 択一：ボタンの表示 (ラジオボタンから置き換え)
+        st.subheader(row.get('english', '英文が設定されていません')) 
+        st.markdown("---")
+        
+        # 💡 init_session_stateでロードされた選択肢データを使用
+        options_to_display = st.session_state.get('mc_options', ["Error: No options loaded"])
 
+        # 💡 [描画] 列数を8に固定し、横並びボタンを表示
+        num_cols = 8 
+        cols = st.columns(num_cols) 
+        
+        # ボタンが押されたときのコールバック関数
+        def select_option(val):
+            st.session_state.multiple_choice_selection = val
+            st.rerun()
+
+        for i, option in enumerate(options_to_display):
+            
+            # 現在選択されているオプションであればハイライトする
+            is_selected = (option == st.session_state.get('multiple_choice_selection'))
+            
+            # 判定済み、または現在選択されている場合は disabled にする
+            # st.session_state.quiz_complete は判定ボタン押下後に True になる
+            is_disabled = st.session_state.quiz_complete or is_selected
+            
+            button_type = "primary" if is_selected else "secondary"
+            
+            # 現在のインデックスを列数(8)で割った余りが、ボタンを配置する列のインデックスになる
+            col_index = i % num_cols 
+            
+            # 💡 8列のコンテナを循環して使用
+            with cols[col_index]:
+                label = f"{option}" 
+                
+                # キーを現在の問題 index に紐づけることで、問題が変わるとリセットされる
+                button_key = f"mc_option_{st.session_state.index}_{i}" 
+
+                if st.button(
+                    label,
+                    key=button_key, 
+                    type=button_type,
+                    use_container_width=True,
+                    disabled=is_disabled,
+                    on_click=select_option,
+                    args=(option,)
+                ):
+                    pass
+        
+        st.markdown("---")
     # ----------------------------------------------------
     # 2. コントロールボタン (判定/リセット/次へ)
     # ----------------------------------------------------
@@ -699,6 +728,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
                 user_answer_final = user_answer_cleaned
                 
             is_correct = (user_answer_final == current_correct)
+
             
     elif quiz_type == 'multiple':
         if st.session_state.get('multiple_choice_selection') is not None:
