@@ -598,7 +598,7 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     
     current_correct = st.session_state.current_correct # init_session_stateで設定済み
 
-    st.markdown(f"**問題 {current_index + 1}**: {japanese}")
+    st.info(f"**問題 {current_index + 1}**: {japanese}")
 
     # ----------------------------------------------------
     # 1. 回答エリアと選択肢エリアの分岐
@@ -651,13 +651,12 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     elif quiz_type == 'multiple':
         # ... 1-C. 択一：ボタンの表示 (ラジオボタンから置き換え)
         st.subheader(row.get('english', '英文が設定されていません')) 
-        st.markdown("---")
         
         # 💡 init_session_stateでロードされた選択肢データを使用
         options_to_display = st.session_state.get('mc_options', ["Error: No options loaded"])
 
         # 💡 [描画] 列数を8に固定し、横並びボタンを表示
-        num_cols = 8 
+        num_cols = 6 
         cols = st.columns(num_cols) 
         
         # ボタンが押されたときのコールバック関数
@@ -794,12 +793,44 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
 
 
 def quiz_main():
-    
     st.markdown("""
     <style>
-    /* ... (CSSの定義は省略) ... */
+    /* Streamlit 標準の primary ボタン（青）のスタイルを上書き */
+    /* Light Mode */
+    .stButton button[data-testid="baseButton-primary"] {
+        background-color: #3b82f6; /* ベースの青 */
+        color: white; /* 文字色 */
+        border: none;
+        transition: background-color 0.1s;
+    }
+    .stButton button[data-testid="baseButton-primary"]:hover {
+        background-color: #2563eb; /* ホバーで濃く */
+    }
+
+    /* 視認性の高い水色/シアン系に変更する場合 (例: Tailwind CSSのsky-400/500) */
+    /* Light Mode - 目立つ水色 */
+    .stButton button[data-testid="baseButton-primary"] {
+        background-color: #38bdf8; /* 明るい水色 */
+        color: #164e63; /* 文字色を濃い青に */
+        border: none;
+    }
+    .stButton button[data-testid="baseButton-primary"]:hover {
+        background-color: #0ea5e9; /* ホバーでより鮮やかな青に */
+    }
+
+    /* Dark Mode - 目立つ水色 (ボタンの色を固定し、文字色を明るく) */
+    .stApp.stApp.stApp > div > section > div > button[data-testid="baseButton-primary"] {
+        background-color: #0ea5e9 !important; /* 鮮やかな青 */
+        color: white !important; 
+        border: none !important;
+    }
+    .stApp.stApp.stApp > div > section > div > button[data-testid="baseButton-primary"]:hover {
+        background-color: #0284c7 !important; /* ホバーで少し濃い青に */
+    }
+
+    /* その他のボタン（secondary）はそのまま */
     </style>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)    
     
     if st.session_state.app_mode == 'selection':
         show_selection_page()
