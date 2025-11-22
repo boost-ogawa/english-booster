@@ -631,7 +631,6 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             cols = st.columns([1] * max_cols)
 
             for i, word in enumerate(st.session_state.shuffled):
-                
                 is_picked = i in st.session_state.used_indices
                 label = word 
                 # 💡 復習モードかどうかでキーを調整
@@ -639,15 +638,16 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
                 button_key = f"word_{key_prefix}_{st.session_state.index}_{i}"
                 col_index = i % max_cols
 
-                if cols[col_index].button(
+                # 修正: ifブロックを削除し、buttonの呼び出しを直接行う
+                cols[col_index].button(
                     label, 
                     key=button_key, 
                     disabled=is_picked, 
                     use_container_width=True,
                     on_click=handle_word_click,
                     args=(i, word)
-                ):
-                    st.rerun() 
+                )
+
     elif quiz_type == 'multiple':
         # ... 1-C. 択一：ボタンの表示 (ラジオボタンから置き換え)
         st.subheader(row.get('english', '英文が設定されていません')) 
@@ -663,7 +663,6 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         # ボタンが押されたときのコールバック関数
         def select_option(val):
             st.session_state.multiple_choice_selection = val
-            st.rerun()
 
         for i, option in enumerate(options_to_display):
             
@@ -701,15 +700,19 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     # ----------------------------------------------------
     # 2. コントロールボタン (判定/リセット/次へ)
     # ----------------------------------------------------
-    
+
     col_undo, col_ok, col_next = st.columns([1, 1, 1])
 
     if quiz_type == 'shuffling':
-        if col_undo.button("↩️ １語消去", on_click=undo_selection, disabled=not st.session_state.selected, use_container_width=True):
-            st.rerun()
+        # 修正: ifブロックを削除し、buttonの呼び出しを直接行う
+        col_undo.button(
+            "↩️ １語消去", 
+            on_click=undo_selection, 
+            disabled=not st.session_state.selected, 
+            use_container_width=True
+        )
     elif quiz_type == 'multiple':
-        col_undo.markdown("") 
-
+        col_undo.markdown("")
 
     # ----------------------------------------------------
     # 3. 判定ロジックの分岐
@@ -769,15 +772,14 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
 
         next_button_label = "結果を確認 ✅" if is_last_question else "次の問題へ ▶"
         next_button_type = "secondary" if is_last_question else "primary"
-        
-        if col_next.button(
+
+        col_next.button( # if を削除
             next_button_label, 
             type=next_button_type, 
             use_container_width=True, 
             on_click=next_question, 
             args=(df, proper_nouns)
-        ):
-            st.rerun()
+        )
             
     else:
         # 準備ができていない場合、リセットボタンを表示
