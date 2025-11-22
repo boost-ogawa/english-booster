@@ -728,8 +728,8 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
             st.balloons()
         else:
             col_ok.error("❌ 不正解。")
-            
-        st.markdown(f"**正解の英文/語句:** <h3>`{current_correct}`</h3>", unsafe_allow_html=True)
+
+        st.markdown(f"**正解の英文/語句:** <span style='font-size: 24px; font-weight: bold; color: #ef4444;'>`{current_correct}`</span>", unsafe_allow_html=True)
 
         total_questions = len(df)
         current_index = st.session_state.index % total_questions
