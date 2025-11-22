@@ -10,7 +10,7 @@ import time
 import pandas as pd
 import random
 import string
-from typing import List
+from typing import List, Tuple
 
 # ==========================================
 # 🔹 Firebase 初期化
@@ -82,7 +82,8 @@ def logout():
 # ==========================================
 # 🔹 Firestore データ保存関数
 # ==========================================
-def save_quiz_result(japanese, correct_english, user_answer, is_correct):
+# 💡 引数に quiz_type を追加し、保存するデータを充実させる
+def save_quiz_result(japanese, correct_english, user_answer, is_correct, quiz_type):
     """Firestoreにクイズ結果を保存する (コレクション名: shuffle_results)"""
     db = init_firestore()
     
@@ -95,6 +96,7 @@ def save_quiz_result(japanese, correct_english, user_answer, is_correct):
         "user_id": st.session_state.user_id,
         "nickname": st.session_state.nickname,
         "quiz_set": st.session_state.selected_csv,
+        "quiz_type": quiz_type, # 💡 クイズタイプを追加
         "question_japanese": japanese,
         "question_english_correct": correct_english,
         "user_answer": user_answer,
@@ -113,6 +115,9 @@ def save_quiz_result(japanese, correct_english, user_answer, is_correct):
 # ==========================================
 def load_review_data(user_id, quiz_set=None):
     """Firestoreから過去の不正解問題を抽出し、復習用DataFrameを返す"""
+    # 💡 復習データは並べかえCSV形式（japanese, english）のみに対応
+    # 択一問題の復習が必要な場合は、別途Firestoreから必要な情報を抽出するロジックが必要です
+    
     db = init_firestore()
     if not hasattr(db, 'collection'):
         return pd.DataFrame({'japanese': [], 'english': []})
@@ -135,6 +140,10 @@ def load_review_data(user_id, quiz_set=None):
         
         for doc in results:
             data = doc.to_dict()
+            # 💡 復習は並べかえ問題のみを対象とする
+            if data['quiz_type'] != 'shuffling':
+                continue
+                
             unique_key = (data['question_japanese'], data['question_english_correct'])
             
             if unique_key not in unique_mistakes:
@@ -172,6 +181,7 @@ def load_selection_data() -> pd.DataFrame:
 
 @st.cache_data
 def load_proper_nouns() -> List[str]:
+    # (省略: 変更なし)
     try:
         if os.path.exists(PROPER_NOUNS_PATH):
             df = pd.read_csv(PROPER_NOUNS_PATH)
@@ -186,6 +196,7 @@ def load_proper_nouns() -> List[str]:
         return ["New York", "Osaka", "Tokyo", "Sunday", "Monday", "Japan", "America", "I"]
 
 def tokenize(sentence: str, proper_nouns: List[str]) -> List[str]:
+    # (省略: 変更なし)
     temp_sentence = sentence
     for pn in sorted(proper_nouns, key=len, reverse=True):
         safe_pn = re.escape(pn)
@@ -193,9 +204,11 @@ def tokenize(sentence: str, proper_nouns: List[str]) -> List[str]:
     return temp_sentence.split()
 
 def detokenize(tokens: List[str]) -> List[str]:
+    # (省略: 変更なし)
     return [t.replace("_", " ") for t in tokens]
 
 def shuffle_question(sentence: str, proper_nouns: List[str]) -> List[str]:
+    # (省略: 変更なし)
     punctuation_match = re.search(r"([\.\?!])$", sentence.strip())
     punctuation = punctuation_match.group(1) if punctuation_match else ""
     sentence_no_punct = sentence.rstrip(string.punctuation).strip()
@@ -214,21 +227,66 @@ def shuffle_question(sentence: str, proper_nouns: List[str]) -> List[str]:
         shuffled_words.append(punctuation)
     return shuffled_words
 
+# 💡 新しい並べ替えデータの生成関数 (再利用のため)
+def generate_shuffling_data(english_sentence: str, proper_nouns: List[str]) -> Tuple[List[str], List[str]]:
+    """並べ替えに必要な単語リストと正解の順序付き単語リストを生成する"""
+    correct_sentence = english_sentence.strip()
+    
+    # 並べ替え用単語の生成
+    shuffled_words = shuffle_question(correct_sentence, proper_nouns)
+    
+    # 正解の単語リストを生成 (判定用)
+    punctuation_match = re.search(r"([\.\?!])$", correct_sentence)
+    sentence_no_punct = correct_sentence.rstrip(string.punctuation).strip()
+    correct_tokens = detokenize(tokenize(sentence_no_punct, proper_nouns))
+    if punctuation_match:
+        correct_tokens.append(punctuation_match.group(1))
+        
+    return shuffled_words, correct_tokens
+
+# 💡 問題形式に応じてセッションステートを初期化する関数
 def init_session_state(df: pd.DataFrame, proper_nouns: List[str]):
     if "index" not in st.session_state:
         st.session_state.index = 0
     
     current_index = st.session_state.index % len(df)
-    english_sentence = df.iloc[current_index]["english"]
+    row = df.iloc[current_index]
     
-    st.session_state.current_correct = english_sentence.strip()
-    st.session_state.shuffled = shuffle_question(english_sentence, proper_nouns)
+    # 💡 問題形式を判定
+    quiz_type = st.session_state.get('quiz_type', 'shuffling') # デフォルトはshuffling
+    
+    # 共通の初期化
+    st.session_state.current_correct = row["english"].strip()
     st.session_state.selected = [] 
     st.session_state.used_indices = []
     st.session_state.quiz_complete = False
     st.session_state.quiz_saved = False
 
+    if quiz_type == 'shuffling':
+        # 既存の並べ替えロジック
+        english_sentence = row["english"]
+        
+        # 💡 並べ替え用データの生成
+        shuffled_words, correct_tokens = generate_shuffling_data(english_sentence, proper_nouns)
+        
+        st.session_state.shuffled = shuffled_words
+        st.session_state.correct_tokens = correct_tokens # 💡 判定用に正解トークンを保存
+
+    elif quiz_type == 'multiple':
+        # 択一問題用の初期化
+        # 選択肢リストをCSVから読み込み、セッションステートに保存
+        options_raw = row.get("word_options", "")
+        if isinstance(options_raw, str):
+            st.session_state.mc_options = [opt.strip() for opt in options_raw.split(',')]
+        else:
+            st.session_state.mc_options = []
+            
+        st.session_state.mc_correct_answer = row.get("correct_answer", "").strip()
+        st.session_state.multiple_choice_selection = None # ユーザーの選択を保持するキー
+        
+
 def handle_word_click(i: int, word: str):
+    # (省略: 変更なし)
     if st.session_state.quiz_complete:
         return
 
@@ -242,12 +300,14 @@ def handle_word_click(i: int, word: str):
     st.session_state.used_indices.append(i) 
 
 def undo_selection():
+    # (省略: 変更なし)
     if st.session_state.selected:
         st.session_state.selected.pop()
         st.session_state.used_indices.pop() 
 
 def next_question(df: pd.DataFrame, proper_nouns: List[str]):
     """次の問題へ進むためのロジック。最終問題なら結果画面へ遷移するフラグを立てる。"""
+    # (省略: 変更なし)
     current_index = st.session_state.index
     total_questions = len(df)
     
@@ -261,6 +321,7 @@ def next_question(df: pd.DataFrame, proper_nouns: List[str]):
     st.session_state.quiz_saved = False 
 
 def reset_question(df: pd.DataFrame, proper_nouns: List[str]):
+    # (省略: 変更なし)
     current_index = st.session_state.index
     st.session_state.index = current_index 
     init_session_state(df, proper_nouns)
@@ -269,7 +330,7 @@ def reset_question(df: pd.DataFrame, proper_nouns: List[str]):
 # 🔹 3. 結果表示ページ
 # ==========================================
 def show_result_page():
-    """クイズセット終了後の結果表示ページ"""
+    # (省略: 変更なし)
     st.subheader("🎉 クイズセット完了！")
     
     total = st.session_state.get('total_questions', 0)
@@ -291,7 +352,7 @@ def show_result_page():
     
     if st.button("📚 問題セット選択に戻る", type="primary", use_container_width=True):
         
-        for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
+        for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name', 'quiz_type', 'mc_options', 'mc_correct_answer', 'multiple_choice_selection', 'correct_tokens']:
             st.session_state.pop(key, None)
             
         st.session_state.app_mode = 'selection'
@@ -301,20 +362,23 @@ def show_result_page():
 # 🔹 1. 問題セット選択ページ (インデックス計算・完全永続化版)
 # ==========================================
 def show_selection_page():
-    st.subheader("📚 問題セット選択（左から順に選択）")
+    # 💡 show_selection_pageの見出し修正
+    st.markdown("## 📚 問題セット選択 <small>(左から順に項目を選択して、問題セットを決定してください。)</small>", unsafe_allow_html=True)
     df_select = load_selection_data()
-    
+    st.session_state.df_select = df_select # 💡 df_selectをセッションステートに保存
+
     if df_select.empty:
         st.error("問題セットの選択リストが空です。")
         return
         
-    if 'grade' not in df_select.columns or 'lesson' not in df_select.columns:
-        st.error("⚠️ エラー: CSVに 'grade' または 'lesson' 列が見つかりません。")
+    # (省略: CSV列のチェック)
+    if 'grade' not in df_select.columns or 'lesson' not in df_select.columns or 'type' not in df_select.columns:
+        st.error("⚠️ エラー: CSVに 'grade', 'lesson', または 'type' 列が見つかりません。")
         return
 
     # -------------------------------------------------------
     # 💾 1. 「保存用変数（金庫）」の初期化
-    # dd_がついた変数は画面移動で消えますが、これらは消えません
+    # (省略: 変更なし)
     # -------------------------------------------------------
     if "saved_grade" not in st.session_state:
         st.session_state.saved_grade = None
@@ -325,36 +389,34 @@ def show_selection_page():
 
     # -------------------------------------------------------
     # ⚡ 2. コールバック関数
-    # 操作されたら「保存用変数」を更新します
+    # (省略: 変更なし)
     # -------------------------------------------------------
     def on_grade_change():
-        # 金庫に保存
         st.session_state.saved_grade = st.session_state.dd_grade
-        # 学年が変わったら下位の選択をリセット
         st.session_state.saved_lesson = None
         st.session_state.dd_lesson = None
         st.session_state.saved_instruction = None
         st.session_state.dd_set_instruction = None
 
     def on_lesson_change():
-        # 金庫に保存
         st.session_state.saved_lesson = st.session_state.dd_lesson
-        # Lessonが変わったら下位の選択をリセット
         st.session_state.saved_instruction = None
         st.session_state.dd_set_instruction = None
 
     def on_instruction_change():
-        # 金庫に保存
         st.session_state.saved_instruction = st.session_state.dd_set_instruction
 
     st.markdown("---")
     
-    # 4カラムレイアウト (2:2:3:4)
+    # 4カラムレイアウト 
     col1, col2, col3, col4 = st.columns([2, 2, 3, 4])
     
     # ==========================================
-    # 🟢 Col 1: 学年選択
+    # 🟢 Col 1, 2, 3: 学年・Lesson・問題セット選択 (変更なし)
     # ==========================================
+    # (省略: 既存の Col 1, 2, 3 の処理は変更なし)
+    
+    # Col 1: 学年選択
     with col1:
         st.subheader("① 学年")
         grade_options = ['中2', '中3'] 
@@ -366,13 +428,11 @@ def show_selection_page():
             "学年を選択",
             options=grade_options,
             key="dd_grade",
-            index=grade_index,  # 計算した位置を指定（これで復元される）
+            index=grade_index,
             on_change=on_grade_change
         )
-
-    # ==========================================
-    # 🟢 Col 2: Lesson選択
-    # ==========================================
+    
+    # Col 2: Lesson選択
     with col2:
         st.subheader("② Lesson")
         current_grade = st.session_state.saved_grade
@@ -381,7 +441,6 @@ def show_selection_page():
             df_grade = df_select[df_select['grade'] == current_grade]
             lesson_options = sorted(df_grade['lesson'].unique().tolist())
             
-            # 保存されている値が、今回の選択肢リストに含まれているか確認してインデックス計算
             lesson_index = None
             if st.session_state.saved_lesson in lesson_options:
                 lesson_index = lesson_options.index(st.session_state.saved_lesson)
@@ -390,17 +449,16 @@ def show_selection_page():
                 "Lessonを選択",
                 options=lesson_options,
                 key="dd_lesson",
-                index=lesson_index, # 計算した位置を指定
+                index=lesson_index,
                 on_change=on_lesson_change
             )
         else:
             st.info("👈 学年を選択してください")
-
-    # ==========================================
-    # 🟢 Col 3: 問題セット選択
-    # ==========================================
+            
+    # Col 3: 問題セット選択
     csv_name = None
-    
+    quiz_type = None # 💡 typeを保持するための変数
+
     with col3:
         st.subheader("③ 問題")
         current_lesson = st.session_state.saved_lesson
@@ -414,7 +472,6 @@ def show_selection_page():
             if not df_target.empty:
                 instruction_options = df_target['instruction'].tolist()
                 
-                # インデックス計算
                 instr_index = None
                 if st.session_state.saved_instruction in instruction_options:
                     instr_index = instruction_options.index(st.session_state.saved_instruction)
@@ -423,19 +480,21 @@ def show_selection_page():
                     "問題セットを選択",
                     options=instruction_options,
                     key="dd_set_instruction",
-                    index=instr_index, # 計算した位置を指定
+                    index=instr_index,
                     on_change=on_instruction_change
                 )
                 
-                # 保存されたInstructionに基づいてCSVを特定
+                # 保存されたInstructionに基づいてCSVとTypeを特定
                 if st.session_state.saved_instruction:
                     selected_row = df_target[df_target['instruction'] == st.session_state.saved_instruction]
                     if not selected_row.empty:
                         csv_name = selected_row.iloc[0]['csv_name']
+                        quiz_type = selected_row.iloc[0]['type'] # 💡 typeを取得
             else:
                 st.warning("該当する問題がありません")
         elif current_grade:
             st.info("👈 Lessonを選択してください")
+
 
     # ==========================================
     # 🟢 Col 4: ボタン配置
@@ -443,6 +502,7 @@ def show_selection_page():
     with col4:
         if csv_name:
             st.markdown(f"**選択中:** > `{st.session_state.saved_grade}` > `{st.session_state.saved_lesson}` > `{st.session_state.saved_instruction}`")
+            st.caption(f"形式: **{quiz_type.upper()}**") # 💡 形式を表示
             
             st.markdown("---")
             
@@ -451,6 +511,7 @@ def show_selection_page():
                 st.session_state.selected_lesson = st.session_state.saved_lesson
                 st.session_state.grade = st.session_state.saved_grade
                 st.session_state.selected_csv = csv_name
+                st.session_state.quiz_type = quiz_type # 💡 typeを保存
                 
                 st.session_state.app_mode = 'quiz'
                 st.session_state.pop('index', None)
@@ -461,21 +522,25 @@ def show_selection_page():
 
             # --- 復習ボタン ---
             if st.button("復習 ↺", key="review_quiz_new", type="secondary", use_container_width=True):
-                review_df = load_review_data(st.session_state.user_id, quiz_set=csv_name)
-                
-                if review_df.empty:
-                    st.toast("🎉 このセットに復習すべき問題はありません！", icon="✅")
+                if quiz_type == 'multiple':
+                    st.toast("⚠️ 現在、択一問題の復習機能はサポートされていません。", icon="🚫")
                 else:
-                    for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name']:
-                        st.session_state.pop(key, None)
-                        
-                    st.session_state.app_mode = 'review_quiz'
-                    st.session_state.review_df = review_df
-                    st.session_state.selected_csv = "復習モード"
-                    st.rerun()
+                    review_df = load_review_data(st.session_state.user_id, quiz_set=csv_name)
+                    
+                    if review_df.empty:
+                        st.toast("🎉 このセットに復習すべき問題はありません！", icon="✅")
+                    else:
+                        for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'correct_count', 'total_questions', 'loaded_csv_name', 'quiz_type', 'mc_options', 'mc_correct_answer', 'multiple_choice_selection']:
+                            st.session_state.pop(key, None)
+                            
+                        st.session_state.app_mode = 'review_quiz'
+                        st.session_state.review_df = review_df
+                        st.session_state.selected_csv = "復習モード"
+                        st.session_state.quiz_type = 'shuffling' # 復習は並べ替え固定
+                        st.rerun()
         else:
-             if current_grade and current_lesson:
-                 st.info("👈 問題を選択してください")
+            if current_grade and current_lesson:
+                st.info("👈 問題を選択してください")
 
     st.markdown("---")
 
@@ -488,87 +553,133 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     current_index = st.session_state.index % total_questions
     row = df.iloc[current_index]
     japanese = row["japanese"]
-    english = row["english"]
-    current_correct = english.strip()
+    current_correct = st.session_state.current_correct
+    quiz_type = st.session_state.quiz_type
     
+    # 💡 共通の問題文表示
     st.markdown(f"**問題 {current_index + 1}**: {japanese}")
 
     # ----------------------------------------------------
-    # 1. あなたの回答エリア (Selected Words)
+    # 1. 回答エリアと選択肢エリアの分岐
     # ----------------------------------------------------
-    # used_indicesの末尾2つが同じ（＝同じボタンが連続でクリックされた）場合をチェック
-    if len(st.session_state.used_indices) >= 2 and st.session_state.used_indices[-1] == st.session_state.used_indices[-2]:
-        # 2つ目の重複した単語だけを削除
-        st.session_state.selected.pop() 
-        st.session_state.used_indices.pop() 
+    if quiz_type == 'shuffling':
+        # ----------------------------------------------------
+        # 1-A. 並べかえ：あなたの回答エリア (Selected Words)
+        # ----------------------------------------------------
+        # used_indicesの末尾2つが同じ（＝同じボタンが連続でクリックされた）場合をチェック (既存ロジック)
+        if len(st.session_state.used_indices) >= 2 and st.session_state.used_indices[-1] == st.session_state.used_indices[-2]:
+            st.session_state.selected.pop() 
+            st.session_state.used_indices.pop() 
 
-    selected_words_html = ""
-    if not st.session_state.selected:
-        selected_words_html = "<div style='border: 2px dashed #9ca3af; padding: 12px; border-radius: 8px; text-align: center; color: #9ca3af; font-style: italic; min-height: 50px;'>下の語句を順番にタップしてください</div>"
-    else:
-        selected_words_html = "<div style='display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border: 2px solid #3b82f6; background-color: #f7fbff; border-radius: 8px; min-height: 50px;'>"
-        for word in st.session_state.selected:
-            is_punctuation = re.match(r"[\.\?!]$", word)
-            color_style = "background-color: #fca5a5; color: #7f1d1d; box-shadow: 0 2px #fecaca;" if is_punctuation else "background-color: #dbeafe; color: #1e40af; box-shadow: 0 2px #93c5fd;"
-            selected_words_html += f"<span class='selected-word-chip' style='{color_style} padding: 6px 10px; border-radius: 6px; font-weight: bold;'>{word}</span>"
-        selected_words_html += "</div>"
-    
-    st.markdown(selected_words_html, unsafe_allow_html=True)
-    
-    # ----------------------------------------------------
-    # 2. 選択肢エリア (Shuffled Words)
-    # ----------------------------------------------------
-    shuffled_container = st.container()
-    with shuffled_container:
-        num_words = len(st.session_state.shuffled)
-        max_cols = min(num_words, 8) 
-        cols = st.columns([1] * max_cols)
+        selected_words_html = ""
+        if not st.session_state.selected:
+            selected_words_html = "<div style='border: 2px dashed #9ca3af; padding: 12px; border-radius: 8px; text-align: center; color: #9ca3af; font-style: italic; min-height: 50px;'>下の語句を順番にタップしてください</div>"
+        else:
+            # (省略: HTML生成ロジックは変更なし)
+            selected_words_html = "<div style='display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border: 2px solid #3b82f6; background-color: #f7fbff; border-radius: 8px; min-height: 50px;'>"
+            for word in st.session_state.selected:
+                is_punctuation = re.match(r"[\.\?!]$", word)
+                color_style = "background-color: #fca5a5; color: #7f1d1d; box-shadow: 0 2px #fecaca;" if is_punctuation else "background-color: #dbeafe; color: #1e40af; box-shadow: 0 2px #93c5fd;"
+                selected_words_html += f"<span class='selected-word-chip' style='{color_style} padding: 6px 10px; border-radius: 6px; font-weight: bold;'>{word}</span>"
+            selected_words_html += "</div>"
+        
+        st.markdown(selected_words_html, unsafe_allow_html=True)
+        
+        # ----------------------------------------------------
+        # 1-B. 並べかえ：選択肢エリア (Shuffled Words)
+        # ----------------------------------------------------
+        shuffled_container = st.container()
+        with shuffled_container:
+            num_words = len(st.session_state.shuffled)
+            max_cols = min(num_words, 8) 
+            cols = st.columns([1] * max_cols)
 
-        for i, word in enumerate(st.session_state.shuffled):
-            
-            is_picked = i in st.session_state.used_indices
-            
-            label = word 
-            button_key = f"word_{st.session_state.selected_csv}_{st.session_state.index}_{i}"
-            col_index = i % max_cols
+            for i, word in enumerate(st.session_state.shuffled):
+                
+                is_picked = i in st.session_state.used_indices
+                label = word 
+                button_key = f"word_{st.session_state.selected_csv}_{st.session_state.index}_{i}"
+                col_index = i % max_cols
 
-            if cols[col_index].button(
-                label, 
-                key=button_key, 
-                disabled=is_picked, 
-                use_container_width=True,
-                on_click=handle_word_click,
-                args=(i, word)
-            ):
-                st.rerun() 
+                if cols[col_index].button(
+                    label, 
+                    key=button_key, 
+                    disabled=is_picked, 
+                    use_container_width=True,
+                    on_click=handle_word_click,
+                    args=(i, word)
+                ):
+                    st.rerun() 
                     
+    elif quiz_type == 'multiple':
+        # ----------------------------------------------------
+        # 1-C. 択一：問題文とラジオボタンの表示
+        # ----------------------------------------------------
+        st.subheader(row.get('english', '英文が設定されていません')) # 問題となる英文/語句
+        
+        # ユーザーの選択を保持するキーを使用
+        st.radio(
+            "正しい選択肢を選んでください:",
+            options=st.session_state.mc_options,
+            key="multiple_choice_selection",
+            index=st.session_state.mc_options.index(st.session_state.get('multiple_choice_selection')) if st.session_state.get('multiple_choice_selection') in st.session_state.mc_options else None
+        )
+
+
     # ----------------------------------------------------
-    # 3. コントロールボタン (OK/Undo/Next)
+    # 2. コントロールボタン (判定/リセット/次へ)
     # ----------------------------------------------------
     
     col_undo, col_ok, col_next = st.columns([1, 1, 1])
 
-    if col_undo.button("↩️ １語消去", on_click=undo_selection, disabled=not st.session_state.selected, use_container_width=True):
-        st.rerun()
+    # 択一問題では「1語消去」ボタンは不要
+    if quiz_type == 'shuffling':
+        if col_undo.button("↩️ １語消去", on_click=undo_selection, disabled=not st.session_state.selected, use_container_width=True):
+            st.rerun()
+    elif quiz_type == 'multiple':
+        # 択一問題ではダミーとして空の列を表示
+        col_undo.markdown("") 
 
-    if len(st.session_state.selected) == len(st.session_state.shuffled):
+
+    # ----------------------------------------------------
+    # 3. 判定ロジックの分岐
+    # ----------------------------------------------------
+    is_ready_to_check = False
+    
+    if quiz_type == 'shuffling':
+        if len(st.session_state.selected) == len(st.session_state.shuffled):
+            is_ready_to_check = True
+            
+            # 並べかえのユーザー回答整形 (既存ロジック)
+            user_answer_raw = " ".join(st.session_state.selected)
+            user_answer_cleaned = re.sub(r'\s+([\.\?!])$', r'\1', user_answer_raw)
+            if user_answer_cleaned and user_answer_cleaned[0].islower():
+                user_answer_final = user_answer_cleaned[0].upper() + user_answer_cleaned[1:]
+            else:
+                user_answer_final = user_answer_cleaned
+                
+            is_correct = (user_answer_final == current_correct)
+            
+    elif quiz_type == 'multiple':
+        # 択一問題では、選択されていればOK
+        if st.session_state.get('multiple_choice_selection') is not None:
+            is_ready_to_check = True
+            user_answer_final = st.session_state.multiple_choice_selection
+            correct_answer = st.session_state.mc_correct_answer
+            is_correct = (user_answer_final == correct_answer)
+            current_correct = correct_answer # 正解表示用に更新
+            
+            
+    if is_ready_to_check:
         st.session_state.quiz_complete = True
         
-        user_answer_raw = " ".join(st.session_state.selected)
-        user_answer_cleaned = re.sub(r'\s+([\.\?!])$', r'\1', user_answer_raw)
-        
-        if user_answer_cleaned and user_answer_cleaned[0].islower():
-            user_answer_final = user_answer_cleaned[0].upper() + user_answer_cleaned[1:]
-        else:
-            user_answer_final = user_answer_cleaned
-
-        is_correct = (user_answer_final == current_correct)
-
+        # 判定後の処理 (保存とカウント)
         if is_correct and not st.session_state.quiz_saved:
             st.session_state.correct_count += 1
-                
+            
         if not st.session_state.quiz_saved:
-            save_quiz_result(japanese, current_correct, user_answer_final, is_correct)
+            # 💡 save_quiz_result に quiz_type を渡す
+            save_quiz_result(japanese, current_correct, user_answer_final, is_correct, quiz_type)
             st.session_state.quiz_saved = True
 
         if is_correct:
@@ -577,7 +688,8 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         else:
             col_ok.error("❌ 不正解。")
             
-        st.subheader(f"**正解の英文:** `{current_correct}`")
+        # 💡 HTMLを使って正解の英文を目立たせる
+        st.markdown(f"**正解の英文:** <h3>`{current_correct}`</h3>", unsafe_allow_html=True)
 
         total_questions = len(df)
         current_index = st.session_state.index % total_questions
@@ -587,15 +699,16 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
         next_button_type = "secondary" if is_last_question else "primary"
         
         if col_next.button(
-            next_button_label,               # ラベルを動的に変更
-            type=next_button_type,           # 最終問題ではボタンの色を変えて強調
+            next_button_label, 
+            type=next_button_type, 
             use_container_width=True, 
             on_click=next_question, 
             args=(df, proper_nouns)
         ):
             st.rerun()
-                          
+            
     else:
+        # 準備ができていない場合、リセットボタンを表示
         if col_next.button("🔄 リセット(すべてクリア)", on_click=reset_question, args=(df, proper_nouns), use_container_width=True):
             st.rerun()
             
@@ -604,20 +717,16 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
 
 
 def quiz_main():
-    """Page 1 (メインコンテンツ) のロジックを管理"""
-    
-    st.markdown("""
-    <style>
-    /* ... (CSSの定義は省略) ... */
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # --- メインコンテンツの表示 ---
+    # ... (省略: CSS定義) ...
+    # ... (省略: app_modeの分岐) ...
     
     if st.session_state.app_mode == 'selection':
         show_selection_page()
 
     elif st.session_state.app_mode == 'quiz' or st.session_state.app_mode == 'review_quiz':
+        
+        # 💡 quiz_typeの取得。復習モードは並べ替え固定
+        quiz_type = st.session_state.get('quiz_type', 'shuffling') 
         
         if st.session_state.app_mode == 'review_quiz':
             if 'review_df' not in st.session_state or st.session_state.review_df.empty:
@@ -628,10 +737,11 @@ def quiz_main():
             
             df = st.session_state.review_df
             proper_nouns = load_proper_nouns()
-            header_text = "🔄 間違えた問題に再挑戦"
+            header_text = "🔄 間違えた問題に再挑戦 (並べかえ)"
+            quiz_type = 'shuffling' # 復習は並べかえロジックを使用
 
         else:
-            header_text = "📝 英文並べかえ問題に挑戦"
+            header_text = f"📝 {quiz_type.upper()} 問題に挑戦" # 💡 ヘッダーテキストを動的に変更
             
             if st.session_state.selected_csv is None:
                 st.session_state.app_mode = 'selection'
@@ -647,6 +757,7 @@ def quiz_main():
                 return
                 
             try:
+                # 択一問題では word_options, correct_answer 列が必要になるためエラーを捕捉
                 df = pd.read_csv(quiz_file_path)
                 proper_nouns = load_proper_nouns()
             except Exception as e:
@@ -661,7 +772,7 @@ def quiz_main():
             st.rerun()
             return
 
-        # 2カラムヘッダーの表示
+        # 2カラムヘッダーの表示 (省略: 変更なし)
         col_title_top, col_button_top = st.columns([4, 1])
 
         with col_title_top:
@@ -670,22 +781,23 @@ def quiz_main():
         with col_button_top:
             st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True) 
             if st.button("⬅️ 選択に戻る", key="back_to_selection_main", use_container_width=True):
+                # (省略: 選択に戻るロジック。quiz_type, mc_optionsなども削除)
                 st.session_state.app_mode = 'selection'
-                st.session_state.selected = []
-                st.session_state.used_indices = []
-                st.session_state.quiz_complete = False
-                st.session_state.loaded_csv_name = None 
+                for key in ['index', 'current_correct', 'shuffled', 'selected', 'used_indices', 'quiz_complete', 'quiz_saved', 'loaded_csv_name', 'quiz_type', 'mc_options', 'mc_correct_answer', 'multiple_choice_selection', 'correct_tokens']:
+                    st.session_state.pop(key, None)
                 st.rerun()
                 return
 
-       
-        if st.session_state.selected_csv != st.session_state.get('loaded_csv_name') or "shuffled" not in st.session_state:
+        
+        # 💡 ロードされたCSV名チェックに加えて quiz_type の変更もチェック条件に追加
+        if st.session_state.selected_csv != st.session_state.get('loaded_csv_name') or "shuffled" not in st.session_state or quiz_type != st.session_state.get('quiz_type_loaded'):
             st.session_state.index = 0
             init_session_state(df, proper_nouns)
             st.session_state.loaded_csv_name = st.session_state.selected_csv
+            st.session_state.quiz_type_loaded = quiz_type # 💡 ロードした問題形式を保存
 
             st.session_state.correct_count = 0
-            st.session_state.total_questions = len(df) # 総問題数をここでセット
+            st.session_state.total_questions = len(df) 
             
 
         show_quiz_page(df, proper_nouns)
@@ -694,7 +806,7 @@ def quiz_main():
         show_result_page()
         
     # --- メインコンテンツ終了 ---
-        
+    # ... (省略: フッター) ...
     st.markdown("---")
     
     # フッター
@@ -711,7 +823,7 @@ def quiz_main():
 
         with col_logout:
             st.button("ログアウト", on_click=logout, key="logout_button_footer", use_container_width=True)
-            
+
 
 # ==========================================
 # 🔹 アプリケーション実行のメインロジック
@@ -719,7 +831,7 @@ def quiz_main():
 def run_app():
     st.set_page_config(layout="wide")
 
-    # セッション初期化
+    # セッション初期化 (省略: 必要なキーを追加)
     defaults = {
         "logged_in": False,
         "page": 0,
@@ -739,6 +851,15 @@ def run_app():
         "correct_count": 0,
         "total_questions": 0,
         "duplicate_error": False,
+        
+        # 💡 新規追加
+        "quiz_type": 'shuffling', 
+        "quiz_type_loaded": 'shuffling', # ロードされている問題形式を保持
+        "mc_options": [],
+        "mc_correct_answer": "",
+        "multiple_choice_selection": None,
+        "correct_tokens": [],
+        "df_select": None # selection page の data
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -746,9 +867,7 @@ def run_app():
 
     db = init_firestore()
 
-    # ------------------------------------------
-    # 🔹 Page 0: ログインページ 
-    # ------------------------------------------
+    # (省略: ログインページのロジック)
     if st.session_state.page == 0:
         if st.session_state.logged_in:
             st.session_state.page = 1
@@ -798,6 +917,7 @@ def run_app():
                     go_to_main_page(nickname, user_id_input, is_admin_user)
                 else:
                     st.error("ニックネームまたはパスワードが正しくありません。")
+
 
     # ------------------------------------------
     # 🔹 Page 1: メインコンテンツ (問題セット選択/クイズ実行)
