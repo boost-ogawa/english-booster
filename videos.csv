@@ -1,5 +1,5 @@
 video_id,title,type,description,date,release_day,url
-video_001,授業映像_Day1,embed,"動画が不安定な場合はこちら→https://youtu.be/GoFe7e8on1s　(スピード測定を行ってから受講してください。)",2025-07-21,1,https://youtu.be/GoFe7e8on1s
+video_001,授業映像_Day1,embed,"(スピード測定を行ってから受講してください。)",2025-07-21,1,https://youtu.be/GoFe7e8on1s
 video_002,Training_M1,embed,今日からトレーニング開始です,2025-07-22,2,https://youtu.be/Un9s90bfC-Q
 video_003,Training_E1,embed,今回から歴史上の出来事シリーズが始まります,2025-07-23,3,https://youtu.be/Xen41P4N-wk
 video_004,Training_E2,embed,歴史上の出来事シリーズの２回目です,2025-07-24,4,https://youtu.be/8wHFh7u8r7Y
@@ -116,3 +116,4 @@ video_114,Training_G09,embed,本日は復習回です。,2025-12-12,143,https://
 video_115,Training_S06,embed,トレーニング104回目_SDGsシリーズの6回目です,2025-12-13,144,https://youtu.be/YxhiPtPxLTo
 video_116,Training_S07,embed,トレーニング105回目_SDGsシリーズの7回目です,2025-12-15,146,https://youtu.be/AANYwVwwBv0
 video_117,Training_G10,embed,本日は復習回です。,2025-12-16,147,https://youtu.be/qh9BHDH761c
+video_118,授業映像_Day11,embed,前回の続きです,2025-12-17,148,https://youtu.be/uiD0n9n2pIY
