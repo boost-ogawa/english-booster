@@ -377,7 +377,7 @@ elif st.session_state.page == 1:
                    
                     # 埋め込み動画（メイン）
                     st.video(normalize_youtube_url(selected_row["url"]))
-                    st.write(f"**公開日:** {selected_row['date'].strftime('%Y年%m月%d日')}")
+                    # st.write(f"**公開日:** {selected_row['date'].strftime('%Y年%m月%d日')}")
 
                 # --- 右カラム (情報/スピード測定) ---
                 with col_speed_test:
