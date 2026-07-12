@@ -1,6 +1,7 @@
 streamlit
 pandas
 firebase-admin>=5.0.0
+grpcio==1.62.2
 pytz
 plotly
 bcrypt
