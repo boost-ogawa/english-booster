@@ -204,6 +204,20 @@ st.markdown(
     .google-classroom-button:hover {
         background-color: #357AE8;
     }
+    div[data-testid="stLinkButton"] a {
+        background-color: #28a745;
+        color: white !important;
+        font-weight: bold;
+        border-radius: 8px;
+        padding: 20px 40px;
+        font-size: 1.8rem;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+    div[data-testid="stLinkButton"] a:hover {
+        background-color: #218838;
+    }
         /* Streamlitの画像を対象 */
     img {
         max-height: 80vh; /* 画面の高さの80%を最大高さとする */
@@ -397,6 +411,11 @@ elif st.session_state.page == 1:
     # こちらも st.session_state.row_to_load を利用
     if st.button("国語の学習開始（表示される文章を読んでStopをおきましょう）", key="japanese_start_button", use_container_width=True, on_click=start_japanese_reading):
         pass
+    st.link_button(
+        "📚 VocaBoosterで単語トレーニング",
+        "https://filedn.com/lTkchLpf4Vo0aRMDYi0tvk5/VocaBooster/VocaBooster.html",
+        use_container_width=True
+    )
 
 elif st.session_state.page == 2:
     # ここから load_material 関数の引数を st.session_state.row_to_load に変更
