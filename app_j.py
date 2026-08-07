@@ -402,9 +402,9 @@ def show_result_page():
 # 🔹 1. 問題セット選択ページ (インデックス計算・完全永続化版)
 # ==========================================
 def show_selection_page():
-    col_head, col_voca = st.columns([4, 1])
+    col_head, col_voca = st.columns([3, 1])
     with col_head:
-        st.markdown("## 📚 問題セット選択 <small>(左から順に項目を選択して、問題セットを決定してください。)</small>", unsafe_allow_html=True)
+        st.markdown("## 📚 問題セット選択 <small>(左から順に項目を選択)</small>", unsafe_allow_html=True)
     with col_voca:
         st.link_button("📖 VocaBooster", VOCABOOSTER_URL, use_container_width=True)
 
@@ -831,7 +831,25 @@ def quiz_main():
     .stApp.stApp.stApp > div > section > div > button[data-testid="baseButton-primary"]:hover {
         background-color: #0284c7 !important; /* ホバーで少し濃い青に */
     }
-
+/* VocaBooster リンクボタン */
+    .stLinkButton a,
+    a[data-testid="stBaseLinkButton-secondary"],
+    a[data-testid="baseLinkButton-secondary"] {
+        background-color: #f97316 !important;   /* オレンジ */
+        color: #ffffff !important;
+        border: none !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        padding: 14px 8px !important;
+        border-radius: 10px !important;
+        box-shadow: 0 3px #c2410c !important;
+    }
+    .stLinkButton a:hover,
+    a[data-testid="stBaseLinkButton-secondary"]:hover,
+    a[data-testid="baseLinkButton-secondary"]:hover {
+        background-color: #ea580c !important;
+        color: #ffffff !important;
+    }
     /* その他のボタン（secondary）はそのまま */
     </style>
     """, unsafe_allow_html=True)    
