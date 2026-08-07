@@ -48,7 +48,7 @@ PROPER_NOUNS_PATH = os.path.join(BASE_DIR, "shuffle_data", "proper_nouns.csv")
 QUESTIONS_SELECT_PATH = os.path.join(BASE_DIR, "shuffle_data", "questions_select.csv")
 AUDIO_CORRECT_PATH = os.path.join(BASE_DIR, "shuffle_data", "audio_correct.mp3")
 AUDIO_FALSE_PATH = os.path.join(BASE_DIR, "shuffle_data", "audio_false.mp3")
-
+VOCABOOSTER_URL = "https://filedn.com/lTkchLpf4Vo0aRMDYi0tvk5/VocaBooster/VocaBooster.html"
 
 # ==========================================
 # 🔹 ログイン関連関数
@@ -402,14 +402,18 @@ def show_result_page():
 # 🔹 1. 問題セット選択ページ (インデックス計算・完全永続化版)
 # ==========================================
 def show_selection_page():
-    st.markdown("## 📚 問題セット選択 <small>(左から順に項目を選択して、問題セットを決定してください。)</small>", unsafe_allow_html=True)
+    col_head, col_voca = st.columns([4, 1])
+    with col_head:
+        st.markdown("## 📚 問題セット選択 <small>(左から順に項目を選択して、問題セットを決定してください。)</small>", unsafe_allow_html=True)
+    with col_voca:
+        st.link_button("📖 VocaBooster", VOCABOOSTER_URL, use_container_width=True)
+
     df_select = load_selection_data()
-    st.session_state.df_select = df_select 
+    st.session_state.df_select = df_select
 
     if df_select.empty:
         st.error("問題セットの選択リストが空です。")
         return
-        
     if 'grade' not in df_select.columns or 'lesson' not in df_select.columns or 'type' not in df_select.columns:
         st.error("⚠️ エラー: CSVに 'grade', 'lesson', または 'type' 列が見つかりません。")
         return
