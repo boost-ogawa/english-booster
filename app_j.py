@@ -72,12 +72,11 @@ def go_to_main_page(nickname, user_id, is_admin):
 
 def logout():
     """ログアウト処理"""
+    for key in list(st.session_state.keys()):
+        if key not in ['page', 'logged_in']:
+            del st.session_state[key]
     st.session_state.logged_in = False
     st.session_state.page = 0
-    for key in list(st.session_state.keys()):
-        if key not in ['page', 'logged_in']: 
-            del st.session_state[key] 
-    st.rerun()
 
 # ==========================================
 # 🔹 Firestore データ保存関数
