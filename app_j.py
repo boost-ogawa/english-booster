@@ -795,64 +795,112 @@ def show_quiz_page(df: pd.DataFrame, proper_nouns: List[str]):
     progress_ratio = (current_index + 1) / total_questions
     st.progress(progress_ratio, text=f"**進捗: {current_index + 1} / {total_questions} 問**")
 
-
 def quiz_main():
     st.markdown("""
     <style>
-    /* Streamlit 標準の primary ボタン（青）のスタイルを上書き */
-    /* Light Mode */
+    /* ==========================================
+       Streamlit 標準の primary ボタン（水色）
+       ========================================== */
     .stButton button[data-testid="baseButton-primary"] {
-        background-color: #3b82f6; /* ベースの青 */
-        color: white; /* 文字色 */
+        background-color: #38bdf8;
+        color: #164e63;
         border: none;
         transition: background-color 0.1s;
     }
     .stButton button[data-testid="baseButton-primary"]:hover {
-        background-color: #2563eb; /* ホバーで濃く */
+        background-color: #0ea5e9;
     }
-
-    /* 視認性の高い水色/シアン系に変更する場合 (例: Tailwind CSSのsky-400/500) */
-    /* Light Mode - 目立つ水色 */
-    .stButton button[data-testid="baseButton-primary"] {
-        background-color: #38bdf8; /* 明るい水色 */
-        color: #164e63; /* 文字色を濃い青に */
-        border: none;
-    }
-    .stButton button[data-testid="baseButton-primary"]:hover {
-        background-color: #0ea5e9; /* ホバーでより鮮やかな青に */
-    }
-
-    /* Dark Mode - 目立つ水色 (ボタンの色を固定し、文字色を明るく) */
+ 
+    /* Dark Mode */
     .stApp.stApp.stApp > div > section > div > button[data-testid="baseButton-primary"] {
-        background-color: #0ea5e9 !important; /* 鮮やかな青 */
-        color: white !important; 
+        background-color: #0ea5e9 !important;
+        color: white !important;
         border: none !important;
     }
     .stApp.stApp.stApp > div > section > div > button[data-testid="baseButton-primary"]:hover {
-        background-color: #0284c7 !important; /* ホバーで少し濃い青に */
+        background-color: #0284c7 !important;
     }
-/* VocaBooster リンクボタン */
+ 
+    /* ==========================================
+       VocaBooster リンクボタン
+       ブランドカラー（山吹 #ffcc00 → #ff9900）に合わせた立体ボタン
+       ========================================== */
     .stLinkButton a,
     a[data-testid="stBaseLinkButton-secondary"],
-    a[data-testid="baseLinkButton-secondary"] {
-        background-color: #f97316 !important;   /* オレンジ */
-        color: #ffffff !important;
-        border: none !important;
-        font-size: 18px !important;
-        font-weight: bold !important;
-        padding: 14px 8px !important;
-        border-radius: 10px !important;
-        box-shadow: 0 3px #c2410c !important;
+    a[data-testid="baseLinkButton-secondary"],
+    a[data-testid^="stBaseLinkButton"],
+    a[data-testid^="baseLinkButton"] {
+        background: linear-gradient(180deg, #ffd94d 0%, #ffcc00 45%, #ff9900 100%) !important;
+        color: #5c3d00 !important;
+        border: 2px solid #e68a00 !important;
+        min-height: 60px !important;
+        padding: 18px 12px !important;
+        border-radius: 14px !important;
+        box-shadow: 0 4px 0 #d97706, 0 7px 14px rgba(217, 119, 6, 0.28) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-decoration: none !important;
+        letter-spacing: 0.02em !important;
+        transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease !important;
     }
+ 
+    /* Streamlit はラベルを内側の p に入れるため、そちらにもサイズ指定が必要 */
+    .stLinkButton a p,
+    .stLinkButton a div,
+    .stLinkButton a span,
+    a[data-testid^="stBaseLinkButton"] p,
+    a[data-testid^="baseLinkButton"] p {
+        font-size: 22px !important;
+        font-weight: 800 !important;
+        color: #5c3d00 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.25 !important;
+        white-space: nowrap !important;
+    }
+ 
+    /* ホバー：少し沈ませる */
     .stLinkButton a:hover,
-    a[data-testid="stBaseLinkButton-secondary"]:hover,
-    a[data-testid="baseLinkButton-secondary"]:hover {
-        background-color: #ea580c !important;
-        color: #ffffff !important;
+    a[data-testid^="stBaseLinkButton"]:hover,
+    a[data-testid^="baseLinkButton"]:hover {
+        background: linear-gradient(180deg, #ffcc00 0%, #ffb300 45%, #f57c00 100%) !important;
+        color: #4a3000 !important;
+        transform: translateY(2px) !important;
+        box-shadow: 0 2px 0 #d97706, 0 4px 8px rgba(217, 119, 6, 0.25) !important;
     }
-    /* その他のボタン（secondary）はそのまま */
+ 
+    /* クリック中：完全に沈む */
+    .stLinkButton a:active,
+    a[data-testid^="stBaseLinkButton"]:active,
+    a[data-testid^="baseLinkButton"]:active {
+        transform: translateY(4px) !important;
+        box-shadow: 0 0 0 #d97706 !important;
+    }
+ 
+    /* キーボード操作時のフォーカスリング */
+    .stLinkButton a:focus-visible,
+    a[data-testid^="stBaseLinkButton"]:focus-visible {
+        outline: 3px solid #1e40af !important;
+        outline-offset: 3px !important;
+    }
+ 
+    /* ダークモードでも黄色地＋濃茶文字を維持 */
+    @media (prefers-color-scheme: dark) {
+        .stLinkButton a,
+        a[data-testid^="stBaseLinkButton"],
+        a[data-testid^="baseLinkButton"] {
+            background: linear-gradient(180deg, #ffd94d 0%, #ffc400 45%, #ff9000 100%) !important;
+            color: #4a3000 !important;
+            border-color: #b45309 !important;
+        }
+        .stLinkButton a p,
+        a[data-testid^="stBaseLinkButton"] p {
+            color: #4a3000 !important;
+        }
+    }
     </style>
-    """, unsafe_allow_html=True)    
+    """, unsafe_allow_html=True)
     
     if st.session_state.app_mode == 'selection':
         show_selection_page()
