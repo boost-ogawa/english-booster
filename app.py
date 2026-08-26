@@ -10,7 +10,7 @@ import tempfile
 import re
 import os
 import bcrypt
-import matplotlib.pyplot as plt
+import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
@@ -369,14 +369,21 @@ elif st.session_state.page == 1:
                     # st.radio も st.selectbox と同じく選択値を返すため、以下のロジックは変更不要
                     selected_row = available_videos[available_videos["title"] == selected_title].iloc[0]
 
-
                 # --- 中央カラム (動画埋め込み) ---
                 with col_video_main:
                     st.header(selected_row["title"])
                     st.write(selected_row["description"])
                    
-                    # 埋め込み動画（メイン）
-                    st.video(normalize_youtube_url(selected_row["url"]))
+                    # URLを準備（YouTubeなら変換、HTMLならそのまま）
+                    final_url = normalize_youtube_url(selected_row["url"])
+                    
+                    # CSVの「type」列によって表示方法を切り替える
+                    if selected_row["type"] == "html":
+                        # LumiなどのHTMLリンクの場合はiframeで表示
+                        components.iframe(final_url, height=500, scrolling=True)
+                    else:
+                        # 従来通りYouTubeなどの場合はst.videoで表示
+                        st.video(final_url)
                     # st.write(f"**公開日:** {selected_row['date'].strftime('%Y年%m月%d日')}")
 
                 # --- 右カラム (情報/スピード測定) ---
