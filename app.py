@@ -380,7 +380,7 @@ elif st.session_state.page == 1:
                     # CSVの「type」列によって表示方法を切り替える
                     if selected_row["type"] == "html":
                         # LumiなどのHTMLリンクの場合はiframeで表示
-                        components.iframe(final_url, height=500, scrolling=True)
+                        components.iframe(final_url, height=660, scrolling=False)
                     else:
                         # 従来通りYouTubeなどの場合はst.videoで表示
                         st.video(final_url)
