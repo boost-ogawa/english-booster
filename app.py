@@ -107,6 +107,51 @@ st.markdown(
         color: #FFFFFF !important;
         margin-bottom: 0.3rem !important;
     }
+    /* インタラクティブ教材の起動ボタン（サムネの代わり） */
+    div[data-testid="stLinkButton"] a,
+    .stLinkButton a {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: linear-gradient(160deg, #123a63 0%, #0b2340 100%);
+        border: 1px solid #2a5f8f !important;
+        border-radius: 12px;
+        color: #ffffff !important;
+        text-decoration: none !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+        transition: transform .12s, box-shadow .12s, border-color .12s;
+    }
+    div[data-testid="stLinkButton"] a::before,
+    .stLinkButton a::before {
+        content: "▶";
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        background: #28a745;
+        color: #ffffff;
+        font-size: 2.2rem;
+        padding-left: 8px;
+        box-shadow: 0 4px 16px rgba(40, 167, 69, .45);
+    }
+    div[data-testid="stLinkButton"] a:hover,
+    .stLinkButton a:hover {
+        transform: translateY(-2px);
+        border-color: #28a745 !important;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .45);
+    }
+    div[data-testid="stLinkButton"] a p {
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        letter-spacing: .04em;
+        margin: 0 !important;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -376,11 +421,18 @@ elif st.session_state.page == 1:
                    
                     # URLを準備（YouTubeなら変換、HTMLならそのまま）
                     final_url = normalize_youtube_url(selected_row["url"])
-                    
+
                     # CSVの「type」列によって表示方法を切り替える
                     if selected_row["type"] == "html":
-                        # LumiなどのHTMLリンクの場合はiframeで表示
-                        components.iframe(final_url, height=660, scrolling=False)
+                        # インタラクティブ教材は別タブで開く。
+                        # Streamlit の埋め込み枠はサンドボックス付きで、
+                        # その中では YouTube プレーヤーが再生を拒否するため。
+                        st.link_button("授業映像を再生する", final_url, use_container_width=True)
+                        st.caption(
+                            "別タブで開きます。映像の途中2か所で自動的に停止し、"
+                            "LogicBooster へのリンクが出ます。"
+                            "解き終わったら映像のタブに戻って続きを再生してください。"
+                        )
                     else:
                         # 従来通りYouTubeなどの場合はst.videoで表示
                         st.video(final_url)
